@@ -1,0 +1,56 @@
+name: "♻️ Refactoring"
+description: "코드 리팩토링 제안"
+labels: ["refactoring"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        코드 품질 향상을 위한 리팩토링 제안에 감사드립니다. 코드베이스를 개선하는 데 도움이 됩니다.
+
+  - type: textarea
+    attributes:
+      label: 🔍 현재 코드 상태
+      description: 리팩토링이 필요한 코드의 현재 상태를 설명해 주세요.
+      placeholder: 현재 코드의 문제점이나 개선이 필요한 부분을 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 💡 리팩토링 제안
+      description: 어떻게 코드를 개선할 수 있을지 제안해 주세요.
+      placeholder: 구체적인 개선 방법이나 아이디어를 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ✅ 기대 효과
+      description: 리팩토링을 통해 얻을 수 있는 이점을 설명해 주세요.
+      placeholder: |
+        - 성능 향상
+        - 코드 가독성 개선
+        - 유지보수성 향상
+        - 버그 감소
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 📁 관련 파일
+      description: 리팩토링이 필요한 파일 경로나 코드 영역을 명시해 주세요.
+      placeholder: 파일 경로, 클래스명, 함수명 등을 구체적으로 적어주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 📋 작업 계획
+      description: 리팩토링 작업 계획을 체크박스 형태로 작성해주세요.
+      placeholder: |
+        - [ ] 코드 분석
+        - [ ] 테스트 작성
+        - [ ] 리팩토링 구현
+        - [ ] 테스트 검증
+    validations:
+      required: false

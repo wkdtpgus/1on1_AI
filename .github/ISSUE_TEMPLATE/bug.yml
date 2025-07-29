@@ -1,0 +1,61 @@
+name: "🐞 Bug"
+description: "버그 리포트"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그를 보고해 주셔서 감사합니다. 가능한 한 자세히 작성해 주시면 빠른 해결에 도움이 됩니다.
+
+  - type: textarea
+    attributes:
+      label: 🐛 버그 설명
+      description: 어떤 버그가 발생했는지 명확하게 설명해 주세요.
+      placeholder: 버그에 대해 자세히 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔄 재현 방법
+      description: 버그를 재현하는 단계를 설명해 주세요.
+      placeholder: |
+        1. '...' 환경에서
+        2. '...' 기능을 실행할 때
+        3. '...' 입력을 하면
+        4. 오류가 발생합니다
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔍 예상 동작
+      description: 원래 어떻게 동작해야 하는지 설명해 주세요.
+      placeholder: 정상적인 경우 어떻게 동작해야 하는지 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 📱 환경 정보
+      description: 버그가 발생한 환경 정보를 제공해 주세요.
+      placeholder: |
+        - OS: [예: Windows 10, macOS 12.0, Ubuntu 20.04]
+        - Python 버전: [예: 3.11.12]
+        - 패키지 버전: [예: langchain 0.1.0]
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 📷 스크린샷
+      description: 가능하다면 버그를 보여주는 스크린샷을 첨부해 주세요.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: 🔍 추가 정보
+      description: 문제 해결에 도움이 될 수 있는 추가 정보를 제공해 주세요.
+    validations:
+      required: false
