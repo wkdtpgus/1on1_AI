@@ -27,7 +27,7 @@ except ImportError as e:
     print("pip install sounddevice soundfile assemblyai numpy scipy python-dotenv")
     sys.exit(1)
 
-from src.services.stt_processor import STTProcessor
+from src.models.transcription import STTProcessor
 
 
 class InteractiveSTTTest:
