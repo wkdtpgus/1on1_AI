@@ -16,13 +16,12 @@ from src.config.config import (
     LLM_TEMPERATURE,
     LLM_MAX_TOKENS
 )
-from src.prompts.analysis_prompt import MEETING_ANALYSIS_PROMPT
+from src.prompts.stt_llm_prompts import MEETING_SUMMARY_PROMPT
 
 
 class STTLLMAnalysisResult(BaseModel):
     """LLM 분석 결과 모델"""
-    title: str = Field(description="전체 맥락을 고려한 한줄 제목 요약")
-    summary: List[str] = Field(description="핵심 포인트 요약 리스트")
+    summary: str = Field(description="회의 내용 전체 요약 (마크다운 형식)")
 
 
 class MeetingAnalyzer:
@@ -50,18 +49,18 @@ class MeetingAnalyzer:
         # 프롬프트 템플릿 설정
         self.prompt_template = PromptTemplate(
             input_variables=["transcript"],
-            template=MEETING_ANALYSIS_PROMPT
+            template=MEETING_SUMMARY_PROMPT
         )
     
     def analyze_transcript(self, transcript: str) -> STTLLMAnalysisResult:
         """
-        전사 텍스트를 분석하여 제목과 요약 생성
+        전사 텍스트를 분석하여 요약 생성
         
         Args:
             transcript: STT로 전사된 회의 내용
             
         Returns:
-            STTLLMAnalysisResult: 분석 결과 (제목, 요약)
+            STTLLMAnalysisResult: 분석 결과 (마크다운 요약)
         """
         try:
             # 프롬프트 생성
@@ -70,28 +69,20 @@ class MeetingAnalyzer:
             # LLM 호출
             response = self.llm.invoke(prompt)
             
-            # JSON 파싱
-            result_json = json.loads(response.content)
+            # 응답 내용을 그대로 사용 (마크다운 형식)
+            summary_text = response.content.strip()
             
             # Pydantic 모델로 변환
             analysis_result = STTLLMAnalysisResult(
-                title=result_json.get("title", "제목 없음"),
-                summary=result_json.get("summary", [])
+                summary=summary_text
             )
             
             return analysis_result
             
-        except json.JSONDecodeError as e:
-            # JSON 파싱 실패 시 기본값 반환
-            return STTLLMAnalysisResult(
-                title="분석 실패",
-                summary=[f"JSON 파싱 오류: {str(e)}"]
-            )
         except Exception as e:
-            # 기타 오류 처리
+            # 오류 처리
             return STTLLMAnalysisResult(
-                title="분석 오류",
-                summary=[f"분석 중 오류 발생: {str(e)}"]
+                summary=f"# 분석 오류\n\n분석 중 오류가 발생했습니다: {str(e)}"
             )
     
     def analyze_stt_result(self, stt_result: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,8 +102,7 @@ class MeetingAnalyzer:
             return {
                 **stt_result,
                 "analysis": {
-                    "title": "전사 내용 없음",
-                    "summary": ["분석할 내용이 없습니다."]
+                    "summary": "# 전사 내용 없음\n\n분석할 내용이 없습니다."
                 }
             }
         
@@ -123,7 +113,6 @@ class MeetingAnalyzer:
         return {
             **stt_result,
             "analysis": {
-                "title": analysis_result.title,
                 "summary": analysis_result.summary
             }
         }
@@ -158,8 +147,8 @@ class MeetingAnalyzer:
             return {
                 **stt_result,
                 "analysis": {
-                    "title": "전사 내용 없음",
-                    "summary": ["분석할 내용이 없습니다."]
+                    "summary": "# 전사 내용 없음\n\n분석할 내용이 없습니다.",
+                    "analyzed_with_speakers": bool(utterances)
                 }
             }
         
@@ -168,7 +157,6 @@ class MeetingAnalyzer:
         return {
             **stt_result,
             "analysis": {
-                "title": analysis_result.title,
                 "summary": analysis_result.summary,
                 "analyzed_with_speakers": bool(utterances)
             }

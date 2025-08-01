@@ -44,6 +44,17 @@ OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
 # LLM 설정
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # OpenAI API 키
-LLM_MODEL = "gpt-4o-mini"  # 사용할 LLM 모델
+LLM_MODEL = "gpt-4.1"  # 사용할 LLM 모델
 LLM_TEMPERATURE = 0.3  # 창의성 설정 (0-1, 낮을수록 일관성 있음)
-LLM_MAX_TOKENS = 500  # 최대 토큰 수
+LLM_MAX_TOKENS = 5000  # 최대 토큰 수
+
+# Google Cloud / Vertex AI 설정
+GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lower() == "true"
+
+# Vertex AI 모델 설정
+VERTEX_AI_MODEL = "gemini-2.5-pro"  # Vertex AI 모델명
+VERTEX_AI_TEMPERATURE = 0.3
+VERTEX_AI_MAX_TOKENS = 5000
