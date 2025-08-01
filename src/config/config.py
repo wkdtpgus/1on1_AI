@@ -41,3 +41,9 @@ AUDIO_FORMAT = "float32"  # 오디오 포맷
 # 파일 저장 경로
 TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
+
+# LLM 설정
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # OpenAI API 키
+LLM_MODEL = "gpt-4o-mini"  # 사용할 LLM 모델
+LLM_TEMPERATURE = 0.3  # 창의성 설정 (0-1, 낮을수록 일관성 있음)
+LLM_MAX_TOKENS = 500  # 최대 토큰 수
