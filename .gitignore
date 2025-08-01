@@ -153,5 +153,6 @@ temp/
 *.tmp
 *.temp
 
-# Poetry
-# poetry.lock은 버전 관리에 포함되어야 함
+
+# 캐시 파일 
+__pycache__/
