@@ -18,7 +18,6 @@ ASSEMBLYAI_LANGUAGE = "ko"  # 기본 언어 설정 (한국어)
 # 1on1 미팅 최적화 파라미터
 ASSEMBLYAI_PUNCTUATE = True  # 구두점 자동 추가
 ASSEMBLYAI_FORMAT_TEXT = True  # 텍스트 포맷팅 (대문자, 숫자 등)
-ASSEMBLYAI_DISFLUENCIES = False  # 필러 단어 제거 (음... 어... 등)
 ASSEMBLYAI_SPEAKER_LABELS = True  # 화자 분리 (2명 회의에 필수)
 ASSEMBLYAI_LANGUAGE_DETECTION = False  # 언어 자동 감지 (한국어로 고정)
 ASSEMBLYAI_WORD_BOOST = []  # 특정 단어 인식 강화 (회사명, 전문용어 등)
@@ -45,7 +44,7 @@ OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 # LLM 설정
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # OpenAI API 키
 LLM_MODEL = "gpt-4.1"  # 사용할 LLM 모델
-LLM_TEMPERATURE = 0.3  # 창의성 설정 (0-1, 낮을수록 일관성 있음)
+LLM_TEMPERATURE = 0.0  # 창의성 설정 (0-1, 낮을수록 일관성 있음)
 LLM_MAX_TOKENS = 5000  # 최대 토큰 수
 
 # Google Cloud / Vertex AI 설정
@@ -56,5 +55,5 @@ GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lowe
 
 # Vertex AI 모델 설정
 VERTEX_AI_MODEL = "gemini-2.5-pro"  # Vertex AI 모델명
-VERTEX_AI_TEMPERATURE = 0.3
-VERTEX_AI_MAX_TOKENS = 5000
+VERTEX_AI_TEMPERATURE = 0.0
+VERTEX_AI_MAX_TOKENS = 8000

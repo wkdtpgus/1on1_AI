@@ -14,27 +14,53 @@ def load_sample_transcript(file_path: str) -> dict:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # 전체 전사 내용 추출
+        # 3가지 형태로 텍스트 추출
         lines = content.split('\n')
-        full_text = ""
         
-        # 전체 전사 내용 찾기
+        # 1. 전체 전사 텍스트 (기존)
+        full_transcript = ""
         in_full_text = False
         
+        # 2. 화자별 발언만 (화자 정보 포함)
+        speaker_separated = ""
+        in_speaker_section = False
+        
+        # 3. 전체 파일 내용 (원본 그대로)
+        raw_content = content
+        
         for line in lines:
-            if "## 전체 전사 내용" in line:
+            # 전체 텍스트 섹션 파싱
+            if "## 전체 텍스트" in line:
                 in_full_text = True
                 continue
             elif "## 화자별 발언" in line:
                 in_full_text = False
-                break
+                in_speaker_section = True
+                continue
             elif in_full_text and line.strip() and not line.startswith("#"):
-                full_text += line + " "
+                full_transcript += line + " "
+            
+            # 화자별 발언 섹션 파싱
+            elif in_speaker_section and line.strip():
+                speaker_separated += line + "\n"
+        
+        # 선택할 수 있는 3가지 옵션 (여기서 변경하여 원하는 형태 선택)
+        # Option 1: 전체 전사 텍스트만
+        # Option 2: 화자 분리된 내용만  
+        # Option 3: 전체 파일 내용
+        
+        selected_text = full_transcript.strip()  # 🔄 여기서 변경: full_transcript, speaker_separated, raw_content 중 선택
         
         return {
             "status": "success",
-            "full_text": full_text.strip(),
-            "timestamp": "2025-07-28T16:44:07"
+            "full_text": selected_text,
+            "timestamp": "2025-07-28T16:44:07",
+            # 디버깅용 정보
+            "options": {
+                "full_transcript_length": len(full_transcript.strip()),
+                "speaker_separated_length": len(speaker_separated.strip()), 
+                "raw_content_length": len(raw_content)
+            }
         }
         
     except Exception as e:
@@ -91,7 +117,7 @@ def main():
     print(f"📊 테스트 대상: OpenAI GPT vs Google Vertex AI Gemini")
     
     # 실제 전사 파일 로드
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/AssemblyAI_회의_전사_결과 복사본.txt"
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/transcription_20250801_165627.txt"
     
     print(f"📄 전사 파일 로드 중: {transcript_file}")
     stt_data = load_sample_transcript(transcript_file)
