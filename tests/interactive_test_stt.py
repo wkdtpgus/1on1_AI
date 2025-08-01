@@ -28,6 +28,7 @@ except ImportError as e:
     sys.exit(1)
 
 from src.models.transcription import STTProcessor
+from src.models.recording import AudioRecorder
 
 
 class InteractiveSTTTest:
@@ -35,6 +36,7 @@ class InteractiveSTTTest:
     
     def __init__(self):
         self.stt = None
+        self.audio_recorder = None
         self.is_recording = False
         self.audio_files = []
         self.audio_dir = project_root / "data" / "raw_audio"
@@ -50,7 +52,8 @@ class InteractiveSTTTest:
         
         try:
             self.stt = STTProcessor(api_key=api_key)
-            print("✅ STT 프로세서 초기화 성공")
+            self.audio_recorder = AudioRecorder()
+            print("✅ STT 프로세서 및 오디오 레코더 초기화 성공")
             
             # 기존 오디오 파일 로드
             self.load_existing_audio_files()
@@ -67,13 +70,13 @@ class InteractiveSTTTest:
             return
         
         try:
-            result = self.stt.start_recording()
-            if result["status"] == "recording":
+            success = self.audio_recorder.start_recording()
+            if success:
                 self.is_recording = True
                 print("🎤 녹음이 시작되었습니다. 말씀해 주세요...")
                 print("   (중지하려면 's' 키를 눌러주세요)")
             else:
-                print(f"❌ 녹음 시작 실패: {result['message']}")
+                print("❌ 녹음 시작에 실패했습니다.")
         except Exception as e:
             print(f"❌ 녹음 시작 오류: {e}")
     
@@ -84,11 +87,10 @@ class InteractiveSTTTest:
             return
         
         try:
-            result = self.stt.stop_recording()
+            audio_file = self.audio_recorder.stop_recording()
             self.is_recording = False
             
-            if result["status"] == "stopped":
-                audio_file = result["audio_file"]
+            if audio_file:
                 self.audio_files.append(audio_file)
                 print(f"✅ 녹음이 중지되었습니다.")
                 print(f"📁 저장된 파일: {audio_file}")
@@ -100,7 +102,7 @@ class InteractiveSTTTest:
                 
                 return audio_file
             else:
-                print(f"❌ 녹음 중지 실패: {result['message']}")
+                print("❌ 녹음된 오디오가 없거나 저장에 실패했습니다.")
                 return None
         except Exception as e:
             print(f"❌ 녹음 중지 오류: {e}")
