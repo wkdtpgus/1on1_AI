@@ -1,5 +1,38 @@
 # STT→LLM 분석용 프롬프트
 
+QA_EXTRACTION_PROMPT = """
+You are an expert meeting analyst. Extract specific answers to given questions from the meeting transcript. 
+
+**Questions:**
+{questions}
+
+**Meeting Transcript:**
+{transcript}
+
+**Instructions:**
+1. Find relevant answers for each question from the transcript
+2. If no clear answer exists, write "답변 없음" or "명확한 답변 부족"
+3. Include speaker information when available
+4. Base answers strictly on the transcript content
+5. Be specific and accurate
+
+**Output Format:**
+Q1: [첫 번째 질문]
+A1: [전사 내용을 기반으로 한 구체적 답변]
+
+Q2: [두 번째 질문]
+A2: [전사 내용을 기반으로 한 구체적 답변]
+
+...
+
+**Guidelines:**
+- Answer in Korean
+- Use exact quotes from transcript when relevant
+- Include speaker attribution: "참석자 A:", "Speaker 1:" etc.
+- If multiple answers exist, include all relevant parts
+- Maintain chronological order when applicable
+"""
+
 MEETING_SUMMARY_PROMPT = """
 You are an expert meeting analyst. Analyze the following meeting transcript and provide a comprehensive summary in Korean.
 
@@ -20,14 +53,17 @@ Analyze the transcript and provide a well-structured summary following the forma
 
 ## 주요 논의 사항
 
-### [주요 주제 1]
+### [주요 주제명]
 - [핵심 포인트 또는 논의 세부사항]
 - [또 다른 중요한 세부사항]
 - **인용:** *"[참석자의 정확한 발언]"* - 참석자 X
 
-### [주요 주제 2]
+### [다음 주요 주제명]
 - [핵심 포인트 또는 논의 세부사항]
 - [하위 논의 포인트들]
+
+### [추가 주제들...]
+- [필요한 만큼 주제를 추가하여 모든 중요한 논의사항을 포함]
 
 ## 결정 사항
 - [구체적인 결정 1]
@@ -42,11 +78,13 @@ Analyze the transcript and provide a well-structured summary following the forma
 - *"[중요한 인용구 2]"* - 참석자 Y
 
 **Guidelines:**
+- Create as many topic sections as needed to cover all important discussion points
 - Use clear headings and bullet points for readability
 - Include verbatim quotes that emphasize key points
-- Organize information logically
+- Organize information logically and chronologically when possible
 - Use participant numbers when speakers are identified
 - If information is not available, state "미명시" or "언급되지 않음"
 - Focus on actionable items and concrete decisions
+- Don't limit yourself to only 2 topics - include all significant discussion areas
 - IMPORTANT: Respond entirely in Korean language
 """
