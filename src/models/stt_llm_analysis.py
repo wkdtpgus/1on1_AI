@@ -15,7 +15,7 @@ from src.config.config import (
     LLM_TEMPERATURE,
     LLM_MAX_TOKENS
 )
-from src.prompts.stt_llm_prompts import MEETING_SUMMARY_PROMPT
+from src.prompts.stt_llm_prompts import COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
 
 
 class STTLLMAnalysisResult(BaseModel):
@@ -45,54 +45,47 @@ class MeetingAnalyzer:
             max_tokens=LLM_MAX_TOKENS
         )
         
-        # 프롬프트 템플릿 설정
-        self.prompt_template = PromptTemplate(
+        # 통합 프롬프트 템플릿 설정
+        self.comprehensive_prompt_template = PromptTemplate(
             input_variables=["transcript"],
-            template=MEETING_SUMMARY_PROMPT
+            template=COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
         )
     
-    def analyze_transcript(self, transcript: str) -> STTLLMAnalysisResult:
+    def analyze_comprehensive(self, transcript: str) -> str:
         """
-        전사 텍스트를 분석하여 요약 생성
+        전사 텍스트를 종합 분석 (요약 + 피드백 + Q&A)
         
         Args:
             transcript: STT로 전사된 회의 내용
             
         Returns:
-            STTLLMAnalysisResult: 분석 결과 (마크다운 요약)
+            str: 종합 분석 결과 (마크다운 형식)
         """
         try:
             # 프롬프트 생성
-            prompt = self.prompt_template.format(transcript=transcript)
+            prompt = self.comprehensive_prompt_template.format(transcript=transcript)
             
             # LLM 호출
             response = self.llm.invoke(prompt)
             
             # 응답 내용을 그대로 사용 (마크다운 형식)
-            summary_text = response.content.strip()
+            analysis_text = response.content.strip()
             
-            # Pydantic 모델로 변환
-            analysis_result = STTLLMAnalysisResult(
-                summary=summary_text
-            )
-            
-            return analysis_result
+            return analysis_text
             
         except Exception as e:
             # 오류 처리
-            return STTLLMAnalysisResult(
-                summary=f"# 분석 오류\n\n분석 중 오류가 발생했습니다: {str(e)}"
-            )
+            return f"# 종합 분석 오류\n\n분석 중 오류가 발생했습니다: {str(e)}"
     
     def analyze_stt_result(self, stt_result: Dict[str, Any]) -> Dict[str, Any]:
         """
-        STT 결과 전체를 받아서 분석
+        STT 결과 전체를 받아서 종합 분석
         
         Args:
             stt_result: STTProcessor의 전사 결과
             
         Returns:
-            분석 결과가 추가된 전체 결과
+            종합 분석 결과가 추가된 전체 결과
         """
         # STT 결과에서 전사 텍스트 추출
         full_text = stt_result.get("full_text", "")
@@ -101,30 +94,30 @@ class MeetingAnalyzer:
             return {
                 **stt_result,
                 "analysis": {
-                    "summary": "# 전사 내용 없음\n\n분석할 내용이 없습니다."
+                    "comprehensive_analysis": "# 전사 내용 없음\n\n분석할 내용이 없습니다."
                 }
             }
         
-        # 텍스트 분석
-        analysis_result = self.analyze_transcript(full_text)
+        # 종합 분석
+        comprehensive_analysis = self.analyze_comprehensive(full_text)
         
         # 결과 병합
         return {
             **stt_result,
             "analysis": {
-                "summary": analysis_result.summary
+                "comprehensive_analysis": comprehensive_analysis
             }
         }
     
     def analyze_with_speakers(self, stt_result: Dict[str, Any]) -> Dict[str, Any]:
         """
-        화자 정보가 포함된 STT 결과를 분석
+        화자 정보가 포함된 STT 결과를 종합 분석
         
         Args:
             stt_result: 화자 분리가 된 STT 결과
             
         Returns:
-            화자별 발언을 고려한 분석 결과
+            화자별 발언을 고려한 종합 분석 결과
         """
         utterances = stt_result.get("utterances", [])
         
@@ -141,22 +134,23 @@ class MeetingAnalyzer:
             # 화자 분리가 없으면 전체 텍스트 사용
             full_transcript = stt_result.get("full_text", "")
         
-        # 분석 수행
+        # 종합 분석 수행
         if not full_transcript:
             return {
                 **stt_result,
                 "analysis": {
-                    "summary": "# 전사 내용 없음\n\n분석할 내용이 없습니다.",
+                    "comprehensive_analysis": "# 전사 내용 없음\n\n분석할 내용이 없습니다.",
                     "analyzed_with_speakers": bool(utterances)
                 }
             }
         
-        analysis_result = self.analyze_transcript(full_transcript)
+        comprehensive_analysis = self.analyze_comprehensive(full_transcript)
         
         return {
             **stt_result,
             "analysis": {
-                "summary": analysis_result.summary,
+                "comprehensive_analysis": comprehensive_analysis,
                 "analyzed_with_speakers": bool(utterances)
             }
         }
+    

@@ -1,90 +1,105 @@
-# STT→LLM 분석용 프롬프트
+# STT→LLM 통합 분석용 프롬프트
 
-QA_EXTRACTION_PROMPT = """
-You are an expert meeting analyst. Extract specific answers to given questions from the meeting transcript. 
-
-**Questions:**
-{questions}
+COMPREHENSIVE_MEETING_ANALYSIS_PROMPT = """
+You are an expert meeting analyst and executive coach specializing in 1-on-1 meetings. Analyze the following meeting transcript comprehensively and provide a complete analysis in a single response.
 
 **Meeting Transcript:**
 {transcript}
 
-**Instructions:**
-1. Find relevant answers for each question from the transcript
-2. If no clear answer exists, write "답변 없음" or "명확한 답변 부족"
-3. Include speaker information when available
-4. Base answers strictly on the transcript content
-5. Be specific and accurate
+**1-on-1 Meeting Best Practices Context:**
 
-**Output Format:**
-Q1: [첫 번째 질문]
-A1: [전사 내용을 기반으로 한 구체적 답변]
+**Manager Should AVOID:**
+- Dominating conversation (70:30 rule violation - manager should speak 30%, employee 70%)
+- Turning into work status updates only
+- Proceeding without clear purpose or structure
+- Failing to follow up on promises and action items
+- Providing hasty feedback without sufficient evidence
 
-Q2: [두 번째 질문]
-A2: [전사 내용을 기반으로 한 구체적 답변]
+**Manager Should STRIVE FOR:**
+- Creating a safe and comfortable environment
+- Encouraging employee-led dialogue with open-ended questions
+- Covering diverse topics: work status, growth, well-being, blockers, relationships
+- Facilitating two-way feedback exchange
+- Setting clear action items with specific ownership and deadlines
 
-...
+**Task:** Provide a comprehensive analysis of this 1-on-1 meeting including summary, manager feedback, and Q&A (if questions provided).
 
-**Guidelines:**
-- Answer in Korean
-- Use exact quotes from transcript when relevant
-- Include speaker attribution: "참석자 A:", "Speaker 1:" etc.
-- If multiple answers exist, include all relevant parts
-- Maintain chronological order when applicable
-"""
+**Required Output Format:**
 
-MEETING_SUMMARY_PROMPT = """
-You are an expert meeting analyst. Analyze the following meeting transcript and provide a comprehensive summary in Korean.
+# 1-on-1 Meeting Comprehensive Analysis Report
 
-**Meeting Transcript:**
-{transcript}
+## 📋 Meeting Overview
+- **Meeting Date:** [Date if specified, otherwise "Date not specified"]
+- **Attendees:** [List of attendees based on speaker identification]
+- **Overall Purpose:** [Brief description of the meeting's objective]
 
-**Instructions:**
-Analyze the transcript and provide a well-structured summary following the format below. When speakers are identified by numbers (e.g., Participant 1, Participant 2), use those identifiers consistently. Please respond in Korean language.
+## 📝 Key Discussion Points
 
-**Response Format:**
+### [Main Topic]
+- [Key point or discussion detail]
+- [Another important detail]
+- **Quote:** *"[Exact quote from attendee]"* - Attendee X
 
-# [간결한 회의 제목]
+### [Next Main Topic]
+- [Key point or discussion detail]
+- [Sub-discussion points]
 
-## 회의 개요
-- **회의 일시:** [명시된 경우 날짜, 그렇지 않으면 "날짜 미명시"]
-- **참석자:** [화자 구분을 기반으로 한 참석자 목록]
-- **전체 목적:** [회의 목표에 대한 간략한 설명]
+[Add as many topics as needed to cover all important discussion points]
 
-## 주요 논의 사항
+## ✅ Decisions Made
+- [Specific decision 1]
+- [Specific decision 2]
 
-### [주요 주제명]
-- [핵심 포인트 또는 논의 세부사항]
-- [또 다른 중요한 세부사항]
-- **인용:** *"[참석자의 정확한 발언]"* - 참석자 X
+## 📌 Action Items
+- **[Task description]** - Owner: [Owner's Name] - Deadline: [Date/Not specified]
+- **[Another task]** - Owner: [Owner's Name] - Deadline: [Date/Not specified]
 
-### [다음 주요 주제명]
-- [핵심 포인트 또는 논의 세부사항]
-- [하위 논의 포인트들]
+## 💬 Key Quotes
+- *"[Important quote 1]"* - Attendee X
+- *"[Important quote 2]"* - Attendee Y
 
-### [추가 주제들...]
-- [필요한 만큼 주제를 추가하여 모든 중요한 논의사항을 포함]
+---
 
-## 결정 사항
-- [구체적인 결정 1]
-- [구체적인 결정 2]
+## 🎯 Manager Improvement Feedback
 
-## 액션 아이템
-- **[작업 설명]** - 담당자: [담당자명] - 마감일: [날짜/미명시]
-- **[다른 작업]** - 담당자: [담당자명] - 마감일: [날짜/미명시]
+### 1. [Area for Improvement]
+**Situation:** [Quote a specific moment or statement from the transcript]
+**Suggestion:** [Suggest a specific alternative action based on 1-on-1 best practices]
+**Why it's important:** [Explain why this is important from the perspective of the core purpose of a 1-on-1]
+**How to implement:** [Provide a concrete method that can be applied in the next 1-on-1]
 
-## 주요 인용구
-- *"[중요한 인용구 1]"* - 참석자 X
-- *"[중요한 인용구 2]"* - 참석자 Y
+### 2. [Area for Improvement]
+**Situation:** [Quote a specific moment or statement from the transcript]
+**Suggestion:** [Suggest a specific alternative action based on 1-on-1 best practices]
+**Why it's important:** [Explain why this is important from the perspective of the core purpose of a 1-on-1]
+**How to implement:** [Provide a concrete method that can be applied in the next 1-on-1]
 
-**Guidelines:**
-- Create as many topic sections as needed to cover all important discussion points
-- Use clear headings and bullet points for readability
-- Include verbatim quotes that emphasize key points
-- Organize information logically and chronologically when possible
-- Use participant numbers when speakers are identified
-- If information is not available, state "미명시" or "언급되지 않음"
-- Focus on actionable items and concrete decisions
-- Don't limit yourself to only 2 topics - include all significant discussion areas
-- IMPORTANT: Respond entirely in Korean language
+### 3. [Area for Improvement]
+**Situation:** [Quote a specific moment or statement from the transcript]
+**Suggestion:** [Suggest a specific alternative action based on 1-on-1 best practices]
+**Why it's important:** [Explain why this is important from the perspective of the core purpose of a 1-on-1]
+**How to implement:** [Provide a concrete method that can be applied in the next 1-on-1]
+
+## ✨ Positive Aspects
+[Briefly mention 1-2 things the manager did well in the 1-on-1]
+
+---
+
+## ❓ Key Q&A Summary
+
+Based on the transcript, generate a summary of the most important questions and answers. Identify key topics discussed and formulate them into a Q&A format, even if not explicitly asked as a question. Provide 3-5 key Q&A pairs.
+
+**Guidelines for Generation:**
+- **Content Source:** All answers must be derived strictly from the transcript.
+- **Question Formulation:** Create concise questions that capture the essence of a core topic (e.g., performance feedback, project roadblocks, career goals).
+- **Synthesize Answers:** Combine relevant pieces of information from the transcript to form a complete answer.
+- **Speaker Attribution:** If possible, attribute the answer to the speaker (e.g., "Attendee A mentioned...").
+- **Relevance:** Focus on the most significant exchanges that impact project goals, employee growth, and manager-employee alignment.
+
+**Analysis Principles:**
+- Base analysis only on the content of the transcript.
+- Present specific and actionable improvement suggestions.
+- Provide an objective evaluation based on 1-on-1 best practices.
+- Maintain a constructive and developmental perspective.
+- **ALL OUTPUT MUST BE PROVIDED IN KOREAN (한국어).**
 """

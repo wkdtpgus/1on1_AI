@@ -17,7 +17,8 @@ sys.path.insert(0, str(project_root))
 from langchain_google_vertexai import ChatVertexAI
 from langchain.schema import HumanMessage
 from src.models.multi_llm_analyzer import MultiLLMAnalyzer
-from src.prompts.stt_llm_prompts import QA_EXTRACTION_PROMPT
+from src.models.stt_llm_analysis import MeetingAnalyzer
+from src.prompts.stt_llm_prompts import COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
 from src.config.config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
@@ -35,6 +36,9 @@ def load_sample_transcript(file_path: str) -> dict:
         # 파일 형식에 따른 텍스트 추출
         if file_path.endswith("test_1on1.txt"):
             selected_text = content.strip()
+        elif "Gemini가 작성한 회의록.txt" in file_path:
+            # Gemini 회의록 파일은 전체 내용을 그대로 사용
+            selected_text = content.strip() 
         else:
             selected_text = _extract_transcript_text(content)
         
@@ -146,92 +150,6 @@ def save_comparison_results(results: dict):
         print(f"💾 Vertex AI Gemini 결과 저장: {vertexai_filepath}")
 
 
-def test_qa_extraction(questions: List[str], transcript_file: str):
-    """Q&A 추출 테스트 함수"""
-    print("\n🔍 Q&A 추출 테스트 시작")
-    print(f"📋 질문 수: {len(questions)}")
-    
-    # 전사 파일 로드
-    stt_data = load_sample_transcript(transcript_file)
-    if not stt_data:
-        print("❌ 전사 파일을 로드할 수 없습니다.")
-        return
-    
-    transcript = stt_data['full_text']
-    print(f"📄 전사 내용 길이: {len(transcript)}자")
-    
-    # Vertex AI 초기화
-    try:
-        llm = ChatVertexAI(
-            project=GOOGLE_CLOUD_PROJECT,
-            location=GOOGLE_CLOUD_LOCATION,
-            model_name=VERTEX_AI_MODEL,
-            temperature=VERTEX_AI_TEMPERATURE,
-            max_output_tokens=VERTEX_AI_MAX_TOKENS
-        )
-        print("✅ Vertex AI Gemini 모델 초기화 완료")
-    except Exception as e:
-        print(f"❌ LLM 초기화 오류: {e}")
-        return
-    
-    # 질문 리스트를 텍스트로 변환
-    questions_text = "\n".join([f"{i+1}. {q}" for i, q in enumerate(questions)])
-    
-    # 프롬프트 생성
-    prompt = QA_EXTRACTION_PROMPT.format(
-        questions=questions_text,
-        transcript=transcript
-    )
-    
-    # Q&A 추출 실행
-    print("\n🔄 Q&A 추출 중...")
-    try:
-        message = HumanMessage(content=prompt)
-        response = llm.invoke([message])
-        qa_result = response.content
-        
-        # 결과 출력
-        print_section("Q&A 추출 결과", qa_result)
-        
-        # 결과 저장
-        save_qa_result(qa_result, questions, len(transcript))
-        
-        return qa_result
-        
-    except Exception as e:
-        print(f"❌ Q&A 추출 오류: {e}")
-        return None
-
-
-def save_qa_result(qa_result: str, questions: List[str], transcript_length: int):
-    """Q&A 결과를 파일로 저장"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # data 디렉토리가 없으면 생성
-    os.makedirs("data", exist_ok=True)
-    
-    # Q&A 결과 파일 저장
-    qa_filename = f"qa_result_{timestamp}.md"
-    qa_filepath = os.path.join("data", qa_filename)
-    
-    with open(qa_filepath, "w", encoding="utf-8") as f:
-        f.write("# Q&A 질문별 답변 정리 결과\n\n")
-        f.write(f"생성 시간: {timestamp}\n")
-        f.write(f"총 질문 수: {len(questions)}\n")
-        f.write(f"전사 내용 길이: {transcript_length}자\n\n")
-        f.write("---\n\n")
-        f.write("## 질문 목록\n")
-        for i, q in enumerate(questions, 1):
-            f.write(f"{i}. {q}\n")
-        f.write("\n---\n\n")
-        f.write("## Q&A 결과\n\n")
-        f.write(qa_result)
-        f.write(f"\n\n---\n\n")
-        f.write("## 분석 정보\n")
-        f.write(f"- 모델: {VERTEX_AI_MODEL}\n")
-        f.write(f"- 생성 시간: {timestamp}\n")
-    
-    print(f"💾 Q&A 결과 저장: {qa_filepath}")
 
 
 def main():
@@ -239,20 +157,20 @@ def main():
     print("🚀 LLM 테스트 시작")
     print("선택하세요:")
     print("1. LLM 모델 비교 테스트 (OpenAI vs Gemini)")
-    print("2. Q&A 질문별 답변 추출 테스트")
+    print("2. 통합 1on1 분석 테스트 (요약+피드백+Q&A)")
     
     choice = input("\n선택 (1 또는 2): ").strip()
     
     if choice == "1":
         _run_llm_comparison_test()
     elif choice == "2":
-        _run_qa_extraction_test()
+        _run_comprehensive_analysis_test()
     else:
         print("❌ 잘못된 선택입니다. 1 또는 2를 선택해주세요.")
 
 def _run_llm_comparison_test():
     """LLM 비교 테스트 실행"""
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/[리버스마운틴] 서비스 관련 미팅 - 2025_08_01 08_49 KST - Gemini가 작성한 회의록.txt"
     
     print(f"\n📊 테스트 대상: OpenAI GPT vs Google Vertex AI Gemini")
     print(f"📄 전사 파일 로드 중: {transcript_file}")
@@ -284,36 +202,71 @@ def _run_llm_comparison_test():
     save_comparison_results(comparison_results)
     print("\n✅ LLM 비교 테스트 완료!")
 
-def _run_qa_extraction_test():
-    """Q&A 추출 테스트 실행"""
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+def _run_comprehensive_analysis_test():
+    """통합 1on1 분석 테스트 실행"""
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/[리버스마운틴] 서비스 관련 미팅 - 2025_08_01 08_49 KST - Gemini가 작성한 회의록.txt"
     
-    print("\n📋 Q&A 질문별 답변 추출 테스트")
+    print("\n🎯 통합 1on1 분석 테스트 (요약+피드백+Q&A)")
+    print(f"📄 전사 파일: {transcript_file}")
     
-    # 1on1 미팅 질문들
-    sample_questions = [
-        "2분기 성과 검토와 3분기 계획은?",
-        "어려웠던 점이나 아쉬웠던 부분은?",
-        "극복한 방법",
-        "구체적인 일정이나 마일스톤",
-        "올해 어떤 목표를 세웠는가?",
-        "최근 개인적인 목표와 관심사는?",
-        "궁금한 점이나 건의사항"
-    ]
+    # 전사 파일 로드
+    stt_data = load_sample_transcript(transcript_file)
+    if not stt_data:
+        print("❌ 전사 파일을 로드할 수 없습니다.")
+        return
     
-    print("📝 테스트 질문 목록:")
-    for i, q in enumerate(sample_questions, 1):
-        print(f"   {i}. {q}")
+    transcript = stt_data['full_text']
+    print(f"✅ 전사 데이터 로드 완료 (길이: {len(transcript)}자)")
     
-    print("\n💡 질문을 수정하려면 코드에서 sample_questions 리스트를 편집하세요.")
+    # MeetingAnalyzer 초기화
+    try:
+        analyzer = MeetingAnalyzer()
+        print("✅ MeetingAnalyzer 초기화 완료")
+    except Exception as e:
+        print(f"❌ 분석기 초기화 실패: {e}")
+        return
     
-    # Q&A 추출 실행
-    qa_result = test_qa_extraction(sample_questions, transcript_file)
+    # 통합 분석 실행
+    print("\n🔄 통합 1on1 분석 중...")
+    try:
+        comprehensive_result = analyzer.analyze_comprehensive(transcript)
+        
+        # 결과 출력
+        print_section("1on1 종합 분석 결과", comprehensive_result)
+        
+        # 결과 저장
+        save_comprehensive_result(comprehensive_result, len(transcript))
+        
+        print("\n✅ 통합 1on1 분석 테스트 완료!")
+        
+    except Exception as e:
+        print(f"❌ 통합 분석 실패: {e}")
+
+
+def save_comprehensive_result(comprehensive_result: str, transcript_length: int):
+    """통합 분석 결과를 파일로 저장"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    if qa_result:
-        print("\n✅ Q&A 추출 테스트 완료!")
-    else:
-        print("\n❌ Q&A 추출 테스트 실패!")
+    # data 디렉토리가 없으면 생성
+    os.makedirs("data", exist_ok=True)
+    
+    # 통합 분석 결과 파일 저장
+    result_filename = f"comprehensive_analysis_{timestamp}.md"
+    result_filepath = os.path.join("data", result_filename)
+    
+    with open(result_filepath, "w", encoding="utf-8") as f:
+        f.write("# 1on1 종합 분석 결과\n\n")
+        f.write(f"생성 시간: {timestamp}\n")
+        f.write(f"전사 내용 길이: {transcript_length}자\n\n")
+        f.write("---\n\n")
+        f.write(comprehensive_result)
+        f.write(f"\n\n---\n\n")
+        f.write("## 분석 정보\n")
+        f.write(f"- 분석 시간: {timestamp}\n")
+        f.write(f"- 사용 프롬프트: COMPREHENSIVE_MEETING_ANALYSIS_PROMPT\n")
+        f.write(f"- 포함 기능: 회의 요약 + 매니저 피드백 + Q&A 답변\n")
+    
+    print(f"💾 통합 분석 결과 저장: {result_filepath}")
     
 
 

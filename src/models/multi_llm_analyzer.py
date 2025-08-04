@@ -23,7 +23,7 @@ from src.config.config import (
     VERTEX_AI_TEMPERATURE,
     VERTEX_AI_MAX_TOKENS
 )
-from src.prompts.stt_llm_prompts import MEETING_SUMMARY_PROMPT
+from src.prompts.stt_llm_prompts import COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
 
 
 class ModelComparisonResult(BaseModel):
@@ -86,7 +86,7 @@ class MultiLLMAnalyzer:
         # 프롬프트 템플릿 설정
         self.prompt_template = PromptTemplate(
             input_variables=["transcript"],
-            template=MEETING_SUMMARY_PROMPT
+            template=COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
         )
     
     def analyze_with_openai(self, transcript: str) -> tuple[str, float]:
