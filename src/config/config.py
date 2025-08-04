@@ -10,6 +10,20 @@ from dotenv import load_dotenv
 # .env 파일 로드
 load_dotenv()
 
+# Gemini 모델 설정
+GEMINI_MODEL = "gemini-2.5-flash"  # 기본 모델 설정 (gemini-2.5-flash 사용)
+GEMINI_TEMPERATURE = 0.0  # 일관된 결과를 위해 낮은 온도 설정
+# 모델 토큰 제한 (효용성을 위해 유지)
+MAX_TOKENS = 10000
+
+# Google / Vertex AI 설정
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
+GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", 'true').lower() == 'true'
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") 
+
+
 # AssemblyAI 모델 설정
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")  # .env 파일에서 자동 로드
 ASSEMBLYAI_SPEECH_MODEL = "best"  # 음성 모델 (best: 최고 정확도, nano: 비용 효율적)
