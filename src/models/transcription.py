@@ -106,6 +106,7 @@ class STTProcessor:
             return result
             
         except Exception as e:
+            print(f"❌ 전사 오류: {e}")
             return {
                 "status": "error",
                 "message": f"전사 처리 중 오류 발생: {str(e)}",

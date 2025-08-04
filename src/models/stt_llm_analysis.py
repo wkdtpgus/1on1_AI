@@ -3,10 +3,9 @@ STT 결과를 LLM으로 분석하는 모듈
 """
 
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 
 # 설정 가져오기

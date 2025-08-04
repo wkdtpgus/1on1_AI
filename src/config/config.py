@@ -18,6 +18,7 @@ ASSEMBLYAI_LANGUAGE = "ko"  # 기본 언어 설정 (한국어)
 # 1on1 미팅 최적화 파라미터
 ASSEMBLYAI_PUNCTUATE = True  # 구두점 자동 추가
 ASSEMBLYAI_FORMAT_TEXT = True  # 텍스트 포맷팅 (대문자, 숫자 등)
+ASSEMBLYAI_DISFLUENCIES = False  # 말더듬, 음성간투사 필터링 (회의에서는 제거)
 ASSEMBLYAI_SPEAKER_LABELS = True  # 화자 분리 (2명 회의에 필수)
 ASSEMBLYAI_LANGUAGE_DETECTION = False  # 언어 자동 감지 (한국어로 고정)
 ASSEMBLYAI_WORD_BOOST = []  # 특정 단어 인식 강화 (회사명, 전문용어 등)

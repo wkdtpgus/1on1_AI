@@ -156,75 +156,92 @@ class STTLLMIntegrationTest:
         if not self.initialize_components():
             return
         
+        # 메뉴 핸들러 매핑
+        menu_handlers = {
+            "1": self.test_with_recording,
+            "2": self._handle_existing_audio_test,
+            "3": self._handle_stt_reanalysis,
+            "q": self._handle_quit
+        }
+        
         while True:
-            print("\n" + "="*60)
-            print("STT + LLM 통합 테스트")
-            print("="*60)
-            print("1. 새로운 녹음으로 테스트")
-            print("2. 기존 오디오 파일로 테스트")
-            print("3. 최근 STT 결과 재분석")
-            print("q. 종료")
-            
+            self._show_menu()
             choice = input("\n선택하세요: ").strip()
             
-            if choice == "1":
-                self.test_with_recording()
-            
-            elif choice == "2":
-                # 오디오 파일 목록 표시
-                audio_dir = self.data_dir / "raw_audio"
-                if audio_dir.exists():
-                    audio_files = list(audio_dir.glob("*.wav"))
-                    if audio_files:
-                        print("\n📁 사용 가능한 오디오 파일:")
-                        for i, f in enumerate(audio_files[-5:], 1):
-                            print(f"  {i}. {f.name}")
-                        
-                        idx = input("\n파일 번호를 선택하세요: ").strip()
-                        try:
-                            file_idx = int(idx) - 1
-                            if 0 <= file_idx < len(audio_files[-5:]):
-                                self.test_with_existing_audio(str(audio_files[-5:][file_idx]))
-                        except ValueError:
-                            print("❌ 잘못된 입력입니다.")
-                    else:
-                        print("❌ 오디오 파일이 없습니다.")
-                else:
-                    print("❌ 오디오 디렉토리가 없습니다.")
-            
-            elif choice == "3":
-                # 최근 STT 결과 재분석
-                stt_dir = self.data_dir / "stt_transcripts"
-                if stt_dir.exists():
-                    json_files = list(stt_dir.glob("transcription_*.json"))
-                    if json_files:
-                        latest_file = max(json_files, key=os.path.getctime)
-                        
-                        with open(latest_file, "r", encoding="utf-8") as f:
-                            stt_result = json.load(f)
-                        
-                        print(f"\n📁 최근 STT 결과 로드: {latest_file.name}")
-                        
-                        # LLM 분석
-                        print("2️⃣ LLM 재분석 시작...")
-                        if stt_result.get("utterances"):
-                            analysis_result = self.meeting_analyzer.analyze_with_speakers(stt_result)
-                        else:
-                            analysis_result = self.meeting_analyzer.analyze_stt_result(stt_result)
-                        
-                        self.display_analysis_result(analysis_result)
-                        self.save_integrated_result(analysis_result)
-                    else:
-                        print("❌ STT 결과 파일이 없습니다.")
-                else:
-                    print("❌ STT 결과 디렉토리가 없습니다.")
-            
-            elif choice.lower() == "q":
-                print("👋 테스트를 종료합니다.")
-                break
-            
+            handler = menu_handlers.get(choice.lower())
+            if handler:
+                if handler() == 'quit':
+                    break
             else:
                 print("❌ 잘못된 선택입니다.")
+    
+    def _show_menu(self):
+        """메뉴 표시"""
+        print("\n" + "="*60)
+        print("STT + LLM 통합 테스트")
+        print("="*60)
+        print("1. 새로운 녹음으로 테스트")
+        print("2. 기존 오디오 파일로 테스트")
+        print("3. 최근 STT 결과 재분석")
+        print("q. 종료")
+    
+    def _handle_existing_audio_test(self):
+        """기존 오디오 파일 테스트 처리"""
+        audio_dir = self.data_dir / "raw_audio"
+        if not audio_dir.exists():
+            print("❌ 오디오 디렉토리가 없습니다.")
+            return
+        
+        audio_files = list(audio_dir.glob("*.wav"))
+        if not audio_files:
+            print("❌ 오디오 파일이 없습니다.")
+            return
+        
+        print("\n📁 사용 가능한 오디오 파일:")
+        for i, f in enumerate(audio_files[-5:], 1):
+            print(f"  {i}. {f.name}")
+        
+        idx = input("\n파일 번호를 선택하세요: ").strip()
+        try:
+            file_idx = int(idx) - 1
+            if 0 <= file_idx < len(audio_files[-5:]):
+                self.test_with_existing_audio(str(audio_files[-5:][file_idx]))
+        except ValueError:
+            print("❌ 잘못된 입력입니다.")
+    
+    def _handle_stt_reanalysis(self):
+        """STT 결과 재분석 처리"""
+        stt_dir = self.data_dir / "stt_transcripts"
+        if not stt_dir.exists():
+            print("❌ STT 결과 디렉토리가 없습니다.")
+            return
+        
+        json_files = list(stt_dir.glob("transcription_*.json"))
+        if not json_files:
+            print("❌ STT 결과 파일이 없습니다.")
+            return
+        
+        latest_file = max(json_files, key=os.path.getctime)
+        
+        with open(latest_file, "r", encoding="utf-8") as f:
+            stt_result = json.load(f)
+        
+        print(f"\n📁 최근 STT 결과 로드: {latest_file.name}")
+        
+        # LLM 분석
+        print("2️⃣ LLM 재분석 시작...")
+        if stt_result.get("utterances"):
+            analysis_result = self.meeting_analyzer.analyze_with_speakers(stt_result)
+        else:
+            analysis_result = self.meeting_analyzer.analyze_stt_result(stt_result)
+        
+        self.display_analysis_result(analysis_result)
+        self.save_integrated_result(analysis_result)
+    
+    def _handle_quit(self):
+        """종료 처리"""
+        print("👋 테스트를 종료합니다.")
+        return 'quit'
 
 
 if __name__ == "__main__":

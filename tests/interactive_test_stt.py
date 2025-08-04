@@ -6,7 +6,6 @@ STT 모듈 대화형 테스트 스크립트
 
 import os
 import sys
-import threading
 from pathlib import Path
 
 # 프로젝트 루트를 Python 경로에 추가
@@ -239,58 +238,84 @@ class InteractiveSTTTest:
         # 도움말 표시
         self.show_help()
         
+        # 명령어 핸들러 매핑
+        command_handlers = {
+            'r': self._handle_record,
+            'record': self._handle_record,
+            's': self._handle_stop,
+            'stop': self._handle_stop,
+            't': self._handle_transcribe,
+            'trans': self._handle_transcribe,
+            'transcribe': self._handle_transcribe,
+            'a': self._handle_transcribe_all,
+            'all': self._handle_transcribe_all,
+            'l': self.list_recordings,
+            'list': self.list_recordings,
+            'h': self.show_help,
+            'help': self.show_help,
+            'q': self._handle_quit,
+            'quit': self._handle_quit,
+            'exit': self._handle_quit,
+        }
+        
         while True:
             try:
                 # 현재 상태 표시
                 status = "🎤 녹음 중" if self.is_recording else "⏹️ 대기 중"
                 command = input(f"\n[{status}] 명령어를 입력하세요 (h: 도움말): ").strip().lower()
                 
-                if command in ['r', 'record']:
-                    self.start_recording()
-                
-                elif command in ['s', 'stop']:
-                    audio_file = self.stop_recording()
-                    if audio_file:
-                        # 녹음 중지 후 전사 여부 묻기
-                        trans_input = input("🤔 바로 전사하시겠습니까? (y/n): ").strip().lower()
-                        if trans_input in ['y', 'yes', '']:
-                            self.transcribe_latest()
-                
-                elif command in ['t', 'trans', 'transcribe']:
-                    self.transcribe_latest()
-                
-                elif command in ['a', 'all']:
-                    self.transcribe_all()
-                
-                elif command in ['l', 'list']:
-                    self.list_recordings()
-                
-                elif command in ['h', 'help']:
-                    self.show_help()
-                
-                elif command in ['q', 'quit', 'exit']:
-                    if self.is_recording:
-                        print("⚠️ 녹음 중입니다. 먼저 중지하고 종료합니다.")
-                        self.stop_recording()
-                    print("👋 테스트를 종료합니다.")
-                    break
-                
-                elif command == '':
+                if command == '':
                     continue
-                
+                    
+                handler = command_handlers.get(command)
+                if handler:
+                    if handler() == 'quit':
+                        break
                 else:
                     print(f"❓ 알 수 없는 명령어: '{command}'. 'h'를 입력하여 도움말을 확인하세요.")
             
             except KeyboardInterrupt:
-                print("\n\n⚠️ Ctrl+C 감지됨.")
-                if self.is_recording:
-                    print("🛑 녹음을 중지합니다...")
-                    self.stop_recording()
-                print("👋 테스트를 종료합니다.")
+                self._handle_keyboard_interrupt()
                 break
             
             except Exception as e:
                 print(f"❌ 오류 발생: {e}")
+    
+    def _handle_record(self):
+        """녹음 시작 명령 처리"""
+        self.start_recording()
+    
+    def _handle_stop(self):
+        """녹음 중지 명령 처리"""
+        audio_file = self.stop_recording()
+        if audio_file:
+            trans_input = input("🤔 바로 전사하시겠습니까? (y/n): ").strip().lower()
+            if trans_input in ['y', 'yes', '']:
+                self.transcribe_latest()
+    
+    def _handle_transcribe(self):
+        """전사 명령 처리"""
+        self.transcribe_latest()
+    
+    def _handle_transcribe_all(self):
+        """전체 전사 명령 처리"""
+        self.transcribe_all()
+    
+    def _handle_quit(self):
+        """종료 명령 처리"""
+        if self.is_recording:
+            print("⚠️ 녹음 중입니다. 먼저 중지하고 종료합니다.")
+            self.stop_recording()
+        print("👋 테스트를 종료합니다.")
+        return 'quit'
+    
+    def _handle_keyboard_interrupt(self):
+        """Ctrl+C 처리"""
+        print("\n\n⚠️ Ctrl+C 감지됨.")
+        if self.is_recording:
+            print("🛑 녹음을 중지합니다...")
+            self.stop_recording()
+        print("👋 테스트를 종료합니다.")
 
 
 if __name__ == "__main__":

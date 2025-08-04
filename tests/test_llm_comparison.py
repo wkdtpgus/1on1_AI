@@ -4,9 +4,16 @@ OpenAI GPT vs Google Vertex AI Gemini 성능 및 결과 품질 비교
 """
 
 import os
+import sys
 import json
 from datetime import datetime
 from typing import List
+from pathlib import Path
+
+# 프로젝트 루트를 Python 경로에 추가
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 from langchain_google_vertexai import ChatVertexAI
 from langchain.schema import HumanMessage
 from src.models.multi_llm_analyzer import MultiLLMAnalyzer
@@ -25,59 +32,74 @@ def load_sample_transcript(file_path: str) -> dict:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # 3가지 형태로 텍스트 추출
-        lines = content.split('\n')
-        
-        # 1. 전체 전사 텍스트 (기존)
-        full_transcript = ""
-        in_full_text = False
-        
-        # 2. 화자별 발언만 (화자 정보 포함)
-        speaker_separated = ""
-        in_speaker_section = False
-        
-        # 3. 전체 파일 내용 (원본 그대로)
-        raw_content = content
-        
-        for line in lines:
-            # 전체 텍스트 섹션 파싱
-            if "## 전체 텍스트" in line:
-                in_full_text = True
-                continue
-            elif "## 화자별 발언" in line:
-                in_full_text = False
-                in_speaker_section = True
-                continue
-            elif in_full_text and line.strip() and not line.startswith("#"):
-                full_transcript += line + " "
-            
-            # 화자별 발언 섹션 파싱
-            elif in_speaker_section and line.strip():
-                speaker_separated += line + "\n"
-        
-        # 파일 형식에 따른 텍스트 선택
+        # 파일 형식에 따른 텍스트 추출
         if file_path.endswith("test_1on1.txt"):
-            # test_1on1.txt는 일반 대화 형식이므로 전체 내용 사용
-            selected_text = raw_content.strip()
+            selected_text = content.strip()
         else:
-            # 기존 전사 파일 형식은 화자별 발언 사용
-            selected_text = speaker_separated.strip() if speaker_separated.strip() else full_transcript.strip()
+            selected_text = _extract_transcript_text(content)
         
         return {
             "status": "success",
             "full_text": selected_text,
             "timestamp": "2025-07-28T16:44:07",
             # 디버깅용 정보
-            "options": {
-                "full_transcript_length": len(full_transcript.strip()),
-                "speaker_separated_length": len(speaker_separated.strip()), 
-                "raw_content_length": len(raw_content)
-            }
+            "options": _get_debug_info(content)
         }
         
     except Exception as e:
         print(f"❌ 파일 로드 오류: {e}")
         return None
+
+def _extract_transcript_text(content: str) -> str:
+    """전사 파일에서 텍스트 추출"""
+    full_transcript = _extract_full_text(content)
+    speaker_separated = _extract_speaker_text(content)
+    
+    # 화자별 발언이 있으면 우선 사용, 없으면 전체 텍스트 사용
+    return speaker_separated.strip() if speaker_separated.strip() else full_transcript.strip()
+
+def _extract_full_text(content: str) -> str:
+    """전체 텍스트 섹션 추출"""
+    lines = content.split('\n')
+    full_transcript = ""
+    in_full_text = False
+    
+    for line in lines:
+        if "## 전체 텍스트" in line:
+            in_full_text = True
+            continue
+        elif "## 화자별 발언" in line:
+            break
+        elif in_full_text and line.strip() and not line.startswith("#"):
+            full_transcript += line + " "
+    
+    return full_transcript
+
+def _extract_speaker_text(content: str) -> str:
+    """화자별 발언 섹션 추출"""
+    lines = content.split('\n')
+    speaker_separated = ""
+    in_speaker_section = False
+    
+    for line in lines:
+        if "## 화자별 발언" in line:
+            in_speaker_section = True
+            continue
+        elif in_speaker_section and line.strip():
+            speaker_separated += line + "\n"
+    
+    return speaker_separated
+
+def _get_debug_info(content: str) -> dict:
+    """디버깅 정보 생성"""
+    full_transcript = _extract_full_text(content)
+    speaker_separated = _extract_speaker_text(content)
+    
+    return {
+        "full_transcript_length": len(full_transcript.strip()),
+        "speaker_separated_length": len(speaker_separated.strip()), 
+        "raw_content_length": len(content)
+    }
 
 
 def print_section(title: str, content: str):
@@ -221,72 +243,77 @@ def main():
     
     choice = input("\n선택 (1 또는 2): ").strip()
     
-    # 실제 전사 파일 경로
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
-    
     if choice == "1":
-        # 기존 LLM 비교 테스트
-        print(f"\n📊 테스트 대상: OpenAI GPT vs Google Vertex AI Gemini")
-        print(f"📄 전사 파일 로드 중: {transcript_file}")
-        
-        stt_data = load_sample_transcript(transcript_file)
-        if not stt_data:
-            print("❌ 전사 파일을 로드할 수 없습니다.")
-            return
-        
-        print(f"✅ 전사 데이터 로드 완료")
-        print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
-        
-        # MultiLLMAnalyzer 초기화
-        print("\n🔧 LLM 모델 초기화 중...")
-        analyzer = MultiLLMAnalyzer()
-        
-        # STT 결과를 두 모델로 분석
-        print("\n🔄 STT 결과 분석 중...")
-        comparison_results = analyzer.analyze_stt_with_comparison(stt_data)
-        
-        # 결과 출력
-        model_comparison = comparison_results.get("model_comparison", {})
-        
-        if "error" in model_comparison:
-            print(f"❌ 오류: {model_comparison['error']}")
-            return
-
-        # 결과 저장
-        save_comparison_results(comparison_results)
-        print("\n✅ LLM 비교 테스트 완료!")
-        
+        _run_llm_comparison_test()
     elif choice == "2":
-        # Q&A 테스트
-        print("\n📋 Q&A 질문별 답변 추출 테스트")
-        
-        # 1on1 미팅 질문들
-        sample_questions = [
-            "2분기 성과 검토와 3분기 계획은?",
-            "어려웠던 점이나 아쉬웠던 부분은?",
-            "극복한 방법",
-            "구체적인 일정이나 마일스톤",
-            "올해 어떤 목표를 세웠는가?",
-            "최근 개인적인 목표와 관심사는?",
-            "궁금한 점이나 건의사항"
-        ]
-        
-        print("📝 테스트 질문 목록:")
-        for i, q in enumerate(sample_questions, 1):
-            print(f"   {i}. {q}")
-        
-        print("\n💡 질문을 수정하려면 코드에서 sample_questions 리스트를 편집하세요.")
-        
-        # Q&A 추출 실행
-        qa_result = test_qa_extraction(sample_questions, transcript_file)
-        
-        if qa_result:
-            print("\n✅ Q&A 추출 테스트 완료!")
-        else:
-            print("\n❌ Q&A 추출 테스트 실패!")
-    
+        _run_qa_extraction_test()
     else:
         print("❌ 잘못된 선택입니다. 1 또는 2를 선택해주세요.")
+
+def _run_llm_comparison_test():
+    """LLM 비교 테스트 실행"""
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    
+    print(f"\n📊 테스트 대상: OpenAI GPT vs Google Vertex AI Gemini")
+    print(f"📄 전사 파일 로드 중: {transcript_file}")
+    
+    stt_data = load_sample_transcript(transcript_file)
+    if not stt_data:
+        print("❌ 전사 파일을 로드할 수 없습니다.")
+        return
+    
+    print(f"✅ 전사 데이터 로드 완료")
+    print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
+    
+    # MultiLLMAnalyzer 초기화
+    print("\n🔧 LLM 모델 초기화 중...")
+    analyzer = MultiLLMAnalyzer()
+    
+    # STT 결과를 두 모델로 분석
+    print("\n🔄 STT 결과 분석 중...")
+    comparison_results = analyzer.analyze_stt_with_comparison(stt_data)
+    
+    # 결과 출력
+    model_comparison = comparison_results.get("model_comparison", {})
+    
+    if "error" in model_comparison:
+        print(f"❌ 오류: {model_comparison['error']}")
+        return
+
+    # 결과 저장
+    save_comparison_results(comparison_results)
+    print("\n✅ LLM 비교 테스트 완료!")
+
+def _run_qa_extraction_test():
+    """Q&A 추출 테스트 실행"""
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    
+    print("\n📋 Q&A 질문별 답변 추출 테스트")
+    
+    # 1on1 미팅 질문들
+    sample_questions = [
+        "2분기 성과 검토와 3분기 계획은?",
+        "어려웠던 점이나 아쉬웠던 부분은?",
+        "극복한 방법",
+        "구체적인 일정이나 마일스톤",
+        "올해 어떤 목표를 세웠는가?",
+        "최근 개인적인 목표와 관심사는?",
+        "궁금한 점이나 건의사항"
+    ]
+    
+    print("📝 테스트 질문 목록:")
+    for i, q in enumerate(sample_questions, 1):
+        print(f"   {i}. {q}")
+    
+    print("\n💡 질문을 수정하려면 코드에서 sample_questions 리스트를 편집하세요.")
+    
+    # Q&A 추출 실행
+    qa_result = test_qa_extraction(sample_questions, transcript_file)
+    
+    if qa_result:
+        print("\n✅ Q&A 추출 테스트 완료!")
+    else:
+        print("\n❌ Q&A 추출 테스트 실패!")
     
 
 

@@ -67,6 +67,7 @@ class AudioRecorder:
             return True
             
         except Exception as e:
+            print(f"ERROR: Failed to start recording: {str(e)}")
             self.is_recording = False
             return False
     
@@ -112,4 +113,5 @@ class AudioRecorder:
             sf.write(filepath, audio_data, self.sample_rate)
             return filepath
         except Exception as e:
+            print(f"ERROR: Failed to save recording file: {str(e)}")
             return None
