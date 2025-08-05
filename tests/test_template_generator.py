@@ -24,7 +24,7 @@ async def main():
         num_questions='Advanced', # Simple, Standard, Advanced
         question_composition=['Multiple choice'], #'Experience/Story-based', 'Growth/Goal-oriented', 'Reflection/Thought-provoking', 'Action/Implementation-focused', 'Relationship/Collaboration', 
         tone_and_manner='Formal', # Formal or Casual
-        creativity=0.1, # 0.0 ~ 1.0
+        creativity=0.0, # 0.0 ~ 1.0
     )
     # ---------------------------------------------- #
 

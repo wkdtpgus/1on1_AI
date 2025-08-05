@@ -34,7 +34,7 @@ class TemplateGeneratorInput(BaseModel):
         'Formal', description="Conversation tone and manner. Formal or Casual."
     )
     creativity: float = Field(
-        0.6, ge=0.2, le=1.0, description="질문 생성의 창의성(Temperature). 0.2 ~ 1.0."
+        0.6, ge=0.0, le=1.0, description="질문 생성의 창의성(Temperature). 0.0 ~ 1.0."
     )
 
 

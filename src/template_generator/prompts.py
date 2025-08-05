@@ -37,6 +37,8 @@ HUMAN_PROMPT = """
     - Relationship/Collaboration: Questions about teamwork and collaboration (e.g., "What aspect of collaboration with colleagues is most helpful?")
     - Growth/Goal-oriented: Questions about personal growth and goal setting (e.g., "What do you want to become like in a year?")
     - Multiple choice: Structured questions with predefined options (e.g., "Rate your current job satisfaction from 1-5")
+       - **[IMPORTANT]** If a specific question type is selected in 'Question Composition', you MUST include at least 3 questions of that type in the generated questions. 
+       - If 'Multiple choice' is selected, you MUST include at least 3 structured questions with predefined options (e.g., rating scales, multiple-choice answers). Example: "On a scale of 1 to 5, how satisfied are you with your current workload?" or "Which of the following areas do you want to focus on next quarter? (a) New feature development, (b) Code refactoring, (c) Learning new technology"
 
 - **Conversation Tone and Manner**: {tone_and_manner}
   - Formal: Very formal and professional, suitable for senior management or performance reviews
