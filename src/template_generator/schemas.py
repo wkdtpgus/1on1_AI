@@ -5,17 +5,37 @@ class TemplateGeneratorInput(BaseModel):
     """
     1on1 템플릿 생성을 위한 입력 데이터 모델
     """
-    target_info: str = Field(..., description="1on1 대상자 정보 (이름, 직무, 담당 역할 등)")
-    purpose: Optional[str] = Field(None, description="1on1 목적/배경 (연간 리뷰, 온보딩, 이슈 대응 등)")
-    problem: Optional[str] = Field(None, description="문제 상황 (퍼포먼스, 협업, 이직징후 등)")
-    
-    # Customization options
-    is_new_1on1: bool = Field(False, description="신규 1on1 여부 (True: 신규, False: 반복)")
-    num_questions: Literal['간결형', '표준형', '심층형'] = Field('표준형', description="생성할 질문 수")
-    question_composition: Literal['오픈형', '객관형', '혼합형'] = Field('혼합형', description="질문 구성 요소")
-    tone_and_manner: Literal['정중하게', '캐주얼하게', '구체적으로'] = Field('정중하게', description="대화 톤앤매너")
-    include_report: bool = Field(False, description="결과 리포트 포함 여부")
-    previous_summary: Optional[str] = Field(None, description="이전 1on1 요약 (반복 1on1의 경우)")
+    # --- 필수 입력 데이터 (누락 가능) ---
+    target_info: Optional[str] = Field(None, description="1on1 대상자에 대한 정보 (팀, 직급, 이름 등)")
+    purpose: Optional[str] = Field(None, description="1on1 미팅의 목적 또는 배경")
+    problem: Optional[str] = Field(None, description="현재 겪고 있는 어려움이나 문제 상황")
+
+    # --- 커스터마이징 옵션 ---
+    dialogue_type: Literal['신규', '반복'] = Field(
+        '반복', description="대화가 신규인지, 반복 대화인지 선택."
+    )
+    use_previous_data: bool = Field(
+        False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부."
+    )
+    previous_summary: Optional[str] = Field(
+        None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보."
+    )
+    num_questions: Literal['간단', '표준', '심화'] = Field(
+        '표준', description="생성할 질문의 개수. 간단(약 3개), 표준(약 5개), 심화(약 7개)."
+    )
+    question_composition: List[Literal[
+        '오픈형', '행동유도형', '객관식', 
+        '성과/목표', '관계/협업', '성장/커리어', '개인/안부'
+    ]] = Field(
+        default_factory=list,
+        description="질문 유형 조합. 예: ['오픈형', '성과/목표']"
+    )
+    tone_and_manner: int = Field(
+        3, ge=0, le=5, description="대화의 톤앤매너. 0(정중) ~ 5(캐주얼)."
+    )
+    creativity: float = Field(
+        0.6, ge=0.2, le=1.0, description="질문 생성의 창의성(Temperature). 0.2 ~ 1.0."
+    )
 
 
 class TemplateGeneratorOutput(BaseModel):
@@ -23,5 +43,5 @@ class TemplateGeneratorOutput(BaseModel):
     생성된 1on1 템플릿 결과 모델
     """
     generated_questions: List[str] = Field(..., description="생성된 1on1 질문 목록")
-    action_items_guidance: str = Field(..., description="액션 아이템 가이드")
+    action_items_guidance: str = Field(..., description="미팅 후 도출할 액션 아이템 가이드")
     suggestion: Optional[str] = Field(None, description="입력이 부족할 경우를 위한 추가 제안 프롬프트")
