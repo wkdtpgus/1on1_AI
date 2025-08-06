@@ -55,23 +55,19 @@ Key agreements and action items from the meeting
 * **[Joint]** Finalize next week's workshop schedule
 
 **Support Needs & Blockers**
-* Issues requiring resolution and support needed
-* (e.g., Data delivery delay from other team → Leader escalation planned)
-
----
+* Clearly label each item as [Support Request] or [Blocker]
+* [Blocker] Data delivery delay from other team → Leader escalation planned
+* [Support Request] Need additional resources for project completion
 
 ## [Detailed Discussion Summary]
 Use a hierarchical numbering system with clear structure and proper indentation:
-- Major categories: 1, 2, 3 (main topics) - no indentation
+- Major categories: Use ### heading format (e.g., ### 1. Performance & Achievements) - no indentation
 - Subcategories: 1.1, 1.2, 2.1, 2.2 (subtopics) - indented under their parent category
 - Details: Bullet points under each subcategory - further indented
-- **Bold keywords** for emphasis on key concepts and themes
+- **Bold keywords** for emphasis on key concepts and themes within content
 
 
 Organize discussion topics into logical categories based on the actual conversation content. Each section should have clear titles and structured content hierarchy
-
-
----
 
 ## Manager Improvement Feedback
 
