@@ -1,6 +1,8 @@
 """
-LLM 모델 비교 테스트 스크립트
-OpenAI GPT vs Google Vertex AI Gemini 성능 및 결과 품질 비교
+통합 LLM 분석 테스트 스크립트
+- OpenAI GPT 및 Gemini 독립 테스트
+- 오디오 처리 및 전사 테스트
+- 통합 분석 테스트
 """
 
 import os
@@ -14,18 +16,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from langchain_google_vertexai import ChatVertexAI
-from langchain.schema import HumanMessage
-from src.models.multi_llm_analyzer import MultiLLMAnalyzer
-from src.models.stt_llm_analysis import MeetingAnalyzer
+from src.models.llm_analysis import OpenAIMeetingAnalyzer, GeminiMeetingAnalyzer
+from src.models.audio_processing import AudioProcessor
 from src.prompts.stt_llm_prompts import COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
-from src.config.config import (
-    GOOGLE_CLOUD_PROJECT,
-    GOOGLE_CLOUD_LOCATION,
-    VERTEX_AI_MODEL,
-    VERTEX_AI_TEMPERATURE,
-    VERTEX_AI_MAX_TOKENS
-)
 
 def load_sample_transcript(file_path: str) -> dict:
     """실제 전사 파일에서 STT 데이터 로드"""
@@ -44,7 +37,8 @@ def load_sample_transcript(file_path: str) -> dict:
         
         return {
             "status": "success",
-            "full_text": selected_text,
+            "transcript": selected_text,  # analyze_stt_result가 기대하는 키 이름
+            "full_text": selected_text,   # 이전 버전 호환성을 위해 유지
             "timestamp": "2025-07-28T16:44:07",
             # 디버깅용 정보
             "options": _get_debug_info(content)
@@ -114,65 +108,63 @@ def print_section(title: str, content: str):
     print(content)
 
 
-def save_comparison_results(results: dict):
-    """비교 결과를 개별 파일로 저장"""
+def save_analysis_result(result: str, model_type: str):
+    """분석 결과를 파일로 저장"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # data 디렉토리가 없으면 생성
     os.makedirs("data", exist_ok=True)
     
-    model_comparison = results.get("model_comparison", {})
+    if model_type == "openai":
+        filename = f"openai_gpt_result_{timestamp}.md"
+        title = "OpenAI GPT 회의 분석 결과"
+    elif model_type == "gemini":
+        filename = f"vertexai_gemini_result_{timestamp}.md"
+        title = "Google Vertex AI Gemini 회의 분석 결과"
+    else:
+        filename = f"analysis_result_{timestamp}.md"
+        title = "회의 분석 결과"
     
-    # OpenAI 결과 파일 저장
-    if "openai_analysis" in model_comparison:
-        openai_filename = f"openai_gpt_result_{timestamp}.md"
-        openai_filepath = os.path.join("data", openai_filename)
-        
-        with open(openai_filepath, "w", encoding="utf-8") as f:
-            f.write("# OpenAI GPT 회의 분석 결과\n\n")
-            f.write(f"생성 시간: {timestamp}\n\n")
-            f.write("---\n\n")
-            f.write(model_comparison["openai_analysis"])
-        
-        print(f"💾 OpenAI GPT 결과 저장: {openai_filepath}")
+    filepath = os.path.join("data", filename)
     
-    # Vertex AI 결과 파일 저장
-    if "vertexai_analysis" in model_comparison:
-        vertexai_filename = f"vertexai_gemini_result_{timestamp}.md"
-        vertexai_filepath = os.path.join("data", vertexai_filename)
-        
-        with open(vertexai_filepath, "w", encoding="utf-8") as f:
-            f.write("# Google Vertex AI Gemini 회의 분석 결과\n\n")
-            f.write(f"생성 시간: {timestamp}\n\n")
-            f.write("---\n\n")
-            f.write(model_comparison["vertexai_analysis"])
-        
-        print(f"💾 Vertex AI Gemini 결과 저장: {vertexai_filepath}")
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(f"# {title}\n\n")
+        f.write(f"생성 시간: {timestamp}\n\n")
+        f.write("---\n\n")
+        f.write(result)
+    
+    print(f"💾 {title} 저장: {filepath}")
 
 
 
 
 def main():
     """메인 테스트 함수"""
-    print("🚀 LLM 테스트 시작")
+    print("🚀 통합 LLM 분석 테스트 시작")
     print("선택하세요:")
-    print("1. LLM 모델 비교 테스트 (OpenAI vs Gemini)")
-    print("2. 통합 1on1 분석 테스트 (요약+피드백+Q&A)")
+    print("1. OpenAI GPT 분석 테스트")
+    print("2. Gemini 분석 테스트 (기본)")
+    print("3. 오디오 처리 및 전사 테스트")
+    print("4. 통합 분석 파이프라인 테스트")
     
-    choice = input("\n선택 (1 또는 2): ").strip()
+    choice = input("\n선택 (1, 2, 3, 또는 4): ").strip()
     
     if choice == "1":
-        _run_llm_comparison_test()
+        _run_openai_test()
     elif choice == "2":
-        _run_comprehensive_analysis_test()
+        _run_gemini_test()
+    elif choice == "3":
+        _run_audio_processing_test()
+    elif choice == "4":
+        _run_integrated_pipeline_test()
     else:
-        print("❌ 잘못된 선택입니다. 1 또는 2를 선택해주세요.")
+        print("❌ 잘못된 선택입니다. 1, 2, 3, 또는 4를 선택해주세요.")
 
-def _run_llm_comparison_test():
-    """LLM 비교 테스트 실행"""
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/[리버스마운틴] 서비스 관련 미팅 - 2025_08_01 08_49 KST - Gemini가 작성한 회의록.txt"
+def _run_openai_test():
+    """OpenAI GPT 분석 테스트 실행"""
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
     
-    print(f"\n📊 테스트 대상: OpenAI GPT vs Google Vertex AI Gemini")
+    print(f"\n📊 OpenAI GPT 분석 테스트")
     print(f"📄 전사 파일 로드 중: {transcript_file}")
     
     stt_data = load_sample_transcript(transcript_file)
@@ -183,62 +175,138 @@ def _run_llm_comparison_test():
     print(f"✅ 전사 데이터 로드 완료")
     print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
     
-    # MultiLLMAnalyzer 초기화
-    print("\n🔧 LLM 모델 초기화 중...")
-    analyzer = MultiLLMAnalyzer()
-    
-    # STT 결과를 두 모델로 분석
-    print("\n🔄 STT 결과 분석 중...")
-    comparison_results = analyzer.analyze_stt_with_comparison(stt_data)
-    
-    # 결과 출력
-    model_comparison = comparison_results.get("model_comparison", {})
-    
-    if "error" in model_comparison:
-        print(f"❌ 오류: {model_comparison['error']}")
+    # OpenAI 분석기 초기화
+    print("\n🔧 OpenAI GPT 모델 초기화 중...")
+    try:
+        analyzer = OpenAIMeetingAnalyzer()
+        print("✅ OpenAI 분석기 초기화 완료")
+    except Exception as e:
+        print(f"❌ OpenAI 분석기 초기화 실패: {e}")
         return
-
-    # 결과 저장
-    save_comparison_results(comparison_results)
-    print("\n✅ LLM 비교 테스트 완료!")
-
-def _run_comprehensive_analysis_test():
-    """통합 1on1 분석 테스트 실행"""
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/[리버스마운틴] 서비스 관련 미팅 - 2025_08_01 08_49 KST - Gemini가 작성한 회의록.txt"
     
-    print("\n🎯 통합 1on1 분석 테스트 (요약+피드백+Q&A)")
-    print(f"📄 전사 파일: {transcript_file}")
+    # STT 결과 분석
+    print("\n🔄 OpenAI GPT로 분석 중...")
+    try:
+        analysis_result = analyzer.analyze_stt_result(stt_data)
+        
+        if "analysis" in analysis_result:
+            result_text = analysis_result["analysis"]["comprehensive_analysis"]
+            print_section("OpenAI GPT 분석 결과", result_text)
+            save_analysis_result(result_text, "openai")
+            print("\n✅ OpenAI GPT 분석 테스트 완료!")
+        else:
+            print("❌ 분석 결과가 없습니다.")
+            
+    except Exception as e:
+        print(f"❌ OpenAI 분석 실패: {e}")
+
+def _run_gemini_test():
+    """Gemini 분석 테스트 실행 (기본)"""
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
     
-    # 전사 파일 로드
+    print(f"\n📊 Gemini 분석 테스트 (기본 모델)")
+    print(f"📄 전사 파일 로드 중: {transcript_file}")
+    
     stt_data = load_sample_transcript(transcript_file)
     if not stt_data:
         print("❌ 전사 파일을 로드할 수 없습니다.")
         return
     
-    transcript = stt_data['full_text']
-    print(f"✅ 전사 데이터 로드 완료 (길이: {len(transcript)}자)")
+    print(f"✅ 전사 데이터 로드 완료")
+    print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
     
-    # MeetingAnalyzer 초기화
+    # Gemini 분석기 초기화
+    print("\n🔧 Gemini 모델 초기화 중...")
     try:
-        analyzer = MeetingAnalyzer()
-        print("✅ MeetingAnalyzer 초기화 완료")
+        analyzer = GeminiMeetingAnalyzer()
+        print("✅ Gemini 분석기 초기화 완료")
     except Exception as e:
-        print(f"❌ 분석기 초기화 실패: {e}")
+        print(f"❌ Gemini 분석기 초기화 실패: {e}")
         return
     
-    # 통합 분석 실행
-    print("\n🔄 통합 1on1 분석 중...")
+    # STT 결과 분석
+    print("\n🔄 Gemini로 분석 중...")
     try:
-        comprehensive_result = analyzer.analyze_comprehensive(transcript)
+        analysis_result = analyzer.analyze_stt_result(stt_data)
         
-        # 결과 출력
-        print_section("1on1 종합 분석 결과", comprehensive_result)
+        if "analysis" in analysis_result:
+            result_text = analysis_result["analysis"]["comprehensive_analysis"]
+            print_section("Gemini 분석 결과", result_text)
+            save_analysis_result(result_text, "gemini")
+            print("\n✅ Gemini 분석 테스트 완료!")
+        else:
+            print("❌ 분석 결과가 없습니다.")
+            
+    except Exception as e:
+        print(f"❌ Gemini 분석 실패: {e}")
+
+def _run_audio_processing_test():
+    """오디오 처리 및 전사 테스트"""
+    print("\n🎵 오디오 처리 및 전사 테스트")
+    
+    # 기존 오디오 파일 테스트
+    audio_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/recording_20250731_175027.wav"
+    
+    if not os.path.exists(audio_file):
+        print(f"❌ 오디오 파일이 존재하지 않습니다: {audio_file}")
+        return
+    
+    print(f"📄 오디오 파일: {audio_file}")
+    
+    # AudioProcessor 초기화
+    try:
+        processor = AudioProcessor()
+        print("✅ AudioProcessor 초기화 완료")
+    except Exception as e:
+        print(f"❌ AudioProcessor 초기화 실패: {e}")
+        return
+    
+    # 기존 파일 전사
+    print("\n🔄 오디오 파일 전사 중...")
+    try:
+        transcription_result = processor.transcribe_existing_file(audio_file)
         
-        # 결과 저장
-        save_comprehensive_result(comprehensive_result, len(transcript))
+        if transcription_result.get("status") == "success":
+            transcript_text = transcription_result.get("transcript", "")
+            print(f"✅ 전사 완료 (길이: {len(transcript_text)}자)")
+            print_section("전사 결과", transcript_text[:500] + "..." if len(transcript_text) > 500 else transcript_text)
+            print("\n✅ 오디오 처리 테스트 완료!")
+        else:
+            print(f"❌ 전사 실패: {transcription_result.get('message', '알 수 없는 오류')}")
+            
+    except Exception as e:
+        print(f"❌ 오디오 처리 실패: {e}")
+
+def _run_integrated_pipeline_test():
+    """통합 분석 파이프라인 테스트"""
+    print("\n🔄 통합 분석 파이프라인 테스트")
+    
+    # 샘플 전사 데이터 로드
+    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    
+    stt_data = load_sample_transcript(transcript_file)
+    if not stt_data:
+        print("❌ 전사 파일을 로드할 수 없습니다.")
+        return
+    
+    print(f"✅ 전사 데이터 로드 완료 (길이: {len(stt_data['full_text'])}자)")
+    
+    # Gemini 분석기로 통합 분석
+    try:
+        analyzer = GeminiMeetingAnalyzer()
+        print("✅ Gemini 분석기 초기화 완료")
         
-        print("\n✅ 통합 1on1 분석 테스트 완료!")
+        print("\n🔄 통합 분석 중...")
+        analysis_result = analyzer.analyze_stt_result(stt_data)
         
+        if "analysis" in analysis_result:
+            result_text = analysis_result["analysis"]["comprehensive_analysis"]
+            print_section("통합 분석 결과", result_text)
+            save_comprehensive_result(result_text, len(stt_data['full_text']))
+            print("\n✅ 통합 분석 파이프라인 테스트 완료!")
+        else:
+            print("❌ 분석 결과가 없습니다.")
+            
     except Exception as e:
         print(f"❌ 통합 분석 실패: {e}")
 
@@ -267,7 +335,9 @@ def save_comprehensive_result(comprehensive_result: str, transcript_length: int)
         f.write(f"- 포함 기능: 회의 요약 + 매니저 피드백 + Q&A 답변\n")
     
     print(f"💾 통합 분석 결과 저장: {result_filepath}")
-    
+
+
+# 이전 함수는 통합 테스트로 대체됨
 
 
 if __name__ == "__main__":
