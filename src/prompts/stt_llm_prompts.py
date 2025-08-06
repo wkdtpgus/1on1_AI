@@ -1,5 +1,3 @@
-# STT→LLM 통합 분석용 프롬프트
-
 COMPREHENSIVE_MEETING_ANALYSIS_PROMPT = """
 You are an expert meeting analyst and executive coach specializing in 1-on-1 meetings. Analyze the following meeting transcript comprehensively and provide a complete analysis in a single response.
 
@@ -96,13 +94,20 @@ Organize discussion topics into logical categories based on the actual conversat
 
 ## Key Q&A Summary
 
-Based on the transcript, generate a summary of the most important questions and answers. Identify key topics discussed and formulate them into a Q&A format, even if not explicitly asked as a question. Provide 3-5 key Q&A pairs.
+**Questions to Answer:**
+{questions}
 
-**Generation Guidelines:**
+**Answer Instructions:**
+- If questions list is provided above, answer each question in order
+- Format your answers as A1:, A2:, A3:, etc. corresponding to each question
+- Extract all answers directly from the meeting transcript
+- If the questions list is empty or None, generate Q&A pairs for the 3-5 most important topics discussed
+
+**Answer Guidelines:**
 - **Content Source:** All answers must be strictly extracted from the transcript.
-- **Question Formulation:** All questions must be based on the content extracted from the transcript.
-- **Answer Synthesis:** Combine relevant information from the transcript to construct a complete answer.
-- **Speaker Attribution:** When possible, attribute the answer to the speaker (e.g., "Attendee A mentioned...").
+- **Answer Format:** Provide clear and comprehensive answers based on the meeting discussion.
+- **No Information Case:** If a question cannot be answered from the transcript, respond with "이 주제는 회의에서 논의되지 않았습니다."
+- **Speaker Attribution:** When possible, attribute the answer to the speaker (e.g., "팀원이 언급하기를...").
 
 **Analysis Principles:**
 - Base analysis only on the content of the transcript.

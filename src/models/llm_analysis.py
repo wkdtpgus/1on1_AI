@@ -58,22 +58,27 @@ class OpenAIMeetingAnalyzer:
         
         # 프롬프트 템플릿 설정
         self.comprehensive_prompt_template = PromptTemplate(
-            input_variables=["transcript"],
+            input_variables=["transcript", "questions"],
             template=COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
         )
     
-    def analyze_comprehensive(self, transcript: str) -> str:
+    def analyze_comprehensive(self, transcript: str, questions: list = None) -> str:
         """
         전사 텍스트를 종합 분석 (요약 + 피드백 + Q&A)
         
         Args:
             transcript: STT로 전사된 회의 내용
+            questions: 답변이 필요한 질문 리스트 (선택적)
             
         Returns:
             str: 종합 분석 결과 (마크다운 형식)
         """
         try:
-            prompt = self.comprehensive_prompt_template.format(transcript=transcript)
+            # 질문 리스트를 그대로 전달 (포맷팅 없이)
+            prompt = self.comprehensive_prompt_template.format(
+                transcript=transcript,
+                questions=questions if questions else []
+            )
             response = self.llm.invoke(prompt)
             return response.content.strip()
             
@@ -143,7 +148,7 @@ class GeminiMeetingAnalyzer:
         
         # 프롬프트 템플릿 설정
         self.comprehensive_prompt_template = PromptTemplate(
-            input_variables=["transcript"],
+            input_variables=["transcript", "questions"],
             template=COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
         )
     
@@ -176,30 +181,36 @@ class GeminiMeetingAnalyzer:
         
         return analysis_input
     
-    def analyze_comprehensive(self, transcript: str) -> str:
+    def analyze_comprehensive(self, transcript: str, questions: list = None) -> str:
         """
         전사 텍스트를 종합 분석 (요약 + 피드백 + Q&A)
         
         Args:
             transcript: STT로 전사된 회의 내용
+            questions: 답변이 필요한 질문 리스트 (선택적)
             
         Returns:
             str: 종합 분석 결과 (마크다운 형식)
         """
         try:
-            prompt = self.comprehensive_prompt_template.format(transcript=transcript)
+            # 질문 리스트를 그대로 전달 (포맷팅 없이)
+            prompt = self.comprehensive_prompt_template.format(
+                transcript=transcript,
+                questions=questions if questions else []
+            )
             response = self.llm.invoke(prompt)
             return response.content.strip()
             
         except Exception as e:
             return f"# 종합 분석 오류\n\n분석 중 오류가 발생했습니다: {str(e)}"
     
-    def analyze_stt_result(self, stt_result: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_stt_result(self, stt_result: Dict[str, Any], questions: list = None) -> Dict[str, Any]:
         """
         간소화된 STT 결과를 받아서 종합 분석
         
         Args:
             stt_result: STTProcessor의 전사 결과 (간단한 형식)
+            questions: 답변이 필요한 질문 리스트 (선택적)
             
         Returns:
             종합 분석 결과가 추가된 전체 결과
@@ -214,14 +225,19 @@ class GeminiMeetingAnalyzer:
                 }
             }
         
-        comprehensive_analysis = self.analyze_comprehensive(transcript_text)
+        # 질문이 stt_result에 포함되어 있으면 우선 사용
+        if not questions and "questions" in stt_result:
+            questions = stt_result.get("questions")
+        
+        comprehensive_analysis = self.analyze_comprehensive(transcript_text, questions)
         
         return {
             **stt_result,
             "analysis": {
                 "comprehensive_analysis": comprehensive_analysis,
                 "analyzed_at": datetime.now().isoformat(),
-                "model_used": VERTEX_AI_MODEL
+                "model_used": VERTEX_AI_MODEL,
+                "questions_answered": questions if questions else []
             }
         }
     

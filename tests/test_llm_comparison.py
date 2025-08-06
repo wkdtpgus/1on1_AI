@@ -278,8 +278,8 @@ def _run_audio_processing_test():
         print(f"❌ 오디오 처리 실패: {e}")
 
 def _run_integrated_pipeline_test():
-    """통합 분석 파이프라인 테스트"""
-    print("\n🔄 통합 분석 파이프라인 테스트")
+    """통합 분석 파이프라인 테스트 - 질문 리스트 기반 분석"""
+    print("\n🔄 통합 분석 파이프라인 테스트 (질문 기반)")
     
     # 샘플 전사 데이터 로드
     transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
@@ -291,19 +291,35 @@ def _run_integrated_pipeline_test():
     
     print(f"✅ 전사 데이터 로드 완료 (길이: {len(stt_data['full_text'])}자)")
     
+    # 고정된 질문 리스트 (여기서 직접 수정)
+    questions = [
+        "이분기에 달성한 주요 성과는 무엇인가요?",
+        "프로젝트 진행 중 어떤 어려움이 있었나요?",
+        "3분기에 계획된 새로운 프로젝트는 무엇인가요?",
+        "개인적인 성장 목표는 무엇인가요?",
+        "어떤 지원이나 리소스가 필요한가요?"
+    ]
+    
+    print(f"\n📝 분석할 질문 {len(questions)}개:")
+    for i, q in enumerate(questions, 1):
+        print(f"  Q{i}: {q}")
+    
     # Gemini 분석기로 통합 분석
     try:
         analyzer = GeminiMeetingAnalyzer()
-        print("✅ Gemini 분석기 초기화 완료")
+        print("\n✅ Gemini 분석기 초기화 완료")
         
-        print("\n🔄 통합 분석 중...")
-        analysis_result = analyzer.analyze_stt_result(stt_data)
+        print("🔄 질문 기반 분석 중...")
+        # 질문 리스트를 무조건 전달
+        analysis_result = analyzer.analyze_stt_result(stt_data, questions=questions)
         
         if "analysis" in analysis_result:
             result_text = analysis_result["analysis"]["comprehensive_analysis"]
             print_section("통합 분석 결과", result_text)
+            print(f"\n✅ {len(questions)}개 질문에 대한 답변 완료")
+            
             save_comprehensive_result(result_text, len(stt_data['full_text']))
-            print("\n✅ 통합 분석 파이프라인 테스트 완료!")
+            print("✅ 통합 분석 파이프라인 테스트 완료!")
         else:
             print("❌ 분석 결과가 없습니다.")
             
