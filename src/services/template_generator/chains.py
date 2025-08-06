@@ -8,6 +8,7 @@ from src.config.config import (
     GEMINI_MODEL,
     MAX_TOKENS,
     GEMINI_TEMPERATURE,
+    GEMINI_THINKING_BUDGET,
 )
 from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
@@ -24,6 +25,7 @@ def get_template_generator_chain():
         model_name=GEMINI_MODEL,
         max_output_tokens=MAX_TOKENS,
         temperature=GEMINI_TEMPERATURE,
+        model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
     )
     # System and Human prompt를 결합한 ChatPromptTemplate 생성
     prompt = ChatPromptTemplate.from_messages([

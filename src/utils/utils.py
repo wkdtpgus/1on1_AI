@@ -27,14 +27,15 @@ def get_user_data_by_name(name: str) -> Optional[Dict[str, Any]]:
 
 def save_questions_to_json(questions: List[str], file_path: str):
     """
-    질문 리스트를 번호가 매겨진 문자열로 변환하여 JSON 파일에 저장합니다.
+    질문 리스트에 번호를 매겨 JSON 파일에 저장합니다.
 
     Args:
         questions (List[str]): 질문 목록.
         file_path (str): 저장할 JSON 파일 경로.
     """
+    numbered_questions = [f"{i+1}. {question}" for i, question in enumerate(questions)]
     output_data = {
-        "questions": questions
+        "questions": numbered_questions
     }
 
     with open(file_path, 'w', encoding='utf-8') as f:
