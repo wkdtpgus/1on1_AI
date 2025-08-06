@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from typing import List, Optional, Union, Literal
 
 class TemplateGeneratorInput(BaseModel):
     """
@@ -44,8 +44,9 @@ class TemplateGeneratorInput(BaseModel):
         default_factory=list,
         description="Question type combination. Example: ['Experience/Story-based', 'Growth/Goal-oriented']"
     )
-    tone_and_manner: Literal['Formal', 'Casual'] = Field(
-        'Formal', description="Conversation tone and manner. Formal or Casual."
+    tone_and_manner: Optional[Literal['Formal', 'Casual']] = Field(
+        'Formal', 
+        description="The desired tone and manner of the questions."
     )
 
 
@@ -53,5 +54,5 @@ class TemplateGeneratorOutput(BaseModel):
     """
     생성된 1on1 템플릿 결과 모델
     """
-    generated_questions: List[str] = Field(..., description="생성된 1on1 질문 목록")
     template_summary: str = Field(..., description="사용자 입력을 바탕으로 한 템플릿 구성 요약")
+    generated_questions: List[str] = Field(..., description="생성된 1on1 질문 목록")

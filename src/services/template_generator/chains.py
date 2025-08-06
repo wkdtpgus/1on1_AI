@@ -2,10 +2,16 @@ from langchain_google_vertexai import ChatVertexAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from src.config.config import GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, GEMINI_MODEL, MAX_TOKENS
+from src.config.config import (
+    GOOGLE_CLOUD_PROJECT,
+    GOOGLE_CLOUD_LOCATION,
+    GEMINI_MODEL,
+    MAX_TOKENS,
+    GEMINI_TEMPERATURE,
+)
 from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
-from src.utils.helpers import get_user_data_by_id
+from src.utils.utils import get_user_data_by_id
 
 
 def get_template_generator_chain():
@@ -17,8 +23,8 @@ def get_template_generator_chain():
         location=GOOGLE_CLOUD_LOCATION,
         model_name=GEMINI_MODEL,
         max_output_tokens=MAX_TOKENS,
+        temperature=GEMINI_TEMPERATURE,
     )
-    
     # System and Human prompt를 결합한 ChatPromptTemplate 생성
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),

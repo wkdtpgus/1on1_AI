@@ -50,8 +50,8 @@ OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
 # Gemini 모델 설정
 GEMINI_MODEL = "gemini-2.5-flash"  # 기본 모델 설정 (gemini-2.5-flash 사용)
-GEMINI_TEMPERATURE = 0.0  # 일관된 결과를 위해 낮은 온도 설정
-# 모델 토큰 제한 (효용성을 위해 유지)
+GEMINI_TEMPERATURE = 0.0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
+# 모델 토큰 제한
 MAX_TOKENS = 10000
 
 # Google / Vertex AI 설정

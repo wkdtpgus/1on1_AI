@@ -1,5 +1,6 @@
+import json
 from src.utils.mock_db import MOCK_USER_DATA
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:
     """
@@ -22,3 +23,19 @@ def get_user_data_by_name(name: str) -> Optional[Dict[str, Any]]:
         if user.get("name") == name:
             return user
     return None
+
+
+def save_questions_to_json(questions: List[str], file_path: str):
+    """
+    질문 리스트를 번호가 매겨진 문자열로 변환하여 JSON 파일에 저장합니다.
+
+    Args:
+        questions (List[str]): 질문 목록.
+        file_path (str): 저장할 JSON 파일 경로.
+    """
+    output_data = {
+        "questions": questions
+    }
+
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(output_data, f, ensure_ascii=False, indent=4)
