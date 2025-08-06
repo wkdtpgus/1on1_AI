@@ -1,8 +1,8 @@
 import asyncio
 import pprint
 
-from src.template_generator.schemas import TemplateGeneratorInput
-from src.template_generator.chains import generate_template
+from src.utils.template_schemas import TemplateGeneratorInput
+from src.services.template_generator.chains import generate_template
 
 async def main():
     """
@@ -12,19 +12,18 @@ async def main():
     
     # --- 테스트할 입력 데이터를 여기에서 수정하세요 --- #
     sample_input = TemplateGeneratorInput(
-        # 기본 정보
-        target_info="김민준, 시니어 백엔드 엔지니어, 최근 입사 3개월 차",
-        purpose="온보딩 과정 중간 점검 및 팀 적응 현황 파악",
-        problem="딱히 없어보이는데, 있는지 궁금함",
-        dialogue_type='New',
+        # 템플릿 필수정보
+        user_id="user_001",
+        purpose=['Satisfaction', 'Growth'],
+        detailed_context="최근 연봉 협상 과정에서 팀원과 의견 차이가 있었습니다. 회사 전체의 보상 테이블 기준을 설명했지만, 팀원은 본인의 기여도에 비해 보상이 부족하다고 느끼는 것 같습니다. 이로 인해 전반적인 업무 만족도나 동기 부여에 영향이 있을까 우려됩니다. 단순히 보상 문제를 넘어, 팀원의 기여를 어떻게 인정하고 있는지, 앞으로의 성장 가능성은 어떻게 보고 있는지에 대해 깊이 있는 대화를 나누고 싶습니다.",
+        dialogue_type='Recurring',
 
-        # 템플릿 커스텀 옵션
-        use_previous_data=False,
-        previous_summary=None,
+        # 템플릿 추가 커스텀
+        use_previous_data=True,
         num_questions='Advanced', # Simple, Standard, Advanced
-        question_composition=['Multiple choice'], #'Experience/Story-based', 'Growth/Goal-oriented', 'Reflection/Thought-provoking', 'Action/Implementation-focused', 'Relationship/Collaboration', 
+        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented'],
         tone_and_manner='Formal', # Formal or Casual
-        creativity=0.0, # 0.0 ~ 1.0
+
     )
     # ---------------------------------------------- #
 

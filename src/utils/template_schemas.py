@@ -5,10 +5,20 @@ class TemplateGeneratorInput(BaseModel):
     """
     1on1 템플릿 생성을 위한 입력 데이터 모델
     """
+    user_id: str = Field(..., description="조회할 사용자의 고유 ID")
     # --- 필수 입력 데이터 (누락 가능) ---
     target_info: Optional[str] = Field(None, description="1on1 대상자에 대한 정보 (팀, 직급, 이름 등)")
-    purpose: Optional[str] = Field(None, description="1on1 미팅의 목적 또는 배경")
-    problem: Optional[str] = Field(None, description="현재 겪고 있는 어려움이나 문제 상황")
+    purpose: List[Literal[
+        'Growth',
+        'Satisfaction',
+        'Relationships',
+        'Junior Development',
+        'Work'
+    ]] = Field(
+        default_factory=list,
+        description="Categories of information the leader wants to gain from the 1on1 (multiple selections possible)"
+    )
+    detailed_context: Optional[str] = Field(None, description="Detailed context, specific situations, or key issues to discuss. The AI will focus on the core problem described here.")
 
     # --- 커스터마이징 옵션 ---
     dialogue_type: Optional[Literal['New', 'Recurring']] = Field(
@@ -24,17 +34,18 @@ class TemplateGeneratorInput(BaseModel):
         None, description="Number of questions to generate. Simple(~3), Standard(~5), Advanced(~7)."
     )
     question_composition: List[Literal[
-        'Experience/Story-based', 'Reflection/Thought-provoking', 'Action/Implementation-focused', 
-        'Relationship/Collaboration', 'Growth/Goal-oriented', 'Multiple choice'
+        'Experience/Story-based', 
+        'Reflection/Thought-provoking', 
+        'Action/Implementation-focused', 
+        'Relationship/Collaboration', 
+        'Growth/Goal-oriented', 
+        'Multiple choice'
     ]] = Field(
         default_factory=list,
         description="Question type combination. Example: ['Experience/Story-based', 'Growth/Goal-oriented']"
     )
     tone_and_manner: Literal['Formal', 'Casual'] = Field(
         'Formal', description="Conversation tone and manner. Formal or Casual."
-    )
-    creativity: float = Field(
-        0.6, ge=0.0, le=1.0, description="질문 생성의 창의성(Temperature). 0.0 ~ 1.0."
     )
 
 
