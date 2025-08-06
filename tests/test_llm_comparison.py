@@ -18,7 +18,7 @@ sys.path.insert(0, str(project_root))
 
 from src.models.llm_analysis import OpenAIMeetingAnalyzer, GeminiMeetingAnalyzer
 from src.models.audio_processing import AudioProcessor
-from src.prompts.stt_llm_prompts import COMPREHENSIVE_MEETING_ANALYSIS_PROMPT
+from src.prompts.stt_llm_prompts import MEETING_ANALYST_SYSTEM_PROMPT, COMPREHENSIVE_ANALYSIS_USER_PROMPT
 
 def load_sample_transcript(file_path: str) -> dict:
     """실제 전사 파일에서 STT 데이터 로드"""
@@ -300,24 +300,17 @@ def _run_integrated_pipeline_test():
         "어떤 지원이나 리소스가 필요한가요?"
     ]
     
-    print(f"\n📝 분석할 질문 {len(questions)}개:")
-    for i, q in enumerate(questions, 1):
-        print(f"  Q{i}: {q}")
-    
+
     # Gemini 분석기로 통합 분석
     try:
         analyzer = GeminiMeetingAnalyzer()
         print("\n✅ Gemini 분석기 초기화 완료")
         
-        print("🔄 질문 기반 분석 중...")
-        # 질문 리스트를 무조건 전달
         analysis_result = analyzer.analyze_stt_result(stt_data, questions=questions)
         
         if "analysis" in analysis_result:
             result_text = analysis_result["analysis"]["comprehensive_analysis"]
-            print_section("통합 분석 결과", result_text)
-            print(f"\n✅ {len(questions)}개 질문에 대한 답변 완료")
-            
+            print_section("통합 분석 결과", result_text)            
             save_comprehensive_result(result_text, len(stt_data['full_text']))
             print("✅ 통합 분석 파이프라인 테스트 완료!")
         else:
@@ -347,7 +340,7 @@ def save_comprehensive_result(comprehensive_result: str, transcript_length: int)
         f.write(f"\n\n---\n\n")
         f.write("## 분석 정보\n")
         f.write(f"- 분석 시간: {timestamp}\n")
-        f.write(f"- 사용 프롬프트: COMPREHENSIVE_MEETING_ANALYSIS_PROMPT\n")
+        f.write(f"- 사용 프롬프트: MEETING_ANALYST_SYSTEM_PROMPT + COMPREHENSIVE_ANALYSIS_USER_PROMPT\n")
         f.write(f"- 포함 기능: 회의 요약 + 매니저 피드백 + Q&A 답변\n")
     
     print(f"💾 통합 분석 결과 저장: {result_filepath}")
