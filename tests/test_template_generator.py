@@ -20,15 +20,15 @@ async def main():
     sample_input = TemplateGeneratorInput(
         # 템플릿 필수정보
         user_id="user_003",
-        purpose=['Junior Development'],
+        purpose=['Junior Development', 'Growth'],
         detailed_context="신규 입사 후 3달차의 성장과 개선을 위한 논의를 진행하고 싶습니다. 어떤 점이 어려운지, 팀 내 관계는 어떠신지, 협업 현황과 성장욕구는 어떤지 알고 싶습니다. 특히 지난 프로젝트에서 표현이 다소 직설적이라는 피드백이 있었는데, 해당 건에 관하여 논의해보고 싶습니다.",
         dialogue_type='Recurring',
 
         # 템플릿 추가 커스텀
         use_previous_data=True,
         num_questions='Advanced', # Simple, Standard, Advanced
-        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented', 'Relationship/Collaboration'],
-        tone_and_manner='Formal', # Formal or Casual
+        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented', 'Relationship/Collaboration','Multiple choice'],
+        tone_and_manner='Casual', # Formal or Casual
 
     )
     

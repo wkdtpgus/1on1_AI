@@ -50,7 +50,7 @@ OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
 # Gemini 모델 설정
 GEMINI_MODEL = "gemini-2.5-flash"  # 기본 모델 설정 (gemini-2.5-flash 사용)
-GEMINI_TEMPERATURE = 0.0
+GEMINI_TEMPERATURE = 0.7
 GEMINI_THINKING_BUDGET = 0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
 # 모델 토큰 제한
 MAX_TOKENS = 10000
