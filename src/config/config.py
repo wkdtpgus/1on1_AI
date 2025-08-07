@@ -25,7 +25,7 @@ ASSEMBLYAI_WORD_BOOST = []  # 특정 단어 인식 강화 (회사명, 전문용�
 ASSEMBLYAI_BOOST_PARAM = "default"  # 부스트 강도 (low, default, high)
 
 # 화자 분리 강화 설정
-ASSEMBLYAI_SPEAKERS_EXPECTED = 2  # 예상 화자 수 (1on1이므로 2명)
+ASSEMBLYAI_SPEAKERS_EXPECTED = 7  # 예상 화자 수 (1on1이므로 2명)
 
 # 화자 분리 최적화를 위한 오디오 설정
 AUDIO_QUALITY_MODE = "high"  # 오디오 품질 모드 (high, standard)
