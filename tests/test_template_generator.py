@@ -1,56 +1,58 @@
 import asyncio
-import pprint
+import asyncio
 import os
+import json
 from datetime import datetime
 
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.services.template_generator.chains import generate_template
+from src.services.summary_generator.chains import generate_summary
 import logging
-from src.utils.utils import save_questions_to_json
 
 async def main():
     """
     템플릿 생성기 체인을 테스트하기 위한 메인 함수입니다.
     """
-    # 간단한 로깅 기본 설정
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     logging.info("1on1 템플릿 생성을 시작합니다...")
-    
+
     # --- 테스트할 입력 데이터를 여기에서 수정하세요 --- #
     sample_input = TemplateGeneratorInput(
-        # 템플릿 필수정보
         user_id="user_002",
-        purpose=['Work','Growth','Satisfaction'],
+        purpose=['Work', 'Growth', 'Satisfaction'],
         detailed_context="어려움이나 문제가 있는지 위주로 묻고 싶습니다.",
         dialogue_type='Recurring',
-
-        # 템플릿 추가 커스텀
         use_previous_data=True,
-        num_questions='Advanced', # Simple, Standard, Advanced
-        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented', 'Relationship/Collaboration','Multiple choice'],
-        tone_and_manner='Formal', # Formal or Casual
-
+        num_questions='Advanced',
+        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented', 'Multiple choice'],
+        tone_and_manner='Formal',
     )
-    
+
     # ---------------------------------------------- #
     try:
-        # 템플릿 생성 함수를 호출합니다.
-        result = await generate_template(sample_input)
+        # 1. 요약과 질문 생성 API 동시 호출
+        logging.info("\n요약 및 질문 생성을 시작합니다...")
+        summary_result, questions_result = await asyncio.gather(
+            generate_summary(sample_input),
+            generate_template(sample_input)
+        )
 
-        logging.info("\n✨ 생성된 1on1 템플릿 결과 ✨")
-        logging.info("="*50)
-        
-        # template_summary 출력 (사용자 요청에 따라 print 사용)
-        print("\n📋 템플릿 구성 요약:")
-        print(result.get('template_summary', '요약 정보 없음'))
-
-        # 생성된 질문을 타임스탬프를 포함한 JSON 파일로 저장
+        # 2. 각 결과를 별도의 JSON 파일로 저장
         output_dir = "data/generated_templates"
+        os.makedirs(output_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file_path = os.path.join(output_dir, f"test_output_{timestamp}.json")
 
-        save_questions_to_json(result.get('generated_questions', []), output_file_path)
-        logging.info(f"\n✅ 질문이 '{output_file_path}' 파일에 성공적으로 저장되었습니다.")
+        # 요약 파일 저장
+        summary_file_path = os.path.join(output_dir, f"summary_{timestamp}.json")
+        with open(summary_file_path, 'w', encoding='utf-8') as f:
+            json.dump(summary_result, f, ensure_ascii=False, indent=4)
+        logging.info(f"\n✅ 요약이 '{summary_file_path}' 파일에 저장되었습니다.")
+
+        # 질문 파일 저장
+        questions_file_path = os.path.join(output_dir, f"questions_{timestamp}.json")
+        with open(questions_file_path, 'w', encoding='utf-8') as f:
+            json.dump(questions_result, f, ensure_ascii=False, indent=4)
+        logging.info(f"✅ 질문이 '{questions_file_path}' 파일에 저장되었습니다.")
 
     except Exception as e:
         logging.error(f"\n❌ 에러가 발생했습니다: {e}")

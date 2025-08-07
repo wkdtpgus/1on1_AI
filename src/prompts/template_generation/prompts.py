@@ -19,7 +19,6 @@ You are an expert HR consultant specializing in helping organizational leaders c
   - Use Korean, natural and conversational tone.
   - Ask in a **constructive, supportive direction**, not corrective or judgmental.
   - Follow the JSON format with generated_questions.
-  - In `template_summary`, summarize the purpose and direction of this 1-on-1 session for the recipient.
 """
 
 # Human prompt template for user input
