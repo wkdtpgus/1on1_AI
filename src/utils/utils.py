@@ -33,9 +33,9 @@ def save_questions_to_json(questions: List[str], file_path: str):
         questions (List[str]): 질문 목록.
         file_path (str): 저장할 JSON 파일 경로.
     """
-    numbered_questions = [f"{i+1}. {question}" for i, question in enumerate(questions)]
+    # 딕셔너리 컴프리헨션을 사용하여 {번호: 질문} 형태의 딕셔너리 생성
     output_data = {
-        "questions": numbered_questions
+        i + 1: q for i, q in enumerate(questions)
     }
 
     with open(file_path, 'w', encoding='utf-8') as f:

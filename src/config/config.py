@@ -51,9 +51,7 @@ OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 # Gemini 모델 설정
 GEMINI_MODEL = "gemini-2.5-flash"  # 기본 모델 설정 (gemini-2.5-flash 사용)
 GEMINI_TEMPERATURE = 0.7
-GEMINI_THINKING_BUDGET = 0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
-# 모델 토큰 제한
-MAX_TOKENS = 10000
+GEMINI_THINKING_BUDGET = 0
 
 # Google / Vertex AI 설정
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -61,3 +59,14 @@ GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
 GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", 'true').lower() == 'true'
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") 
+
+# GPT 모델 설정
+GPT_MODEL = "gpt-4.1-mini"  # 기본 모델 설정
+GPT_TEMPERATURE = 0.0  # 일관된 결과를 위해 낮은 온도 설정
+
+# Claude 모델 설정
+CLAUDE_MODEL = "claude-sonnet-4-20250514"  # 기본 모델 설정
+CLAUDE_TEMPERATURE = 0.0  # 일관된 결과를 위해 낮은 온도 설정
+
+# 모델 토큰 제한
+MAX_TOKENS = 10000

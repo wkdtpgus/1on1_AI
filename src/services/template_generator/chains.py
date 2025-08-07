@@ -1,4 +1,6 @@
 from langchain_google_vertexai import ChatVertexAI
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -9,25 +11,44 @@ from src.config.config import (
     MAX_TOKENS,
     GEMINI_TEMPERATURE,
     GEMINI_THINKING_BUDGET,
+    GPT_MODEL,
+    GPT_TEMPERATURE,
+    CLAUDE_MODEL,
+    CLAUDE_TEMPERATURE,
 )
 from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
 from src.utils.utils import get_user_data_by_id
 
-
-def get_template_generator_chain():
+def get_template_generator_chain(model_name: str):
     """
     1on1 템플릿 생성을 위한 LangChain 체인을 생성합니다.
+    model_name에 따라 적절한 모델 클래스를 선택합니다.
     """
-    model = ChatVertexAI(
-        project=GOOGLE_CLOUD_PROJECT,
-        location=GOOGLE_CLOUD_LOCATION,
-        model_name=GEMINI_MODEL,
-        max_output_tokens=MAX_TOKENS,
-        temperature=GEMINI_TEMPERATURE,
-        model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
-    )
-    # System and Human prompt를 결합한 ChatPromptTemplate 생성
+    if "gpt" in model_name.lower():
+        model = ChatOpenAI(
+            model_name=model_name,
+            max_tokens=MAX_TOKENS,
+            temperature=GPT_TEMPERATURE,
+        )
+    elif "claude" in model_name.lower():
+        model = ChatAnthropic(
+            model=model_name,
+            max_tokens=MAX_TOKENS,
+            temperature=CLAUDE_TEMPERATURE,
+        )
+    elif "gemini" in model_name.lower():
+        model = ChatVertexAI(
+            project=GOOGLE_CLOUD_PROJECT,
+            location=GOOGLE_CLOUD_LOCATION,
+            model_name=model_name,
+            max_output_tokens=MAX_TOKENS,
+            temperature=GEMINI_TEMPERATURE,
+            model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
+        )
+    else:
+        raise ValueError(f"Unsupported model: {model_name}")
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", HUMAN_PROMPT)
@@ -37,12 +58,11 @@ def get_template_generator_chain():
     chain = prompt | model | parser
     return chain
 
-
-async def generate_template(input_data: TemplateGeneratorInput) -> dict:
+async def generate_template(input_data: TemplateGeneratorInput, model_name: str = GEMINI_MODEL) -> dict:
     """
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
     """
-    chain = get_template_generator_chain()
+    chain = get_template_generator_chain(model_name=model_name)
 
     # user_id로 사용자 정보 가져오기
     user_data = get_user_data_by_id(input_data.user_id)
