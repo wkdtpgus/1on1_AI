@@ -134,6 +134,7 @@ dmypy.json
 Thumbs.db
 
 # Project specific
+data/*
 data/raw_audio/*
 data/stt_transcripts/*
 data/generated_templates/*
