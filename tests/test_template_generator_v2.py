@@ -17,9 +17,9 @@ async def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     
     # --- 테스트할 모델을 여기서 선택하세요 --- #
-    model_to_test = GPT_MODEL
+    # model_to_test = GPT_MODEL
     # model_to_test = CLAUDE_MODEL
-    # model_to_test = GEMINI_MODEL  # 기본값
+    model_to_test = GEMINI_MODEL  # 기본값
     # ------------------------------------ #
 
     logging.info(f"[{model_to_test}] 모델로 1on1 템플릿 생성을 시작합니다...")
@@ -27,9 +27,9 @@ async def main():
     # --- 테스트할 입력 데이터를 여기에서 수정하세요 --- #
     sample_input = TemplateGeneratorInput(
         # 템플릿 필수정보
-        user_id="user_002",
-        purpose=['Work','Growth','Satisfaction','Relationships'],
-        detailed_context="보상이 만족스럽지않아 이직을 고민중이라는 소문이 있음. 핵심인재라 잡아야 함.",
+        user_id="user_001",
+        purpose=['Work','Growth','Satisfaction','Relationships','Junior Development'],
+        detailed_context="보상이 만족스럽지않아 이직을 고민중이라고 함. 최근 심한 논쟁이 있었음. 하지만 핵심인재라 잡아야 함.",
         dialogue_type='New',
 
         # 템플릿 추가 커스텀

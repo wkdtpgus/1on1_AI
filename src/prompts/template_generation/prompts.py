@@ -71,8 +71,7 @@ HUMAN_PROMPT = """
           "First question",
           "Second question", 
           "Third question"
-  ],
-  "template_summary": "..."
+  ]
 }}
 """
 
