@@ -160,3 +160,6 @@ __pycache__/
 
 # vertex ai
 thetimecollabo-38646deba34a.json
+
+# .claude
+.claude/
