@@ -38,11 +38,12 @@ def get_template_generator_chain():
     return chain
 
 
+chain = get_template_generator_chain()
+
 async def generate_template(input_data: TemplateGeneratorInput) -> dict:
     """
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
     """
-    chain = get_template_generator_chain()
 
     # user_id로 사용자 정보 가져오기
     user_data = get_user_data_by_id(input_data.user_id)

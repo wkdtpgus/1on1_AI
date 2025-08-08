@@ -5,7 +5,7 @@ Your task is to create a concise summary of the upcoming 1-on-1 meeting's purpos
 Introduce about the meeting's purpose and direction of this 1-on-1 session to the recipient.
 Summarize the key information from the user's input into {language} sentences.
 Focus on the 'why' of the meeting (purpose, context) and 'what' we discuss about.
-Brief it with 3 sentences.
+Brief it with 3 sentences, using recipient friendly language.
 
 IMPORTANT: Refering sensitive problem or issue in very subtle and indirect way by paraphrasing.
 """
