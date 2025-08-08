@@ -120,7 +120,7 @@ Note: If no questions are provided, extract and answer 3-5 key topics from the d
   
   "feedback": [
     {{
-      "title": "Improvement area title",
+      "title": "Specific manager behavior or approach that needs improvement (focus on what the manager did wrong or failed to do, not general joint issues)",
       "situation": "Specific quote from transcript",
       "suggestion": "Alternative action based on best practices",
       "importance": "Why this matters for 1-on-1 effectiveness",
