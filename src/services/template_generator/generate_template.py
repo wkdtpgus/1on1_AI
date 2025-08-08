@@ -45,6 +45,28 @@ async def generate_template(input_data: TemplateGeneratorInput) -> dict:
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
     """
 
+    # 언어별 번역 문자열
+    translations = {
+        'korean': {
+            'title': "과거 대화 요약",
+            'done_label': "완료",
+            'todo_label': "할 일",
+            'pending_label': "진행 중인 액션 아이템",
+            'completed_label': "완료된 액션 아이템",
+            'none_text': "없음 (첫 미팅이거나 기록이 없습니다)",
+            'not_specified': "지정되지 않음"
+        },
+        'english': {
+            'title': "Previous Conversation Summary",
+            'done_label': "Done",
+            'todo_label': "ToDo",
+            'pending_label': "Pending Action Items",
+            'completed_label': "Completed Action Items",
+            'none_text': "None (This is the first meeting or no history exists)",
+            'not_specified': "Not specified"
+        }
+    }
+
     # user_id로 사용자 정보 가져오기
     user_data = get_user_data_by_id(input_data.user_id)
     if not user_data:
@@ -56,6 +78,9 @@ async def generate_template(input_data: TemplateGeneratorInput) -> dict:
     # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
     previous_summary_section = ""
     if input_data.use_previous_data:
+        lang = input_data.language.lower()
+        labels = translations.get(lang, translations['english'])
+
         history = user_data.get("one_on_one_history")
         if history:  # 기록이 있는 경우
             # 가장 최근 미팅 기록을 가져옴 (리스트의 마지막 항목)
@@ -63,37 +88,25 @@ async def generate_template(input_data: TemplateGeneratorInput) -> dict:
             summary = last_meeting.get("summary", {})
             action_items = last_meeting.get("action_items", {})
 
-            is_korean = input_data.language.lower() == 'korean'
-
-            # 언어 설정에 따라 동적으로 제목 설정
-            title = "과거 대화 요약" if is_korean else "Previous Conversation Summary"
-            done_label = "완료" if is_korean else "Done"
-            todo_label = "할 일" if is_korean else "ToDo"
-            pending_label = "진행 중인 액션 아이템" if is_korean else "Pending Action Items"
-            completed_label = "완료된 액션 아이템" if is_korean else "Completed Action Items"
-
-            formatted_summary = f"- **{title}**:\n"
+            formatted_summary = f"- **{labels['title']}**:\n"
             for topic, details in summary.items():
                 formatted_summary += f"  - {topic}:\n"
                 if details.get("Done"): 
-                    formatted_summary += f"    - {done_label}: {', '.join(details['Done'])}\n"
+                    formatted_summary += f"    - {labels['done_label']}: {', '.join(details['Done'])}\n"
                 if details.get("ToDo"): 
-                    formatted_summary += f"    - {todo_label}: {', '.join(details['ToDo'])}\n"
+                    formatted_summary += f"    - {labels['todo_label']}: {', '.join(details['ToDo'])}\n"
 
             if action_items.get("pending"): 
-                formatted_summary += f"- **{pending_label}**: {', '.join(action_items['pending'])}\n"
+                formatted_summary += f"- **{labels['pending_label']}**: {', '.join(action_items['pending'])}\n"
             if action_items.get("completed"): 
-                formatted_summary += f"- **{completed_label}**: {', '.join(action_items['completed'])}\n"
+                formatted_summary += f"- **{labels['completed_label']}**: {', '.join(action_items['completed'])}\n"
 
             previous_summary_section = formatted_summary.strip()
         else:  # 기록이 없는 경우
-            is_korean = input_data.language.lower() == 'korean'
-            title = "과거 대화 요약" if is_korean else "Previous Conversation Summary"
-            none_text = "없음 (첫 미팅이거나 기록이 없습니다)" if is_korean else "None (This is the first meeting or no history exists)"
-            previous_summary_section = f"- **{title}**: {none_text}"
+            previous_summary_section = f"- **{labels['title']}**: {labels['none_text']}"
 
-    # 모든 기본값은 영어로 통일
-    default_value = "Not specified"
+    # 언어 설정에 따른 기본값
+    default_value = labels['not_specified']
 
     # 질문 구성 요소가 선택되었을 경우, 문자열로 변환
     question_composition_str = ", ".join(input_data.question_composition) if input_data.question_composition else default_value
