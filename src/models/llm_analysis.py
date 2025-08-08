@@ -106,9 +106,7 @@ class OpenAIMeetingAnalyzer(BaseMeetingAnalyzer):
 
 
 class GeminiMeetingAnalyzer(BaseMeetingAnalyzer):    
-    def __init__(self, 
-                 google_project: Optional[str] = None,
-                 google_location: Optional[str] = None):
+    def __init__(self, google_project: Optional[str] = None, google_location: Optional[str] = None):
 
         super().__init__()
         

@@ -18,7 +18,11 @@ def load_sample_transcript(file_path: str) -> dict:
             content = f.read()
         
         # 파일 형식에 따른 텍스트 추출
-        if file_path.endswith("test_1on1.txt"):
+        if (file_path.endswith("test_1on1.txt") or 
+            file_path.endswith("test_50min_meeting.txt") or
+            file_path.endswith("test_career_focus.txt") or
+            file_path.endswith("test_performance_issue.txt")):
+            # 테스트 파일들은 전체 내용을 그대로 사용
             selected_text = content.strip()
         elif "Gemini가 작성한 회의록.txt" in file_path:
             # Gemini 회의록 파일은 전체 내용을 그대로 사용
@@ -132,6 +136,73 @@ def save_analysis_result(result: str, model_type: str):
         print(f"⚠️ JSON 파싱 실패: {str(e)[:100]}")
 
 
+def get_test_data_and_questions():
+    """테스트 데이터 파일과 해당 질문 리스트 반환"""
+    test_configs = {
+        "1": {
+            "name": "기본 1-on-1 미팅 (test_1on1.txt)",
+            "file": "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt",
+            "questions": [
+                "이분기에 달성한 주요 성과는 무엇인가요?",
+                "프로젝트 진행 중 어떤 어려움이 있었나요?",
+                "3분기에 계획된 새로운 프로젝트는 무엇인가요?",
+                "개인적인 성장 목표는 무엇인가요?",
+                "어떤 지원이나 리소스가 필요한가요?"
+            ]
+        },
+        "2": {
+            "name": "50분 종합 미팅 (test_50min_meeting.txt)",
+            "file": "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_50min_meeting.txt",
+            "questions": [
+                "이커머스 플랫폼 개선 프로젝트의 현재 진행 상황은 어떤가요?",
+                "새로운 기술 학습(파이썬, 머신러닝)에서 어떤 어려움이 있었나요?",
+                "데이터 분석에서 발견한 흥미로운 인사이트가 있나요?",
+                "업무와 학습 시간의 균형을 어떻게 맞추고 계신가요?",
+                "향후 3개월간의 개인 목표는 무엇인가요?",
+                "커리어 패스에 대한 고민과 방향성은?",
+                "현재 업무 분배에서 조정이 필요한 부분이 있나요?",
+                "팀이나 회사에 대한 개선 제안사항이 있나요?"
+            ]
+        },
+        "3": {
+            "name": "커리어 개발 중심 미팅 (test_career_focus.txt)",
+            "file": "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_career_focus.txt",
+            "questions": [
+                "입사 후 지금까지의 성장을 어떻게 평가하시나요?",
+                "기술 전문성과 매니지먼트 중 어떤 방향으로 발전하고 싶나요?",
+                "5년 후 목표하는 포지션은 무엇인가요?",
+                "PMP나 클라우드 기술 학습은 어떻게 진행되고 있나요?",
+                "리더십 역량 개발을 위한 계획이 있나요?",
+                "현재 회사에서의 성장 가능성을 어떻게 보시나요?",
+                "워라밸과 지속가능한 성장을 위한 고민은 무엇인가요?"
+            ]
+        },
+        "4": {
+            "name": "성과 개선 미팅 (test_performance_issue.txt)",
+            "file": "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_performance_issue.txt",
+            "questions": [
+                "최근 업무 완료가 지연되는 주요 원인은 무엇이라고 생각하나요?",
+                "코드 품질 향상을 위해 어떤 노력을 하고 계신가요?",
+                "팀 회의나 협업에서 더 적극적으로 참여하려면 어떻게 해야 할까요?",
+                "업무 스트레스나 동기부여에서 어려움이 있나요?",
+                "기술적 역량 향상을 위한 학습 계획은?",
+                "1년 후 어떤 개발자가 되고 싶나요?"
+            ]
+        }
+    }
+    
+    print("📋 테스트할 데이터를 선택하세요:")
+    for key, config in test_configs.items():
+        print(f"{key}. {config['name']}")
+    
+    choice = input("\n선택 (1-4): ").strip()
+    
+    if choice in test_configs:
+        return test_configs[choice]
+    else:
+        print("❌ 잘못된 선택입니다. 기본값으로 test_1on1.txt를 사용합니다.")
+        return test_configs["1"]
+
 def main():
     """메인 테스트 함수"""
     print("🚀 통합 LLM 분석 테스트 시작 (JSON 출력)")
@@ -156,9 +227,13 @@ def main():
 
 def _run_openai_test():
     """OpenAI GPT 분석 테스트 실행 (JSON 전용)"""
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    # 테스트 데이터 선택
+    test_config = get_test_data_and_questions()
+    transcript_file = test_config["file"]
+    questions = test_config["questions"]
     
     print(f"\n📊 OpenAI GPT 분석 테스트 (JSON)")
+    print(f"📄 선택된 데이터: {test_config['name']}")
     print(f"📄 전사 파일 로드 중: {transcript_file}")
     
     stt_data = load_sample_transcript(transcript_file)
@@ -168,6 +243,7 @@ def _run_openai_test():
     
     print(f"✅ 전사 데이터 로드 완료")
     print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
+    print(f"   - 사용할 질문 개수: {len(questions)}개")
     
     # OpenAI 분석기 초기화
     print("\n🔧 OpenAI GPT 모델 초기화 중...")
@@ -181,22 +257,13 @@ def _run_openai_test():
     # STT 결과 분석 (JSON)
     print(f"\n🔄 OpenAI GPT로 분석 중 (JSON 형식)...")
     try:
-        # 기본 질문 추가
-        default_questions = [
-            "이분기에 달성한 주요 성과는 무엇인가요?",
-            "프로젝트 진행 중 어떤 어려움이 있었나요?",
-            "3분기에 계획된 새로운 프로젝트는 무엇인가요?",
-            "개인적인 성장 목표는 무엇인가요?",
-            "어떤 지원이나 리소스가 필요한가요?"
-        ]
-        
         # STT 데이터에서 전사 텍스트 추출
         transcript_text = stt_data.get("transcript", "")
         if not transcript_text:
             print("❌ 전사 내용이 없습니다.")
             return
         
-        result_text = analyzer.analyze_comprehensive(transcript_text, questions=default_questions)
+        result_text = analyzer.analyze_comprehensive(transcript_text, questions=questions)
         
         print_section("OpenAI GPT 분석 결과 (JSON)", result_text[:500] + "..." if len(result_text) > 500 else result_text)
         save_analysis_result(result_text, "openai")
@@ -207,9 +274,13 @@ def _run_openai_test():
 
 def _run_gemini_test():
     """Gemini 분석 테스트 실행 (JSON 전용)"""
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    # 테스트 데이터 선택
+    test_config = get_test_data_and_questions()
+    transcript_file = test_config["file"]
+    questions = test_config["questions"]
     
     print(f"\n📊 Gemini 분석 테스트 (JSON)")
+    print(f"📄 선택된 데이터: {test_config['name']}")
     print(f"📄 전사 파일 로드 중: {transcript_file}")
     
     stt_data = load_sample_transcript(transcript_file)
@@ -219,6 +290,7 @@ def _run_gemini_test():
     
     print(f"✅ 전사 데이터 로드 완료")
     print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
+    print(f"   - 사용할 질문 개수: {len(questions)}개")
     
     # Gemini 분석기 초기화
     print("\n🔧 Gemini 모델 초기화 중...")
@@ -232,22 +304,13 @@ def _run_gemini_test():
     # STT 결과 분석 (JSON)
     print(f"\n🔄 Gemini로 분석 중 (JSON 형식)...")
     try:
-        # 기본 질문 추가
-        default_questions = [
-            "이분기에 달성한 주요 성과는 무엇인가요?",
-            "프로젝트 진행 중 어떤 어려움이 있었나요?",
-            "3분기에 계획된 새로운 프로젝트는 무엇인가요?",
-            "개인적인 성장 목표는 무엇인가요?",
-            "어떤 지원이나 리소스가 필요한가요?"
-        ]
-        
         # STT 데이터에서 전사 텍스트 추출
         transcript_text = stt_data.get("transcript", "")
         if not transcript_text:
             print("❌ 전사 내용이 없습니다.")
             return
         
-        result_text = analyzer.analyze_comprehensive(transcript_text, questions=default_questions)
+        result_text = analyzer.analyze_comprehensive(transcript_text, questions=questions)
         
         print_section("Gemini 분석 결과 (JSON)", result_text[:500] + "..." if len(result_text) > 500 else result_text)
         save_analysis_result(result_text, "gemini")
@@ -297,8 +360,12 @@ def _run_integrated_pipeline_test():
     """통합 분석 파이프라인 테스트 - 질문 리스트 기반 분석 (JSON 전용)"""
     print("\n🔄 통합 분석 파이프라인 테스트 (JSON 출력)")
     
-    # 샘플 전사 데이터 로드
-    transcript_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/test_1on1.txt"
+    # 테스트 데이터 선택
+    test_config = get_test_data_and_questions()
+    transcript_file = test_config["file"]
+    questions = test_config["questions"]
+    
+    print(f"📄 선택된 데이터: {test_config['name']}")
     
     stt_data = load_sample_transcript(transcript_file)
     if not stt_data:
@@ -306,15 +373,7 @@ def _run_integrated_pipeline_test():
         return
     
     print(f"✅ 전사 데이터 로드 완료 (길이: {len(stt_data['full_text'])}자)")
-    
-    # 고정된 질문 리스트
-    questions = [
-        "이분기에 달성한 주요 성과는 무엇인가요?",
-        "프로젝트 진행 중 어떤 어려움이 있었나요?",
-        "3분기에 계획된 새로운 프로젝트는 무엇인가요?",
-        "개인적인 성장 목표는 무엇인가요?",
-        "어떤 지원이나 리소스가 필요한가요?"
-    ]
+    print(f"   - 사용할 질문 개수: {len(questions)}개")
 
     # Gemini 분석기로 통합 분석
     try:
