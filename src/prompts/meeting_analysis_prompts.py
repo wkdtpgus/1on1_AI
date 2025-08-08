@@ -17,10 +17,12 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 # 1-on-1 Meeting Best Practices
 
 ## Manager Should AVOID:
-• Dominating conversation (violating 70:30 rule - employee should speak 70%, manager 30%)
+• Dominating conversation (manager speaking much more than the 70:30 guideline where employee should speak more)
 • Focusing only on work status updates
-• Lacking clear purpose or structure
-• Giving hasty feedback without evidence
+• Providing hasty feedback without sufficient evidence
+  - presenting subjective interpretations/judgments without evidence
+  - Excessive generalizations like "always" or "never"
+
 
 ## Manager Should STRIVE FOR:
 • Creating safe environment (first 5 minutes for ice-breaking and relationship building)
@@ -28,10 +30,10 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 • Covering diverse topics: work, growth, well-being, blockers, relationships, career development
 • Facilitating two-way feedback exchange
 • Setting clear action items with ownership and deadlines
-• Effective feedback approach:
-  - Start with positive feedback
-  - Use Situation→Impact→Suggestion format for improvements
-  - Guide team members to self-discover improvements
+• Effective feedback delivery approach:
+  - Start with positive feedback first
+  - Use Situation→Impact→Suggestion format for improvement feedback
+  - Guide team members to self-discover improvements through coaching questions
 • Last 5 minutes wrap-up:
   - Reflect on meeting effectiveness
   - Confirm action items for next meeting
@@ -65,8 +67,6 @@ Use hierarchical structure:
 • Details: Bullet points with proper indentation
 • Bold keywords for emphasis
 
-## Manager Improvement Feedback:
-Provide exactly 3 improvement areas:
 
 ### 1. [Improvement Area]
 **Situation**: [Specific quote from transcript]
@@ -110,6 +110,9 @@ Note: If no questions are provided, extract and answer 3-5 key topics from the d
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
+• For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness
+• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing feedback and positive_aspects
+
 
 # Required JSON Output Format:
 {{
