@@ -2,6 +2,9 @@ MOCK_USER_DATA = [
     {
         "user_id": "user_001",
         "name": "김수연",
+        "team": "프로덕트 디자인팀",
+        "role": "UX 디자이너",
+        "annual": 4,
         "one_on_one_history": [
             {
                 "meeting_id": "mtg_001",
@@ -32,6 +35,9 @@ MOCK_USER_DATA = [
     {
         "user_id": "user_002",
         "name": "박준호",
+        "team": "데이터 엔지니어링팀",
+        "role": "데이터 엔지니어",
+        "annual": 3,
         "one_on_one_history": [
             {
                 "meeting_id": "mtg_002",
@@ -56,11 +62,17 @@ MOCK_USER_DATA = [
     {
         "user_id": "user_003",
         "name": "장세현",
+        "team": "AI 개발팀",
+        "role": "AI 개발자",
+        "annual": 1,
         "one_on_one_history": []
     },
     {
         "user_id": "user_004",
         "name": "John Doe",
+        "team": "Software Engineering Team",
+        "role": "Senior Software Engineer",
+        "annual": 5,
         "one_on_one_history": [
             {
                 "meeting_id": "mtg_003",

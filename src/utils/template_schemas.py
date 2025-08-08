@@ -44,9 +44,15 @@ class TemplateGeneratorInput(BaseModel):
         default_factory=list,
         description="Question type combination. Example: ['Experience/Story-based', 'Growth/Goal-oriented']"
     )
-    tone_and_manner: Optional[Literal['Formal', 'Casual']] = Field(
-        'Formal', 
-        description="The desired tone and manner of the questions."
+    tone_and_manner: str = Field(
+        ...,
+        description="The desired tone and manner of the questions.",
+        example='Formal'
+    )
+    language: str = Field(
+        ...,
+        description="The language for the generated questions.",
+        example='English'
     )
 
 

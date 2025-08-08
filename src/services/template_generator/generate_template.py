@@ -50,9 +50,7 @@ async def generate_template(input_data: TemplateGeneratorInput) -> dict:
         raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
     # target_info가 비어있으면 DB에서 조회한 정보로 채워주기
-    target_info = input_data.target_info
-    if not target_info:
-        target_info = f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
+    target_info = input_data.target_info #or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
 
     # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
     previous_summary_section = ""
@@ -64,33 +62,47 @@ async def generate_template(input_data: TemplateGeneratorInput) -> dict:
             summary = last_meeting.get("summary", {})
             action_items = last_meeting.get("action_items", {})
 
-            # 요약 및 액션 아이템을 한국어로 포맷팅
-            formatted_summary = "- **이전 대화 요약**:\n"
+            is_korean = input_data.language.lower() == 'korean'
+
+            # 언어 설정에 따라 동적으로 제목 설정
+            title = "과거 대화 요약" if is_korean else "Previous Conversation Summary"
+            done_label = "완료" if is_korean else "Done"
+            todo_label = "할 일" if is_korean else "ToDo"
+            pending_label = "진행 중인 액션 아이템" if is_korean else "Pending Action Items"
+            completed_label = "완료된 액션 아이템" if is_korean else "Completed Action Items"
+
+            formatted_summary = f"- **{title}**:\n"
             for topic, details in summary.items():
                 formatted_summary += f"  - {topic}:\n"
-                if details.get("Done"):
-                    formatted_summary += f"    - Done: {', '.join(details['Done'])}\n"
-                if details.get("ToDo"):
-                    formatted_summary += f"    - ToDo: {', '.join(details['ToDo'])}\n"
+                if details.get("Done"): 
+                    formatted_summary += f"    - {done_label}: {', '.join(details['Done'])}\n"
+                if details.get("ToDo"): 
+                    formatted_summary += f"    - {todo_label}: {', '.join(details['ToDo'])}\n"
 
-            if action_items.get("pending"):
-                formatted_summary += "- **미완료된 Action Items**: " + ", ".join(action_items["pending"]) + "\n"
-            if action_items.get("completed"):
-                formatted_summary += "- **완료된 Action Items**: " + ", ".join(action_items["completed"]) + "\n"
+            if action_items.get("pending"): 
+                formatted_summary += f"- **{pending_label}**: {', '.join(action_items['pending'])}\n"
+            if action_items.get("completed"): 
+                formatted_summary += f"- **{completed_label}**: {', '.join(action_items['completed'])}\n"
 
             previous_summary_section = formatted_summary.strip()
         else:  # 기록이 없는 경우
-            previous_summary_section = "- **이전 대화 요약**: 없음 (첫 번째 미팅이거나 이전 기록이 없음)"
+            is_korean = input_data.language.lower() == 'korean'
+            title = "과거 대화 요약" if is_korean else "Previous Conversation Summary"
+            none_text = "없음 (첫 미팅이거나 기록이 없습니다)" if is_korean else "None (This is the first meeting or no history exists)"
+            previous_summary_section = f"- **{title}**: {none_text}"
+
+    # 모든 기본값은 영어로 통일
+    default_value = "Not specified"
 
     # 질문 구성 요소가 선택되었을 경우, 문자열로 변환
-    question_composition_str = ", ".join(input_data.question_composition) if input_data.question_composition else "지정되지 않음"
+    question_composition_str = ", ".join(input_data.question_composition) if input_data.question_composition else default_value
 
     # 프롬프트에 전달할 변수 준비
-    def safe_value(value, default="지정되지 않음"):
+    def safe_value(value, default=default_value):
         return value if value is not None else default
     
     # purpose 리스트를 문자열로 변환
-    purpose_str = ", ".join(input_data.purpose) if input_data.purpose else "지정되지 않음"
+    purpose_str = ", ".join(input_data.purpose) if input_data.purpose else default_value
 
     prompt_variables = {
         "target_info": target_info,
@@ -100,7 +112,8 @@ async def generate_template(input_data: TemplateGeneratorInput) -> dict:
         "previous_summary_section": previous_summary_section,
         "num_questions": safe_value(input_data.num_questions),
         "question_composition": question_composition_str,
-        "tone_and_manner": safe_value(input_data.tone_and_manner)
+        "tone_and_manner": safe_value(input_data.tone_and_manner),
+        "language": safe_value(input_data.language)
     }
 
     # 체인 실행

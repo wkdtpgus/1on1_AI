@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List
 
 def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:
     """
-    user_id로 MOCK_USER_DATA에서 사용자 데이터를 찾습니다.
+    Finds user data in MOCK_USER_DATA by user_id.
     """
     if not user_id:
         return None
@@ -15,7 +15,7 @@ def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:
 
 def get_user_data_by_name(name: str) -> Optional[Dict[str, Any]]:
     """
-    이름으로 MOCK_USER_DATA에서 사용자 데이터를 찾습니다.
+    Finds user data in MOCK_USER_DATA by name.
     """
     if not name:
         return None
@@ -27,11 +27,11 @@ def get_user_data_by_name(name: str) -> Optional[Dict[str, Any]]:
 
 def save_questions_to_json(questions: List[str], file_path: str):
     """
-    질문 리스트를 번호가 매겨진 딕셔너리 형태로 JSON 파일에 저장합니다.
+    Saves a list of questions to a JSON file as a numbered dictionary.
 
     Args:
-        questions (List[str]): 질문 목록.
-        file_path (str): 저장할 JSON 파일 경로.
+        questions (List[str]): A list of questions.
+        file_path (str): The path to the JSON file to be saved.
     """
     output_data = {str(i + 1): question for i, question in enumerate(questions)}
 
