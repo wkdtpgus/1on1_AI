@@ -61,8 +61,8 @@ GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", 'true').lower
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") 
 
 # GPT 모델 설정
-GPT_MODEL = "gpt-4.1-mini"  # 기본 모델 설정
-GPT_TEMPERATURE = 0.0  # 일관된 결과를 위해 낮은 온도 설정
+GPT_MODEL = "gpt-5-mini"  # 기본 모델 설정
+GPT_TEMPERATURE = 1.0  # 현재 모델이 0.0을 지원하지 않아 기본값 1.0으로 설정
 
 # Claude 모델 설정
 CLAUDE_MODEL = "claude-sonnet-4-20250514"  # 기본 모델 설정

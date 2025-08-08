@@ -17,9 +17,9 @@ async def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     
     # --- 테스트할 모델을 여기서 선택하세요 --- #
-    # model_to_test = GPT_MODEL
+    model_to_test = GPT_MODEL
     # model_to_test = CLAUDE_MODEL
-    model_to_test = GEMINI_MODEL  # 기본값
+    # model_to_test = GEMINI_MODEL  # 기본값
     # ------------------------------------ #
 
     logging.info(f"[{model_to_test}] 모델로 1on1 템플릿 생성을 시작합니다...")

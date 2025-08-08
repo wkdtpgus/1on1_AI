@@ -28,7 +28,8 @@ def get_template_generator_chain(model_name: str):
     if "gpt" in model_name.lower():
         model = ChatOpenAI(
             model_name=model_name,
-            max_tokens=MAX_TOKENS,
+            # max_tokens = MAX_TOKENS,
+            max_completion_tokens=MAX_TOKENS,
             temperature=GPT_TEMPERATURE,
         )
     elif "claude" in model_name.lower():
