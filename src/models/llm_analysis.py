@@ -64,6 +64,10 @@ class BaseMeetingAnalyzer(ABC):
                 "questions": questions_text
             })
             
+            # None 체크 추가
+            if result is None:
+                raise ValueError("LLM returned None - possibly due to schema validation failure")
+            
             # JSON 형식으로 반환
             return result.model_dump_json(indent=2)
             
