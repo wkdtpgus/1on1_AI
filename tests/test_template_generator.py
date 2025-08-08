@@ -5,8 +5,8 @@ import json
 from datetime import datetime
 
 from src.utils.template_schemas import TemplateGeneratorInput
-from src.services.template_generator.chains import generate_template
-from src.services.summary_generator.chains import generate_summary
+from src.services.template_generator.generate_template import generate_template
+from src.services.template_generator.generate_summary import generate_summary
 import logging
 
 async def main():

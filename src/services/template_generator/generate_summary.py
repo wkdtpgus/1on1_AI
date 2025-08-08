@@ -11,7 +11,7 @@ from src.config.config import (
     GEMINI_THINKING_BUDGET,
 )
 from src.prompts.summary_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from src.utils.summary_schemas import SummaryGeneratorOutput
+from src.utils.template_schemas import SummaryGeneratorOutput
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
