@@ -1,7 +1,7 @@
 MOCK_USER_DATA = [
     {
         "user_id": "user_001",
-        "name": "김수연",
+        "name": "(가상)김수연",
         "one_on_one_history": [
             {
                 "meeting_id": "mtg_001",
@@ -31,7 +31,7 @@ MOCK_USER_DATA = [
     },
     {
         "user_id": "user_002",
-        "name": "박준호",
+        "name": "(가상)박준호",
         "one_on_one_history": [
             {
                 "meeting_id": "mtg_002",
@@ -55,12 +55,7 @@ MOCK_USER_DATA = [
     },
     {
         "user_id": "user_003",
-        "name": "장세현",
-        "one_on_one_history": []
-    },
-    {
-        "user_id": "user_004",
-        "name": "John Doe",
+        "name": "(가상)John Doe",
         "one_on_one_history": [
             {
                 "meeting_id": "mtg_003",
@@ -87,5 +82,55 @@ MOCK_USER_DATA = [
                 }
             }
         ]
+    },
+    {
+        "user_id": "user_004",
+        "name": "장세현",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_005",
+        "name": "김지현",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_006",
+        "name": "김동영",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_007",
+        "name": "김준희",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_008",
+        "name": "지유진",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_009",
+        "name": "이민희",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_010",
+        "name": "박요한",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_011",
+        "name": "최재준",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_012",
+        "name": "김경민",
+        "one_on_one_history": []
+    },
+    {
+        "user_id": "user_013",
+        "name": "양현빈",
+        "one_on_one_history": []
     }
 ]
