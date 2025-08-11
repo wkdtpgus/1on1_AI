@@ -1,6 +1,9 @@
 import streamlit as st
 import asyncio
+import json
+import re
 from src.services.template_generator.generate_template import generate_template
+from src.services.template_generator.generate_template_streaming import generate_template_streaming
 from src.services.template_generator.generate_summary import generate_summary
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.mock_db import MOCK_USER_DATA
@@ -112,7 +115,6 @@ if submit_button:
     if target_info_details:
         target_info += f" ({target_info_details})"
 
-    # Convert selected Korean options back to English values for the backend
     purpose_en = [PURPOSE_MAP[p] for p in purpose_kr]
     num_questions_en = NUM_QUESTIONS_MAP[num_questions_kr]
     question_composition_en = [QUESTION_COMPOSITION_MAP[name]['en'] for name, selected in question_composition_selections.items() if selected]
@@ -130,35 +132,66 @@ if submit_button:
         language=language
     )
 
-    with st.spinner('Generating your 1-on-1 template...'):
-        try:
-            # Run async functions concurrently
-            async def generate_all():
-                results = await asyncio.gather(
-                    generate_summary(input_data),
-                    generate_template(input_data)
-                )
-                return results
+    try:
+        with col2:
+            with st.spinner('1on1 템플릿 생성중...'):
+                # 1. Generate Summary (Sync)
+                summary_result = asyncio.run(generate_summary(input_data))
+                with summary_placeholder.container():
+                    st.subheader("템플릿 요약")
+                    st.info(summary_result.get('template_summary', 'No summary generated.'))
 
-            summary_result, template_result = asyncio.run(generate_all())
+                # 2. Generate Questions (Streaming)
+                with questions_placeholder.container():
+                    st.subheader("생성된 질문")
+                    
+                    async def stream_and_format_questions(input_data):
+                        full_response = ""
+                        buffer = ""
+                        question_index = 1
+                        in_questions_array = False
 
-            # Display results
-            with summary_placeholder.container():
-                st.subheader("템플릿 요약")
-                st.info(summary_result.get('template_summary', 'No summary generated.'))
-            
-            with questions_placeholder.container():
-                st.subheader("생성된 질문")
-                for i, q in enumerate(template_result.get('generated_questions', [])):
-                    if isinstance(q, dict):
-                        question_text = q.get('question', 'N/A')
-                        st.markdown(f"**{i+1}. {question_text}**")
-                        if q.get('type') == 'multiple_choice' and 'options' in q:
-                            for option in q['options']:
-                                st.markdown(f"    - {option}")
-                        st.write("")
-                    else:
-                        st.markdown(f"**{i+1}. {q}**")
+                        async for chunk in generate_template_streaming(input_data):
+                            full_response += chunk
+                            buffer += chunk
 
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+                            # Find the start of the questions array
+                            if not in_questions_array and '"generated_questions": [' in buffer:
+                                in_questions_array = True
+                                # Clear buffer up to the start of the array content
+                                buffer = buffer.split('"generated_questions": [', 1)[1]
+
+                            if in_questions_array:
+                                while True:
+                                    # This regex correctly handles escaped quotes and other characters within a JSON string.
+                                    match = re.search(r'"((?:\\.|[^"\\])*)"', buffer)
+                                    if match:
+                                        # The raw content is in group 1.
+                                        question_raw = match.group(1)
+                                        
+                                        # Un-escape the string content for display.
+                                        try:
+                                            # Use json.loads to properly handle all JSON string escapes (\n, \t, \", etc.)
+                                            # We wrap it in quotes to make it a valid JSON string for the parser.
+                                            question = json.loads(f'"{question_raw}"')
+                                        except json.JSONDecodeError:
+                                            # Fallback for any unexpected format, though the regex should prevent this.
+                                            question = question_raw.replace('\\n', '\n').replace('\"', '"')
+
+                                        # Format for Streamlit markdown.
+                                        formatted_question = question.replace('\n', '  \n')
+                                        yield f"**{question_index}. {formatted_question}**\n\n"
+                                        question_index += 1
+                                        
+                                        # Clean up buffer: move past the processed question and any trailing comma/whitespace.
+                                        buffer = buffer[match.end():].lstrip()
+                                        if buffer.startswith(','):
+                                            buffer = buffer[1:]
+                                    else:
+                                        # No complete question found in the buffer, wait for more chunks.
+                                        break
+
+                    st.write_stream(stream_and_format_questions(input_data))
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")

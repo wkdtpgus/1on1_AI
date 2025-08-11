@@ -1,6 +1,8 @@
-from langchain_google_vertexai import ChatVertexAI
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+from typing import AsyncIterator
+
+import vertexai
+from langsmith import traceable
+from vertexai.generative_models import GenerativeModel, Part
 
 from src.config.config import (
     GOOGLE_CLOUD_PROJECT,
@@ -8,40 +10,20 @@ from src.config.config import (
     GEMINI_MODEL,
     MAX_TOKENS,
     GEMINI_TEMPERATURE,
-    GEMINI_THINKING_BUDGET,
 )
-from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from typing import Dict
-from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
+from src.prompts.template_generation.prompts import HUMAN_PROMPT, SYSTEM_PROMPT
+from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
+# Vertex AI 초기화
+vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=GOOGLE_CLOUD_LOCATION)
 
-def get_template_generator_chain():
-    """
-    1on1 템플릿 생성을 위한 LangChain 체인을 생성합니다.
-    """
-    model = ChatVertexAI(
-        project=GOOGLE_CLOUD_PROJECT,
-        location=GOOGLE_CLOUD_LOCATION,
-        model_name=GEMINI_MODEL,
-        max_output_tokens=MAX_TOKENS,
-        temperature=GEMINI_TEMPERATURE,
-        model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
-    )
-    # System and Human prompt를 결합한 ChatPromptTemplate 생성
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        ("human", HUMAN_PROMPT)
-    ])
-    
-    parser = JsonOutputParser(pydantic_object=TemplateGeneratorOutput)
-    chain = prompt | model | parser
-    return chain
+# 스트리밍을 위한 모델 직접 초기화
+streaming_model = GenerativeModel(GEMINI_MODEL)
 
 
-chain = get_template_generator_chain()
-
-async def generate_template(input_data: TemplateGeneratorInput) -> Dict:
+@traceable(run_type="llm", name="generate_template_streaming")
+async def generate_template_streaming(input_data: TemplateGeneratorInput) -> AsyncIterator[str]:
     """
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
     """
@@ -104,7 +86,26 @@ async def generate_template(input_data: TemplateGeneratorInput) -> Dict:
         "language": safe_value(input_data.language)
     }
 
-    # 체인 실행
-    response = await chain.ainvoke(prompt_variables)
-    return response
+    # Google SDK에 맞는 형식으로 프롬프트 구성
+    formatted_human_prompt = HUMAN_PROMPT.format(**prompt_variables)
+    contents = [Part.from_text(formatted_human_prompt)]
 
+    # 생성 설정
+    generation_config = {
+        "max_output_tokens": MAX_TOKENS,
+        "temperature": GEMINI_TEMPERATURE,
+    }
+
+    # 모델의 generate_content_async를 직접 호출하여 스트리밍
+    responses = streaming_model.generate_content(
+        contents,
+        generation_config=generation_config,
+        stream=True,
+    )
+
+    for response in responses:
+        try:
+            yield response.text
+        except Exception:
+            # 일부 청크에 텍스트가 없을 수 있으므로 오류 발생 시 무시
+            pass
