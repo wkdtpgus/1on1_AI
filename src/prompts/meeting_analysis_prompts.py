@@ -40,9 +40,12 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 
 # Output Structure Requirements
 
+## Title (for JSON title field):
+One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검")
+
 ## Quick Review Structure (for JSON quick_review field):
 **Key Takeaways**
-• Main agreements and action items
+• core content of the meeting
 
 **Decisions Made**
 • Joint decisions from the meeting
@@ -132,6 +135,8 @@ Note: If no questions are provided, extract and answer 3-5 key topics from the d
 
 # Required JSON Output Format:
 {{
+  "title": "One-line summary of the entire meeting (in Korean, e.g., '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')",
+  
   "quick_review": {{
     "key_takeaways": "core content of the meeting (in Korean)",
     "decisions_made": "Joint decisions from the meeting (in Korean)",

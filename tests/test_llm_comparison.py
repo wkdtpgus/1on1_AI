@@ -320,41 +320,191 @@ def _run_gemini_test():
         print(f"❌ Gemini 분석 실패: {e}")
 
 def _run_audio_processing_test():
-    """오디오 처리 및 전사 테스트"""
-    print("\n🎵 오디오 처리 및 전사 테스트")
-    
-    # 기존 오디오 파일 테스트
-    audio_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/recording_20250731_175027.wav"
-    
-    if not os.path.exists(audio_file):
-        print(f"❌ 오디오 파일이 존재하지 않습니다: {audio_file}")
-        return
-    
-    print(f"📄 오디오 파일: {audio_file}")
+    """오디오 처리 및 전사 테스트 - 전체 파이프라인"""
+    print("\n🎵 오디오 처리 및 전사 테스트 (전체 파이프라인)")
+    print("1. 녹음 시작")
+    print("2. WAV 파일 저장")
+    print("3. 화자 분리 전사")
+    print("4. Gemini 분석")
     
     # AudioProcessor 초기화
     try:
         processor = AudioProcessor()
-        print("✅ AudioProcessor 초기화 완료")
+        print("\n✅ AudioProcessor 초기화 완료")
     except Exception as e:
         print(f"❌ AudioProcessor 초기화 실패: {e}")
         return
     
-    # 기존 파일 전사
-    print("\n🔄 오디오 파일 전사 중...")
-    try:
-        transcription_result = processor.transcribe_existing_file(audio_file)
+    # 녹음 옵션 선택
+    print("\n녹음 옵션을 선택하세요:")
+    print("1. 새로 녹음하기")
+    print("2. 기존 WAV 파일 사용하기")
+    
+    choice = input("선택 (1-2): ").strip()
+    
+    if choice == "1":
+        # 새로 녹음
+        print("\n🎤 녹음을 시작합니다...")
+        print("중지하려면 Enter 키를 누르세요.")
         
-        if transcription_result.get("status") == "success":
-            transcript_text = transcription_result.get("transcript", "")
-            print(f"✅ 전사 완료 (길이: {len(transcript_text)}자)")
-            print_section("전사 결과", transcript_text[:500] + "..." if len(transcript_text) > 500 else transcript_text)
-            print("\n✅ 오디오 처리 테스트 완료!")
+        # 녹음 시작
+        if not processor.start_recording():
+            print("❌ 녹음 시작 실패")
+            return
+        
+        print("🔴 녹음 중...")
+        
+        # Enter 키 대기
+        input()
+        
+        # 녹음 중지 및 전사
+        print("\n⏹️ 녹음을 중지하고 전사를 시작합니다...")
+        
+        # 화자 정보 입력 받기
+        print("\n화자 정보를 입력하시겠습니까? (y/n): ", end="")
+        if input().strip().lower() == 'y':
+            participants_info = _get_participants_info()
         else:
-            print(f"❌ 전사 실패: {transcription_result.get('message', '알 수 없는 오류')}")
-            
+            participants_info = None
+        
+        # 녹음 중지 및 전사
+        transcription_result = processor.stop_recording_and_transcribe(participants_info)
+        
+    elif choice == "2":
+        # 기존 파일 사용
+        audio_file = input("\nWAV 파일 경로를 입력하세요 (Enter: 기본 샘플 파일): ").strip()
+        
+        if not audio_file:
+            audio_file = "/Users/kimjoonhee/Documents/Orblit_1on1_AI/recording_20250731_175027.wav"
+        
+        if not os.path.exists(audio_file):
+            print(f"❌ 오디오 파일이 존재하지 않습니다: {audio_file}")
+            return
+        
+        print(f"📄 오디오 파일: {audio_file}")
+        
+        # 화자 정보 입력 받기
+        print("\n화자 정보를 입력하시겠습니까? (y/n): ", end="")
+        if input().strip().lower() == 'y':
+            participants_info = _get_participants_info()
+        else:
+            participants_info = None
+        
+        # 전사 수행
+        print("\n🔄 오디오 파일 전사 중 (화자 분리)...")
+        transcription_result = processor.transcribe_existing_file(audio_file, participants_info)
+    else:
+        print("❌ 잘못된 선택입니다.")
+        return
+    
+    # 전사 결과 확인
+    if transcription_result.get("status") != "success":
+        print(f"❌ 전사 실패: {transcription_result.get('message', '알 수 없는 오류')}")
+        return
+    
+    transcript_text = transcription_result.get("transcript", "")
+    print(f"\n✅ 전사 완료 (길이: {len(transcript_text)}자)")
+    print_section("전사 결과 (화자 분리)", transcript_text[:500] + "..." if len(transcript_text) > 500 else transcript_text)
+    
+    # Gemini로 분석
+    print("\n🤖 Gemini로 회의 분석을 수행하시겠습니까? (y/n): ", end="")
+    if input().strip().lower() == 'y':
+        _analyze_with_gemini(transcript_text)
+    
+    print("\n✅ 오디오 처리 파이프라인 테스트 완료!")
+
+def _get_participants_info():
+    """화자 정보 입력 받기"""
+    participants_info = {}
+    
+    print("\n화자 수를 입력하세요 (2-5): ", end="")
+    num_speakers = int(input().strip() or "2")
+    num_speakers = max(2, min(5, num_speakers))
+    
+    for i in range(num_speakers):
+        speaker_label = chr(65 + i)  # A, B, C...
+        print(f"\n화자 {speaker_label} 정보:")
+        name = input(f"  이름: ").strip() or f"참석자{i+1}"
+        role = input(f"  역할: ").strip() or "참석자"
+        
+        participants_info[speaker_label] = {
+            "name": name,
+            "role": role
+        }
+    
+    return participants_info
+
+def _analyze_with_gemini(transcript_text):
+    """Gemini로 전사 결과 분석"""
+    print("\n🤖 Gemini 분석을 시작합니다...")
+    
+    # 질문 선택
+    print("\n분석에 사용할 질문 세트를 선택하세요:")
+    print("1. 기본 1-on-1 질문")
+    print("2. 종합 미팅 질문")
+    print("3. 커리어 개발 질문")
+    print("4. 성과 개선 질문")
+    print("5. 사용자 정의 질문")
+    
+    choice = input("선택 (1-5): ").strip()
+    
+    test_configs = get_test_data_and_questions()
+    
+    if choice == "1":
+        questions = test_configs["1"]["questions"]
+    elif choice == "2":
+        questions = test_configs["2"]["questions"]
+    elif choice == "3":
+        questions = test_configs["3"]["questions"]
+    elif choice == "4":
+        questions = test_configs["4"]["questions"]
+    elif choice == "5":
+        print("\n질문을 입력하세요 (빈 줄 입력시 종료):")
+        questions = []
+        while True:
+            q = input(f"질문 {len(questions)+1}: ").strip()
+            if not q:
+                break
+            questions.append(q)
+        if not questions:
+            print("❌ 질문이 입력되지 않았습니다.")
+            return
+    else:
+        print("❌ 잘못된 선택입니다. 기본 질문을 사용합니다.")
+        questions = test_configs["1"]["questions"]
+    
+    print(f"\n선택된 질문 개수: {len(questions)}개")
+    
+    # Gemini 분석기 초기화
+    try:
+        analyzer = GeminiMeetingAnalyzer()
+        print("✅ Gemini 분석기 초기화 완료")
     except Exception as e:
-        print(f"❌ 오디오 처리 실패: {e}")
+        print(f"❌ Gemini 분석기 초기화 실패: {e}")
+        return
+    
+    # 분석 수행
+    print("\n🔄 Gemini로 분석 중...")
+    try:
+        result_text = analyzer.analyze_comprehensive(transcript_text, questions=questions)
+        
+        print_section("Gemini 분석 결과 (JSON)", result_text[:500] + "..." if len(result_text) > 500 else result_text)
+        
+        # 결과 저장
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        os.makedirs("data", exist_ok=True)
+        
+        # 전사 결과 저장
+        transcript_file = os.path.join("data", f"transcript_{timestamp}.txt")
+        with open(transcript_file, "w", encoding="utf-8") as f:
+            f.write(transcript_text)
+        print(f"\n💾 전사 결과 저장: {transcript_file}")
+        
+        # 분석 결과 저장
+        save_analysis_result(result_text, "gemini")
+        
+    except Exception as e:
+        print(f"❌ Gemini 분석 실패: {e}")
 
 def _run_integrated_pipeline_test():
     """통합 분석 파이프라인 테스트 - 질문 리스트 기반 분석 (JSON 전용)"""
