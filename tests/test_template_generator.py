@@ -19,16 +19,16 @@ async def main():
 
     # --- Modify the test input data here --- #
     sample_input = TemplateGeneratorInput(
-        user_id="user_003",
-        target_info="장세현, 신입 AI개발팀 주니어, 1년차(인턴십 전환 후 3개월 경과)",
-        purpose=['Work', 'Growth', 'Satisfaction'],
-        detailed_context="현재 팀에서의 업무 적응 현황을 확인하고자 합니다. 코드 작성 시 반복적인 실수가 발생하고 있어 개선점을 논의하려 합니다.",
+        user_id="user_001",
+        target_info="김수연, 프로덕트 디자인팀 팀장, 5년차",
+        purpose=['Work', 'Relationships', 'Satisfaction'],
+        detailed_context="프로덕트 디자인 팀 내 불화 발생하여, 갈등상황 진단 및 해결책 논의하고자 함. 김수연씨의 매니징 능력 개선을 위함.",
         dialogue_type='Recurring',
         use_previous_data=True,
         num_questions='Advanced',
-        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented', 'Multiple choice'],
+        question_composition=['Action/Implementation-focused', 'Growth/Goal-oriented', 'Relationship/Collaboration', 'Experience/Story-based'],
         tone_and_manner='Casual',
-        language='Korean'  # Set the language for generation
+        language='English'  # Set the language for generation
     )
 
     # ---------------------------------------------- #

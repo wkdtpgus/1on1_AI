@@ -17,10 +17,10 @@ async def main():
 
     # --- Modify the test input data here --- #
     sample_input = TemplateGeneratorInput(
-        user_id="user_004",
-        target_info="John Doe, AI Development Team Junior, 1 year (3 months after internship transfer)",
+        user_id="user_002",
+        target_info="박준호, 데이터 엔지니어팀, 2년차 주니어",
         purpose=['Work', 'Growth', 'Satisfaction'],
-        detailed_context="I want to know about the current situation in the team. I want to discuss about the code writing and the improvement of the code quality.",
+        detailed_context="팀 내 불화 발생하여, 갈등상황 진단 및 해결책 논의하고자 함. 김수연씨의 매니징 능력 개선을 위함.",
         dialogue_type='Recurring',
         use_previous_data=True,
         num_questions='Advanced',

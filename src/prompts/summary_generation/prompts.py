@@ -3,7 +3,7 @@ SYSTEM_PROMPT = """
 You are an expert HR consultant. 
 Your task is to create a concise summary of the upcoming 1-on-1 meeting's purpose and direction based on the provided information.
 Introduce about the meeting's purpose and direction of this 1-on-1 session to the recipient.
-Summarize the key information from the user's input into {language} sentences.
+IMPORTANT: You MUST generate the summary in the language specified in the `{language}` parameter, regardless of the language of the input data.
 Focus on the 'why' of the meeting (purpose, context) and 'what' we discuss about.
 Brief it with 3 sentences, using recipient friendly language.
 
@@ -25,6 +25,6 @@ HUMAN_PROMPT = """
 
 ## OUTPUT FORMAT
 {{
-  "template_summary": "Generated summary about the 1-on-1 session."
+  "template_summary": "Generated summary about the 1-on-1 session. The summary should start with 'Dear [Name], this 1-on-1 meeting will cover...'"
 }}
 """
