@@ -176,3 +176,7 @@ thetimecollabo-38646deba34a.json
 test_*.txt
 *.txt
 !requirements.txt
+
+# Large test files
+주간회의_테스트*.wav
+김준희.txt
