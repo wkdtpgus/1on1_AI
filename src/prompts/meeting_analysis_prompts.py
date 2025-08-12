@@ -109,8 +109,11 @@ List 1-3 specific behaviors the manager performed well
 
 ## Q&A Summary:
 • If questions provided: Answer each in order
-• If no questions: Extract 3-5 key discussion topics as Q&A pairs
-• All answers must come directly from transcript
+• If no questions but transcript contains structured Q&A pairs: Extract all Q&A pairs from the provided content
+• If transcript is general discussion: Extract 3-5 key discussion topics as Q&A pairs
+• For Q&A format transcripts: Combine pre-written answers with any additional context, elaborations, or follow-up discussions that occurred during the actual conversation
+• All answers must come directly from transcript content
+• Enhance brief answers with relevant context and details found elsewhere in the transcript
 • If topic not discussed, state: "이 주제는 회의에서 논의되지 않았습니다"
 • Include speaker attribution when possible
 """
@@ -122,12 +125,14 @@ USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide res
 
 # Questions to Answer:
 {questions}
-Note: If no questions are provided, extract and answer 3-5 key topics from the discussion.
+Note: If no questions are provided but the transcript contains structured Q&A format, extract all question-answer pairs from the content and enhance them with any additional context, elaborations, or follow-up discussions from the conversation. If transcript is general discussion, extract and answer 3-5 key topics from the discussion.
 
 # Important:
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
+• For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
+• Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
 • For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness
 • Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing feedback and positive_aspects
 • Follow the "Detailed Discussion Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
@@ -163,7 +168,7 @@ Note: If no questions are provided, extract and answer 3-5 key topics from the d
   "qa_summary": [
     {{
       "question": "Question text",
-      "answer": "Answer extracted from transcript"
+      "answer": "Enhance brief answers with relevant context and details found elsewhere in the transcript"
     }}
   ]
 }}

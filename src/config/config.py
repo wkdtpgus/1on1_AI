@@ -25,7 +25,7 @@ ASSEMBLYAI_WORD_BOOST = []  # 특정 단어 인식 강화 (회사명, 전문용�
 ASSEMBLYAI_BOOST_PARAM = "default"  # 부스트 강도 (low, default, high)
 
 # 화자 분리 강화 설정
-ASSEMBLYAI_SPEAKERS_EXPECTED = 7  # 예상 화자 수 (1on1이므로 2명)
+ASSEMBLYAI_SPEAKERS_EXPECTED = 2  # 예상 화자 수 (1on1이므로 2명)
 
 # 화자 분리 최적화를 위한 오디오 설정
 AUDIO_QUALITY_MODE = "high"  # 오디오 품질 모드 (high, standard)
@@ -43,6 +43,7 @@ TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
 # LLM 설정
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")  # LLM 프로바이더 (openai, gemini)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # OpenAI API 키
 LLM_MODEL = "gpt-4.1"  # 사용할 LLM 모델
 LLM_TEMPERATURE = 0.0  # 창의성 설정 (0-1, 낮을수록 일관성 있음)
@@ -57,4 +58,4 @@ GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lowe
 # Vertex AI 모델 설정
 VERTEX_AI_MODEL = "gemini-2.5-pro"  # Vertex AI 모델명
 VERTEX_AI_TEMPERATURE = 0.0
-VERTEX_AI_MAX_TOKENS = 8000
+VERTEX_AI_MAX_TOKENS = 9000
