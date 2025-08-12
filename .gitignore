@@ -163,3 +163,16 @@ thetimecollabo-38646deba34a.json
 
 # .claude
 .claude/
+
+# Vercel
+.vercel
+
+# Audio files
+*.wav
+*.mp3
+*.m4a
+
+# Test files
+test_*.txt
+*.txt
+!requirements.txt

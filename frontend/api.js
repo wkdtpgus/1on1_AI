@@ -1,5 +1,8 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000'; // FastAPI 백엔드 URL
+// 환경에 따라 API URL 자동 설정
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8000'  // 로컬 개발 환경
+    : window.VITE_API_URL || 'https://orblit-1on1-gjvxyuakk-kimjoonhees-projects.vercel.app'; // 프로덕션 배포된 URL
 
 // API Functions
 class MeetingAPI {
