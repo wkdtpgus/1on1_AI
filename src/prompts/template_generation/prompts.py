@@ -67,6 +67,7 @@ HUMAN_PROMPT = """
     4. Relationship/Collaboration: About teamwork and collaboration. 
       (e.g., "What aspect of collaboration with colleagues is most helpful?")
       (e.g., "How can the team better support you?")
+      (e.g., "With whom do you have these kinds of networks?")
     5. Growth/Goal-oriented: Role and position based goal setting and development. 
       (e.g., "What do you want to become like in a year?")
       (e.g., "What new skill are you hoping to develop this quarter?")
