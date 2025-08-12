@@ -1,20 +1,30 @@
 import requests
 import json
+from src.utils.mock_db import MOCK_USER_DATA
 
 # FastAPI 서버의 v2 스트리밍 엔드포인트 URL
 url = "http://127.0.0.1:8002/templates/generate-streaming-v2"
 
+# 테스트할 사용자 ID
+USER_ID_TO_TEST = "user_001"
+
+# MOCK_USER_DATA에서 사용자 찾기
+user_data = next((user for user in MOCK_USER_DATA if user["user_id"] == USER_ID_TO_TEST), None)
+
+if not user_data:
+    raise ValueError(f"Test user '{USER_ID_TO_TEST}' not found in mock_db.py")
+
 # 요청에 포함할 데이터 (TemplateGeneratorInput 스키마에 맞춰서)
 payload = {
-    "user_id": "shjang",
-    "target_info": "장서현, Data anaylst, Growth-Squad",
-    "purpose": ["Growth", "Work"],
-    "detailed_context": "최근 데이터 분석 업무에 어려움을 느끼고 있어, 함께 해결 방안을 논의하고 싶습니다.",
-    "dialogue_type": "Recurring",
+    "user_id": user_data["user_id"],
+    "target_info": user_data['name'],
+    "purpose": ["Growth", "Work"], # Enum에 맞는 값으로 설정
+    "detailed_context": "프로덕트 디자인 팀 내 불화 발생하여, 갈등상황 진단 및 해결책 논의하고자 함. 김수연씨의 매니징 능력 개선을 위함.",
+    "dialogue_type": "Recurring", # Enum에 맞는 값으로 설정
     "use_previous_data": True,
-    "num_questions": "Standard",
-    "question_composition": ["Growth/Goal-oriented", "Reflection/Thought-provoking", "Action/Implementation-focused"],
-    "tone_and_manner": "친근하고 부드럽게",
+    "num_questions": "Standard", # Enum에 맞는 값으로 설정
+    "question_composition": ["Growth/Goal-oriented", "Reflection/Thought-provoking", "Action/Implementation-focused"], # Enum에 맞는 값으로 설정
+    "tone_and_manner": "Casual",
     "language": "Korean"
 }
 

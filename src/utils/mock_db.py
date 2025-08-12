@@ -1,21 +1,5 @@
 MOCK_USER_DATA = [
     {
-        "user_id": "shjang",
-        "name": "장서현",
-        "team": "Growth-Squad",
-        "role": "Data Analyst",
-        "one_on_one_history": [
-            {
-                "date": "2024-04-25",
-                "summary": "지난 분기 데이터 분석 성과 리뷰 및 다음 분기 목표 설정.",
-                "action_items": {
-                    "Done": ["1분기 유저 유입 경로 분석 보고서 작성"],
-                    "ToDo": ["A/B 테스트 결과 분석 및 공유"]
-                }
-            }
-        ]
-    },
-    {
         "user_id": "user_001",
         "name": "(가상)김수연",
         "one_on_one_history": [
