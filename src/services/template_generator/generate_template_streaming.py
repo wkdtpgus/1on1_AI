@@ -4,9 +4,7 @@ import tempfile
 from typing import AsyncIterator
 
 import streamlit as st
-import vertexai
 from langsmith import traceable
-from vertexai.generative_models import GenerativeModel, Part
 
 from src.config.config import (
     GOOGLE_CLOUD_PROJECT,
@@ -19,13 +17,15 @@ from src.prompts.template_generation.prompts import HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
+
 @traceable(run_type="llm", name="generate_template_streaming")
 async def generate_template_streaming(input_data: TemplateGeneratorInput) -> AsyncIterator[str]:
     """
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
-    Streamlit Cloud 환경에서 인증을 위해 임시 파일과 환경 변수를 사용합니다.
+    google-auth 라이브러리를 사용해 수동으로 인증 정보를 로드하여 문제를 해결합니다.
     """
     temp_creds_path = None
+    credentials = None
     try:
         # 1. Streamlit secrets에서 인증 정보를 가져와 임시 파일로 저장
         if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
@@ -33,15 +33,26 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
                 json.dump(gcp_creds_dict, temp_creds_file)
                 temp_creds_path = temp_creds_file.name
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_creds_path
 
-        # 2. Vertex AI 초기화 (환경 변수를 통해 인증)
-        vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=GOOGLE_CLOUD_LOCATION)
+        # 2. 라이브러리 지연 임포트 및 수동 인증
+        import vertexai
+        import google.auth
+        from vertexai.generative_models import GenerativeModel, Part
 
-        # 3. 모델 초기화
+        if temp_creds_path:
+            credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
+        
+        # 3. Vertex AI 초기화 (수동 로드한 인증 정보 직접 주입)
+        vertexai.init(
+            project=GOOGLE_CLOUD_PROJECT, 
+            location=GOOGLE_CLOUD_LOCATION, 
+            credentials=credentials
+        )
+
+        # 4. 모델 초기화
         streaming_model = GenerativeModel(GEMINI_MODEL)
 
-        # 4. 프롬프트 변수 준비 (기존 로직과 동일)
+        # 5. 프롬프트 변수 준비 (기존 로직과 동일)
         user_data = None
         if input_data.user_id != "default_user":
             user_data = get_user_data_by_id(input_data.user_id)
@@ -91,7 +102,7 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
             "language": safe_value(input_data.language)
         }
 
-        # 5. 스트리밍 호출
+        # 6. 스트리밍 호출
         formatted_human_prompt = HUMAN_PROMPT.format(**prompt_variables)
         contents = [Part.from_text(formatted_human_prompt)]
         generation_config = {
@@ -112,9 +123,6 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
                 pass
 
     finally:
-        # 6. 임시 파일 정리
+        # 7. 임시 파일 정리
         if temp_creds_path and os.path.exists(temp_creds_path):
             os.remove(temp_creds_path)
-        # 환경 변수 정리 (선택 사항)
-        if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
-            del os.environ['GOOGLE_APPLICATION_CREDENTIALS']
