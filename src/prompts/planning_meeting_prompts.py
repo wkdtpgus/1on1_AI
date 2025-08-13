@@ -41,45 +41,37 @@ Analyze the provided planning meeting transcript to generate comprehensive meeti
 ## Title (for JSON title field):
 One-line summary capturing the main planning focus (e.g., "2024년 신제품 런칭 전략 기획 회의")
 
-## Quick Review Structure (for JSON quick_review field):
-**Key Planning Outcomes**
-• Core strategic decisions and directions established
-
-**Major Decisions Made**
-• Strategic choices and approved approaches
-
-**Action Items**
-• [담당자] Specific planning action by deadline
-• [팀명] Team responsibilities and deliverables
-
-**Resource & Timeline**
-• Budget allocations, resource assignments, and key milestones
-
 ## Detailed Discussion Structure (for JSON detailed_discussion field):
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
 ### 기획 회의록 - [프로젝트/주제명] (YYYY.MM.DD)
 
 ## 2. 회의 주제
-• 각 주제별 담당자와 핵심 논의 포인트
+
+  • 각 주제별 담당자와 핵심 논의 포인트
 
 ## 3. 회의 내용 및 주요 논의 사항
-### [주제 A]: [구체적 주제명]
-• 논의된 세부 내용과 의견
-• 제시된 아이디어와 접근 방법
-• 결정사항 및 합의 내용
 
-### [주제 B]: [구체적 주제명]  
-• 논의된 세부 내용과 의견
-• 제시된 아이디어와 접근 방법
-• 결정사항 및 합의 내용
+  ### [주제 A]: [구체적 주제명]
+
+    • 논의된 세부 내용과 의견
+    • 제시된 아이디어와 접근 방법
+    • 결정사항 및 합의 내용
+
+  ### [주제 B]: [구체적 주제명]
+
+    • 논의된 세부 내용과 의견
+    • 제시된 아이디어와 접근 방법
+    • 결정사항 및 합의 내용
 
 ## 4. 실행 항목 (Action Items)
-• [담당자] 구체적 실행 사항 (기한: YYYY.MM.DD)
-• [팀명] 팀 차원의 실행 사항
+
+  • [담당자] 구체적 실행 사항 (기한: YYYY.MM.DD)
+  • [팀명] 팀 차원의 실행 사항
 
 ## 5. 차기 논의 예정 사항
-• 다음 회의에서 다룰 주제들
-• 추가 검토가 필요한 사항들
+
+  • 다음 회의에서 다룰 주제들
+  • 추가 검토가 필요한 사항들
 
 # Planning Meeting Categories
 
@@ -104,9 +96,8 @@ USER_PROMPT = """Analyze the following planning meeting transcript and provide r
 # Meeting Transcript:
 {transcript}
 
-# Questions to Answer:
-{questions}
-Note: If no specific questions are provided, extract key strategic discussions, decisions, and planning outcomes from the transcript.
+# Participants Info:
+{participants_info}
 
 # Important:
 • Focus on strategic and planning aspects of the discussion
@@ -122,13 +113,6 @@ Note: If no specific questions are provided, extract key strategic discussions, 
 # Required JSON Output Format:
 {{
   "title": "One-line summary of the planning meeting focus (in Korean)",
-  
-  "quick_review": {{
-    "key_planning_outcomes": "Core strategic decisions and directions (in Korean)",
-    "major_decisions": "Strategic choices and approved approaches (in Korean)", 
-    "action_items": "Planning actions with owner and deadline (in Korean)",
-    "resource_timeline": "Budget, resources, and key milestones (in Korean)"
-  }},
   
   "detailed_discussion": "Detailed meeting minutes following the Korean corporate format specified in system prompt (in Korean)",
   

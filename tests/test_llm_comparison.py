@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple, Any
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.models.llm_analysis import OpenAIMeetingAnalyzer, GeminiMeetingAnalyzer
+from src.models.llm_analysis import GeminiMeetingAnalyzer
 from src.models.audio_processing import AudioProcessor
 try:
     from pydub import AudioSegment
@@ -307,73 +307,24 @@ def main():
     """메인 테스트 함수"""
     print("🚀 통합 LLM 분석 테스트 시작 (JSON 출력)")
     print("선택하세요:")
-    print("1. OpenAI GPT 분석 테스트")
-    print("2. Gemini 분석 테스트")
-    print("3. 오디오 처리 및 전사 테스트")
-    print("4. 통합 분석 파이프라인 테스트")
-    print("7. 미리 작성된 Q&A 분석 테스트")
+    print("1. Gemini 분석 테스트")
+    print("2. 오디오 처리 및 전사 테스트")
+    print("3. 통합 분석 파이프라인 테스트")
+    print("4. 미리 작성된 Q&A 분석 테스트")
     
-    choice = input("\n선택 (1-4, 7): ").strip()
+    choice = input("\n선택 (1-4): ").strip()
     
     if choice == "1":
-        _run_openai_test()
-    elif choice == "2":
         _run_gemini_test()
-    elif choice == "3":
+    elif choice == "2":
         _run_audio_processing_test()
-    elif choice == "4":
+    elif choice == "3":
         _run_integrated_pipeline_test()
-    elif choice == "7":
+    elif choice == "4":
         _run_qa_analysis_test()
     else:
-        print("❌ 잘못된 선택입니다. 1-4, 7을 선택해주세요.")
+        print("❌ 잘못된 선택입니다. 1-4를 선택해주세요.")
 
-def _run_openai_test():
-    """OpenAI GPT 분석 테스트 실행 (JSON 전용)"""
-    # 테스트 데이터 선택
-    test_config = get_test_data_and_questions()
-    transcript_file = test_config["file"]
-    questions = test_config["questions"]
-    
-    print(f"\n📊 OpenAI GPT 분석 테스트 (JSON)")
-    print(f"📄 선택된 데이터: {test_config['name']}")
-    print(f"📄 전사 파일 로드 중: {transcript_file}")
-    
-    stt_data = load_sample_transcript(transcript_file)
-    if not stt_data:
-        print("❌ 전사 파일을 로드할 수 없습니다.")
-        return
-    
-    print(f"✅ 전사 데이터 로드 완료")
-    print(f"   - 전체 텍스트 길이: {len(stt_data['full_text'])}자")
-    print(f"   - 사용할 질문 개수: {len(questions)}개")
-    
-    # OpenAI 분석기 초기화
-    print("\n🔧 OpenAI GPT 모델 초기화 중...")
-    try:
-        analyzer = OpenAIMeetingAnalyzer()
-        print("✅ OpenAI 분석기 초기화 완료")
-    except Exception as e:
-        print(f"❌ OpenAI 분석기 초기화 실패: {e}")
-        return
-    
-    # STT 결과 분석 (JSON)
-    print(f"\n🔄 OpenAI GPT로 분석 중 (JSON 형식)...")
-    try:
-        # STT 데이터에서 전사 텍스트 추출
-        transcript_text = stt_data.get("transcript", "")
-        if not transcript_text:
-            print("❌ 전사 내용이 없습니다.")
-            return
-        
-        result_text = analyzer.analyze_comprehensive(transcript_text, questions=questions)
-        
-        print_section("OpenAI GPT 분석 결과 (JSON)", result_text[:500] + "..." if len(result_text) > 500 else result_text)
-        save_analysis_result(result_text, "openai")
-        print(f"\n✅ OpenAI GPT 분석 테스트 완료!")
-            
-    except Exception as e:
-        print(f"❌ OpenAI 분석 실패: {e}")
 
 def _run_gemini_test():
     """Gemini 분석 테스트 실행 (JSON 전용)"""
@@ -589,7 +540,6 @@ def _run_audio_processing_test():
         "speaker_times": transcription_result.get("speaker_times", {}),
         "total_duration_seconds": transcription_result.get("total_duration_seconds", 0),
         "utterances": transcription_result.get("utterances", []),
-        "participants": transcription_result.get("participants", [])
     }
     
     with open(transcript_json_file, "w", encoding="utf-8") as f:

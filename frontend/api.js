@@ -1,13 +1,13 @@
 // API Configuration
 // 환경에 따라 API URL 자동 설정
 const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000'  // 로컬 개발 환경
-    : window.VITE_API_URL || 'https://orblit-1on1-gjvxyuakk-kimjoonhees-projects.vercel.app'; // 프로덕션 배포된 URL
+    ? `http://localhost:${window.location.port || '8001'}`  // 로컬 개발 환경 - 현재 포트 사용
+    : window.VITE_API_URL || window.location.origin; // 현재 도메인 사용
 
 // API Functions
 class MeetingAPI {
     // 오디오 파일을 서버로 전송하고 분석 결과를 받아오는 함수
-    static async analyzeAudio(audioBlob, meetingType = '1on1', questions = null) {
+    static async analyzeAudio(audioBlob, meetingType = '1on1', questions = null, qaData = null, participantsInfo = null) {
         const formData = new FormData();
         
         // Blob을 File 객체로 변환
@@ -15,9 +15,21 @@ class MeetingAPI {
         formData.append('audio_file', audioFile);
         formData.append('meeting_type', meetingType);
         
-        // 질문이 있는 경우 추가
+        // 질문이 있는 경우 추가 (기존 호환성)
         if (questions && questions.length > 0) {
             formData.append('questions', JSON.stringify(questions));
+        }
+        
+        // Q&A 데이터가 있는 경우 추가
+        if (qaData && qaData.length > 0) {
+            formData.append('qa_data', JSON.stringify(qaData));
+            console.log('🔍 API로 전송하는 Q&A 데이터:', qaData);
+        }
+        
+        // 참석자 정보가 있는 경우 추가
+        if (participantsInfo && (participantsInfo.leader || participantsInfo.member || participantsInfo.participants)) {
+            formData.append('participants_info', JSON.stringify(participantsInfo));
+            console.log('👥 API로 전송하는 참석자 정보:', participantsInfo);
         }
         
         try {
@@ -169,7 +181,7 @@ class MeetingAPI {
 }
 
 // Progress tracking with real API
-async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on1') {
+async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on1', qaData = null, participantsInfo = null) {
     try {
         // 초기 업로드
         updateProgress(10, '파일 업로드 중...');
@@ -178,7 +190,7 @@ async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on
         updateProgress(20, 'STT 변환 시작...');
         
         // 실제 API 호출
-        const results = await MeetingAPI.analyzeAudio(audioBlob, meetingType);
+        const results = await MeetingAPI.analyzeAudio(audioBlob, meetingType, null, qaData, participantsInfo);
         
         // 진행률 시뮬레이션 (실제로는 백엔드에서 WebSocket으로 진행률 전송)
         const progressSteps = [

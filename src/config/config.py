@@ -43,19 +43,22 @@ TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
 # LLM 설정
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")  # LLM 프로바이더 (openai, gemini)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # OpenAI API 키
-LLM_MODEL = "gpt-4.1"  # 사용할 LLM 모델
-LLM_TEMPERATURE = 0.0  # 창의성 설정 (0-1, 낮을수록 일관성 있음)
-LLM_MAX_TOKENS = 5000  # 최대 토큰 수
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")  # LLM 프로바이더
 
 # Google Cloud / Vertex AI 설정
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lower() == "true"
 
 # Vertex AI 모델 설정
 VERTEX_AI_MODEL = "gemini-2.5-pro"  # Vertex AI 모델명
 VERTEX_AI_TEMPERATURE = 0.0
-VERTEX_AI_MAX_TOKENS = 9000
+VERTEX_AI_MAX_TOKENS = 13000
+
+# LangSmith 추적 설정 (선택적)
+LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
+LANGSMITH_ENDPOINT = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
+LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
+LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "oblit-1on1_ai_ui")

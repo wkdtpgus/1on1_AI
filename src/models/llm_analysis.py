@@ -1,66 +1,123 @@
-from datetime import datetime
-from typing import Optional
-from abc import ABC, abstractmethod
-from langchain_openai import ChatOpenAI
+from typing import Optional, Dict, Any, List
+from abc import ABC
 from langchain_google_vertexai import ChatVertexAI
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 import json
+import os
+import logging
 
 # 설정 가져오기
 from src.config.config import (
-    OPENAI_API_KEY,
-    LLM_MODEL,
-    LLM_TEMPERATURE,
-    LLM_MAX_TOKENS,
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     VERTEX_AI_MODEL,
     VERTEX_AI_TEMPERATURE,
-    VERTEX_AI_MAX_TOKENS
+    VERTEX_AI_MAX_TOKENS,
+    # LangSmith 설정
+    LANGSMITH_TRACING,
+    LANGSMITH_ENDPOINT,
+    LANGSMITH_API_KEY,
+    LANGSMITH_PROJECT
 )
 from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.prompts.planning_meeting_prompts import SYSTEM_PROMPT as PLANNING_SYSTEM_PROMPT, USER_PROMPT as PLANNING_USER_PROMPT
-from src.utils.schema import MeetingAnalysis, PlanningMeetingAnalysis
+from src.prompts.general_meeting_prompts import SYSTEM_PROMPT as GENERAL_SYSTEM_PROMPT, USER_PROMPT as GENERAL_USER_PROMPT
+from src.prompts.weekly_meeting_prompts import SYSTEM_PROMPT as WEEKLY_SYSTEM_PROMPT, USER_PROMPT as WEEKLY_USER_PROMPT
+from src.utils.schema import MeetingAnalysis, PlanningMeetingAnalysis, GeneralMeetingAnalysis, WeeklyMeetingAnalysis
+
+# 로깅 설정
+logger = logging.getLogger(__name__)
+
+# LangSmith 추적 설정
+if LANGSMITH_TRACING and LANGSMITH_API_KEY:
+    os.environ["LANGSMITH_TRACING"] = "true"
+    os.environ["LANGSMITH_ENDPOINT"] = LANGSMITH_ENDPOINT
+    os.environ["LANGSMITH_API_KEY"] = LANGSMITH_API_KEY
+    os.environ["LANGSMITH_PROJECT"] = LANGSMITH_PROJECT
+    logger.info(f"LangSmith 추적 활성화됨 - 프로젝트: {LANGSMITH_PROJECT}")
+else:
+    logger.info("LangSmith 추적이 비활성화되어 있습니다")
 
 
 class BaseMeetingAnalyzer(ABC):    
+    """회의 분석을 위한 기본 추상 클래스"""
+    
     def __init__(self):
         pass
     
-    @abstractmethod
-    def _get_model_name(self) -> str:
-        """모델명 반환 (서브클래스에서 구현)"""
-        pass
+    def _prepare_speaker_stats(self, speaker_stats: Optional[Dict]) -> str:
+        #화자 통계 텍스트 준비
+        if not speaker_stats:
+            return ""
+        
+        stats_text = "\n화자별 발언 점유율:\n"
+        for speaker_name, stats in speaker_stats.items():
+            stats_text += f"- {speaker_name}: {stats['percentage']}% ({stats['formatted_time']})\n"
+        return stats_text
     
-    def analyze_comprehensive(self, transcript: str, questions: list = None, speaker_stats: dict = None) -> str:
-
+    def _handle_analysis_error(self, error: Exception, error_type: str = "분석 오류") -> str:
+        """분석 오류 처리 및 JSON 형식으로 반환"""
+        import traceback
+        error_detail = traceback.format_exc()
+        logger.error(f"{error_type} 상세:\n{error_detail}")
+        
+        error_result = {
+            "error": error_type,
+            "message": str(error),
+            "detail": error_detail
+        }
+        return json.dumps(error_result, indent=2, ensure_ascii=False)
+    
+    def _execute_chain(self, chain, input_data: Dict, 
+                      analysis_type: str = "분석") -> str:
+        """체인 실행 및 결과 처리"""
         try:
-            # 질문 텍스트 처리
-            questions_text = ""
-            if questions:
-                if isinstance(questions, list):
-                    questions_text = "\n".join(f"- {q}" for q in questions)
-                else:
-                    questions_text = str(questions)
+            logger.info(f"{analysis_type} 요청 데이터 크기: {len(str(input_data))}자")
             
-            # 화자 통계 텍스트 처리
-            speaker_stats_text = ""
-            if speaker_stats:
-                speaker_stats_text = "\n화자별 발언 점유율:\n"
-                for speaker_name, stats in speaker_stats.items():
-                    speaker_stats_text += f"- {speaker_name}: {stats['percentage']}% ({stats['formatted_time']})\n"
+            result = chain.invoke(input_data)
             
-            # 전사 텍스트에 화자 통계 추가
+            logger.info(f"{analysis_type} 응답 타입: {type(result)}")
+            if result:
+                logger.debug(f"{analysis_type} 응답 내용 미리보기: {str(result)[:200]}...")
+            else:
+                logger.warning(f"{analysis_type} 응답: None")
+            
+            # None 체크
+            if result is None:
+                logger.warning(f"{analysis_type}에서 None을 반환했습니다. 스키마 검증 실패 또는 내용이 너무 길 가능성이 있습니다.")
+                raise ValueError(f"{analysis_type} returned None - possibly due to schema validation failure or content too long")
+            
+            # JSON 형식으로 반환
+            return result.model_dump_json(indent=2)
+            
+        except Exception as e:
+            return self._handle_analysis_error(e, f"{analysis_type} 오류")
+    
+    def analyze_1on1_meeting(self, transcript: str, 
+                            speaker_stats: Dict = None, qa_pairs: List = None, 
+                            participants: Dict = None) -> str:
+        """1:1 회의 종합 분석"""
+        try:
+            # 화자 통계 준비
+            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
+            
+            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
             full_transcript = transcript
             if speaker_stats_text:
-                full_transcript = f"{transcript}\n\n{speaker_stats_text}"
+                full_transcript += f"\n{speaker_stats_text}"
             
-            # 기존 사용자 프롬프트 템플릿을 그대로 사용 (JSON 출력은 무시됨)
+            # 사용자 프롬프트 템플릿
             user_prompt_template = PromptTemplate(
-                input_variables=["transcript", "questions"],
+                input_variables=["transcript", "participants_info", "qa_pairs_json"],
                 template=USER_PROMPT
             )
+            
+            # Q&A JSON 준비
+            qa_pairs_json = json.dumps(qa_pairs, ensure_ascii=False) if qa_pairs else "[]"
+            
+            # 참석자 정보를 JSON으로 직접 전달
+            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
             
             # 프롬프트 체인 구성
             prompt = ChatPromptTemplate.from_messages([
@@ -68,141 +125,153 @@ class BaseMeetingAnalyzer(ABC):
                 ("human", user_prompt_template.template)
             ])
             
-            # 체인 생성: prompt | structured_llm
+            # 체인 생성
             chain = prompt | self.llm.with_structured_output(MeetingAnalysis)
             
-            # 실행
-            print(f"🔍 Gemini 요청 데이터 크기: {len(full_transcript)}자")
-            print(f"🔍 질문 개수: {len(questions) if questions else 0}개")
             
-            result = chain.invoke({
+            # 체인 실행
+            input_data = {
                 "transcript": full_transcript,
-                "questions": questions_text
-            })
+                "participants_info": participants_info_text,
+                "qa_pairs_json": qa_pairs_json
+            }
             
-            print(f"🔍 Gemini 응답 타입: {type(result)}")
-            print(f"🔍 Gemini 응답 내용: {str(result)[:200]}..." if result else "🔍 Gemini 응답: None")
-            
-            # None 체크 추가
-            if result is None:
-                print("⚠️ Gemini가 None을 반환했습니다. 스키마 검증 실패 또는 내용이 너무 길 가능성이 있습니다.")
-                raise ValueError("LLM returned None - possibly due to schema validation failure or content too long")
-            
-            # JSON 형식으로 반환
-            return result.model_dump_json(indent=2)
+            return self._execute_chain(chain, input_data, "1:1 회의 분석")
             
         except Exception as e:
-            import traceback
-            error_detail = traceback.format_exc()
-            print(f"❌ 분석 오류 상세:\n{error_detail}")
-            
-            # 에러도 JSON 형식으로 반환
-            error_result = {
-                "error": "분석 오류",
-                "message": str(e),
-                "detail": error_detail
-            }
-            return json.dumps(error_result, indent=2, ensure_ascii=False)
+            return self._handle_analysis_error(e, "1:1 회의 분석 오류")
     
-    def analyze_planning_meeting(self, transcript: str, questions: list = None, speaker_stats: dict = None) -> str:
+    def analyze_planning_meeting(self, transcript: str, 
+                                speaker_stats: Dict = None, 
+                                participants: Dict = None) -> str:
         """기획회의 분석 메서드"""
         try:
-            # 질문 텍스트 처리
-            questions_text = ""
-            if questions:
-                if isinstance(questions, list):
-                    questions_text = "\n".join(f"- {q}" for q in questions)
-                else:
-                    questions_text = str(questions)
+            # 화자 통계 준비
+            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
             
-            # 화자 통계 텍스트 처리 (기획회의에서는 참고용)
-            speaker_stats_text = ""
-            if speaker_stats:
-                speaker_stats_text = "\n참여자별 발언 점유율:\n"
-                for speaker_name, stats in speaker_stats.items():
-                    speaker_stats_text += f"- {speaker_name}: {stats['percentage']}% ({stats['formatted_time']})\n"
-            
-            # 전사 텍스트에 화자 통계 추가
+            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
             full_transcript = transcript
             if speaker_stats_text:
-                full_transcript = f"{transcript}\n\n{speaker_stats_text}"
+                full_transcript += f"\n{speaker_stats_text}"
             
             # 기획회의 프롬프트 템플릿 사용
             user_prompt_template = PromptTemplate(
-                input_variables=["transcript", "questions"],
+                input_variables=["transcript", "participants_info"],
                 template=PLANNING_USER_PROMPT
             )
-            
+
             # 프롬프트 체인 구성
             prompt = ChatPromptTemplate.from_messages([
                 ("system", PLANNING_SYSTEM_PROMPT),
                 ("human", user_prompt_template.template)
             ])
             
-            # 체인 생성: prompt | structured_llm
+            # 체인 생성
             chain = prompt | self.llm.with_structured_output(PlanningMeetingAnalysis)
             
-            # 실행
-            print(f"🔍 기획회의 분석 요청 데이터 크기: {len(full_transcript)}자")
-            print(f"🔍 질문 개수: {len(questions) if questions else 0}개")
+            # 참가자 정보를 JSON으로 직접 전달
+            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
             
-            result = chain.invoke({
+            # 체인 실행
+            input_data = {
                 "transcript": full_transcript,
-                "questions": questions_text
-            })
+                "participants_info": participants_info_text
+            }
             
-            print(f"🔍 기획회의 분석 응답 타입: {type(result)}")
-            print(f"🔍 기획회의 분석 응답 내용: {str(result)[:200]}..." if result else "🔍 기획회의 분석 응답: None")
-            
-            # None 체크 추가
-            if result is None:
-                print("⚠️ 기획회의 분석에서 None을 반환했습니다.")
-                raise ValueError("Planning meeting analysis returned None")
-            
-            # JSON 형식으로 반환
-            return result.model_dump_json(indent=2)
+            return self._execute_chain(chain, input_data, "기획회의 분석")
             
         except Exception as e:
-            import traceback
-            error_detail = traceback.format_exc()
-            print(f"❌ 기획회의 분석 오류 상세:\n{error_detail}")
+            return self._handle_analysis_error(e, "기획회의 분석 오류")
+    
+    def analyze_general_meeting(self, transcript: str, 
+                               speaker_stats: Dict = None, 
+                               participants: Dict = None) -> str:
+        """일반회의 분석 메서드"""
+        try:
+            # 화자 통계 준비
+            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
             
-            # 에러도 JSON 형식으로 반환
-            error_result = {
-                "error": "기획회의 분석 오류",
-                "message": str(e),
-                "detail": error_detail
+            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
+            full_transcript = transcript
+            if speaker_stats_text:
+                full_transcript += f"\n{speaker_stats_text}"
+            
+            # 일반회의 프롬프트 템플릿 사용
+            user_prompt_template = PromptTemplate(
+                input_variables=["transcript", "participants_info"],
+                template=GENERAL_USER_PROMPT
+            )
+            
+            # 프롬프트 체인 구성
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", GENERAL_SYSTEM_PROMPT),
+                ("human", user_prompt_template.template)
+            ])
+            
+            # 체인 생성
+            chain = prompt | self.llm.with_structured_output(GeneralMeetingAnalysis)
+            
+            # 참가자 정보를 JSON으로 직접 전달
+            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
+            
+            # 체인 실행
+            input_data = {
+                "transcript": full_transcript,
+                "participants_info": participants_info_text
             }
-            return json.dumps(error_result, indent=2, ensure_ascii=False)
+            
+            return self._execute_chain(chain, input_data, "일반회의 분석")
+            
+        except Exception as e:
+            return self._handle_analysis_error(e, "일반회의 분석 오류")
     
-
-
-class OpenAIMeetingAnalyzer(BaseMeetingAnalyzer):    
-    def __init__(self, api_key: Optional[str] = None):
-
-        super().__init__()
-        
-        self.api_key = api_key or OPENAI_API_KEY
-        if not self.api_key:
-            raise ValueError("OpenAI API key is required")
-        
-        # OpenAI LLM 초기화
-        self.llm = ChatOpenAI(
-            openai_api_key=self.api_key,
-            model=LLM_MODEL,
-            temperature=LLM_TEMPERATURE,
-            max_tokens=LLM_MAX_TOKENS
-        )
-        print(f"✅ OpenAI {LLM_MODEL} 모델 초기화 완료")
-    
-    def _get_model_name(self) -> str:
-        """OpenAI 모델명 반환"""
-        return LLM_MODEL
+    def analyze_weekly_meeting(self, transcript: str, 
+                              speaker_stats: Dict = None, 
+                              participants: Dict = None) -> str:
+        """주간회의 분석 메서드"""
+        try:
+            # 화자 통계 준비
+            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
+            
+            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
+            full_transcript = transcript
+            if speaker_stats_text:
+                full_transcript += f"\n{speaker_stats_text}"
+            
+            # 주간회의 프롬프트 템플릿 사용
+            user_prompt_template = PromptTemplate(
+                input_variables=["transcript", "participants_info"],
+                template=WEEKLY_USER_PROMPT
+            )
+            
+            # 프롬프트 체인 구성
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", WEEKLY_SYSTEM_PROMPT),
+                ("human", user_prompt_template.template)
+            ])
+            
+            # 체인 생성
+            chain = prompt | self.llm.with_structured_output(WeeklyMeetingAnalysis)
+            
+            # 참가자 정보를 JSON으로 직접 전달
+            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
+            
+            # 체인 실행
+            input_data = {
+                "transcript": full_transcript,
+                "participants_info": participants_info_text
+            }
+            
+            return self._execute_chain(chain, input_data, "주간회의 분석")
+            
+        except Exception as e:
+            return self._handle_analysis_error(e, "주간회의 분석 오류")
 
 
 class GeminiMeetingAnalyzer(BaseMeetingAnalyzer):    
+    """Google Vertex AI Gemini 모델을 사용한 회의 분석기"""
+    
     def __init__(self, google_project: Optional[str] = None, google_location: Optional[str] = None):
-
         super().__init__()
         
         self.google_project = google_project or GOOGLE_CLOUD_PROJECT
@@ -219,9 +288,5 @@ class GeminiMeetingAnalyzer(BaseMeetingAnalyzer):
             temperature=VERTEX_AI_TEMPERATURE,
             max_output_tokens=VERTEX_AI_MAX_TOKENS,
         )
-        print(f"✅ Vertex AI {VERTEX_AI_MODEL} 모델 초기화 완료")
-    
-    def _get_model_name(self) -> str:
-        """Gemini 모델명 반환"""
-        return VERTEX_AI_MODEL
+        logger.info(f"Vertex AI {VERTEX_AI_MODEL} 모델 초기화 완료")
     

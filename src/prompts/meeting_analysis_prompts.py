@@ -64,23 +64,27 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
 ### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)
 
+**Note**: If participant names are provided in the transcript, use them throughout the analysis to personalize feedback and recommendations (e.g., "김팀장이 이대리에게...", "[리더명]이 [팀원명]과의 관계에서...").
+
 1. **Category Creation Rule**: Create a new category (### 1.) when switching to a completely different topic area (performance, career, projects, etc.)
 
 2. **Subcategory Format Rule**: 
    - Use **X.X format** (e.g., **1.1**, **1.2**) for distinct subtopics within each category
    - Create subcategories when there are 2+ separate subtopics under one category
    - NEVER use bullet points (•) for subcategories - always use **X.X** format
+   - NO indentation for subcategories - place them at the same level as category headers
 
 3. **Detail Format Rule**: 
-   - Use single bullet points (•) ONLY for specific details under subcategories
+   - Use single bullet points (•) for specific details under subcategories
+   - NO indentation for bullet points - place them directly under subcategories
    - Maximum 2 levels: Category → Subcategory → Details
-   - NO nested bullet points (no •••• or multiple levels)
+   - NO nested bullet points (no multiple • levels or indented bullets)
    - Write details as objective observations without speaker attributions (no "팀장:", "지훈:" prefixes)
 
 4. **Decision Criteria**:
-   - Same topic area with 2+ distinct subtopics → Use **X.X** subcategories
+   - Same topic area with 2+ distinct subtopics → Use **X.X** subcategories (no indentation)
    - Different topic areas → Use new ### category
-   - Specific facts/details → Use single • bullet points
+   - Specific facts/details → Use single • bullet points (no indentation)
 
 
 
@@ -123,17 +127,20 @@ USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide res
 # Meeting Transcript:
 {transcript}
 
-# Questions to Answer:
-{questions}
-Note: If no questions are provided but the transcript contains structured Q&A format, extract all question-answer pairs from the content and enhance them with any additional context, elaborations, or follow-up discussions from the conversation. If transcript is general discussion, extract and answer 3-5 key topics from the discussion.
+# Participants Information:
+{participants_info}
+
+# User-provided Q&A (JSON):
+{qa_pairs_json}
 
 # Important:
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
+• **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
-• For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness
+• For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
 • Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing feedback and positive_aspects
 • Follow the "Detailed Discussion Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
 
@@ -167,8 +174,8 @@ Note: If no questions are provided but the transcript contains structured Q&A fo
   
   "qa_summary": [
     {{
-      "question": "Question text",
-      "answer": "Enhance brief answers with relevant context and details found elsewhere in the transcript"
+      "question": "Question text", 
+      "answer": "Comprehensive answer leveraging transcript and user-provided Q/A when relevant"
     }}
   ]
 }}
