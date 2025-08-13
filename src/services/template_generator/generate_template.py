@@ -5,11 +5,11 @@ from typing import AsyncIterable
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.prompts import ChatPromptTemplate
 from langsmith import traceable
-
+# streaming true공통설정 따로 빼두기
 # Configure basic logging to see INFO level messages
 logging.basicConfig(level=logging.INFO)
 
-from src.config.config import (
+from src.config.template_config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     GEMINI_MODEL,
@@ -51,9 +51,11 @@ async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable
         raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
     # target_info가 비어있으면 DB에서 조회한 정보로 채워주기
+    # (비활)
     target_info = input_data.target_info
 
     # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
+    # 여기서 받기만하고 테스트파일에서 만들어야함(더미데이터활용하는것이기 때문) - 프론트에서 묶어서 매핑할 수 없음
     previous_summary_section = ""
     if input_data.use_previous_data:
         history = user_data.get("one_on_one_history")
@@ -85,10 +87,13 @@ async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable
         return value if value is not None else default
 
     # purpose list, 질문 구성요소 list가 선택되었을 경우, 문자열로 변환
+    # 여기서 받기만하고 테스트파일에서 만들어야함(문자열처리는 메인파일에서 금지)
     purpose_str = ", ".join(input_data.purpose) if input_data.purpose else default_value
     question_composition_str = ", ".join(input_data.question_composition) if input_data.question_composition else default_value
 
     prompt_variables = {
+        #필수값만 남기기 - 필수는 safe_value로 처리
+        #
         "target_info": safe_value(input_data.target_info),
         "purpose": purpose_str,
         "detailed_context": safe_value(input_data.detailed_context),

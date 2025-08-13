@@ -2,7 +2,7 @@ from langchain_google_vertexai import ChatVertexAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from src.config.config import (
+from src.config.template_config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     GEMINI_MODEL,

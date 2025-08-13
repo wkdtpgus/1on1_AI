@@ -7,6 +7,12 @@ class TemplateGeneratorInput(BaseModel):
     """
     user_id: str = Field(..., description="조회할 사용자의 고유 ID")
     # --- 필수 입력 데이터 (누락 가능) ---
+    # option빼기(디폴트값으로 설정하는 방법)
+    # 함수 만들지말고 스키마로 다음과 같이 처리
+    #       detailed_context: str = Field(
+    #          default="Not specified",  # None 대신 기본값
+    #          description="..."
+    #      )
     target_info: Optional[str] = Field(None, description="1on1 대상자에 대한 정보 (팀, 직급, 이름 등)")
     purpose: List[Literal[
         'Growth',

@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import json
 import re
-from src.services.template_generator.generate_template import generate_template
 from src.services.template_generator.generate_summary import generate_summary
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.mock_db import MOCK_USER_DATA

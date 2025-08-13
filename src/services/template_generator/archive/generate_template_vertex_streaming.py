@@ -4,7 +4,7 @@ import vertexai
 from langsmith import traceable
 from vertexai.generative_models import GenerativeModel, Part
 
-from src.config.config import (
+from src.config.template_config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     GEMINI_MODEL,
