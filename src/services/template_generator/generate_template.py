@@ -64,7 +64,7 @@ async def generate_template(input_data: TemplateGeneratorInput) -> Dict:
 
         user_data = None
         print(f"[DIAGNOSTIC] generate_template: Checking user_id: '{input_data.user_id}' (type: {type(input_data.user_id)})")
-        if not input_data.user_id or input_data.user_id.strip().lower() != "default_user":
+        if input_data.user_id and input_data.user_id.strip().lower() != "default_user":
             user_data = get_user_data_by_id(input_data.user_id)
             if not user_data:
                 raise ValueError(f"User with ID '{input_data.user_id}' not found.")

@@ -77,10 +77,8 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
         previous_summary_section = ""
 
         print(f"[DIAGNOSTIC] generate_template_streaming: Checking user_id: '{input_data.user_id}' (type: {type(input_data.user_id)})")
-        if not input_data.user_id or input_data.user_id.strip().lower() == "default_user":
-            # 'default_user' 또는 ID가 없는 경우, 이전 대화 기록을 사용하지 않음
-            previous_summary_section = "None (This is the first meeting or no history exists)"
-        else:
+        user_data = None
+        if input_data.user_id and input_data.user_id.strip().lower() != "default_user":
             # 실제 사용자인 경우, 데이터베이스에서 정보를 가져옴
             user_data = get_user_data_by_id(input_data.user_id)
             if not user_data:
@@ -91,26 +89,26 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
                 target_info = f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
 
             # 이전 대화 기록 처리
-            if input_data.use_previous_data:
+            if input_data.use_previous_data and user_data.get("one_on_one_history"):
                 history = user_data.get("one_on_one_history")
-                if history:
-                    latest_history = history[-1]
-                    done_items = latest_history.get("action_items", {}).get("Done", [])
-                    todo_items = latest_history.get("action_items", {}).get("ToDo", [])
-                    done_section = f"  - Done: {', '.join(done_items) if done_items else 'None'}"
-                    todo_section = f"  - ToDo: {', '.join(todo_items) if todo_items else 'None'}"
-                    previous_summary_section = (
-                        f"<Previous Conversation Summary>\n"
-                        f"- Date: {latest_history['date']}\n"
-                        f"- Summary: {latest_history['summary']}\n"
-                        f"- Action Items:\n"
-                        f"{done_section}\n"
-                        f"{todo_section}"
-                    )
-                else:
-                    previous_summary_section = "None (This is the first meeting or no history exists)"
+                latest_history = history[-1]
+                done_items = latest_history.get("action_items", {}).get("Done", [])
+                todo_items = latest_history.get("action_items", {}).get("ToDo", [])
+                done_section = f"  - Done: {', '.join(done_items) if done_items else 'None'}"
+                todo_section = f"  - ToDo: {', '.join(todo_items) if todo_items else 'None'}"
+                previous_summary_section = (
+                    f"<Previous Conversation Summary>\n"
+                    f"- Date: {latest_history['date']}\n"
+                    f"- Summary: {latest_history['summary']}\n"
+                    f"- Action Items:\n"
+                    f"{done_section}\n"
+                    f"{todo_section}"
+                )
             else:
-                previous_summary_section = ""
+                previous_summary_section = "None (This is the first meeting or no history exists)"
+        else:
+            # 'default_user' 또는 ID가 없는 경우
+            previous_summary_section = "None (This is the first meeting or no history exists)"
 
         default_value = "Not specified"
         question_composition_str = ", ".join(input_data.question_composition) if input_data.question_composition else default_value
