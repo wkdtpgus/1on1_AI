@@ -133,44 +133,6 @@ if submit_button:
 
     # This dictionary will be sent as a JSON payload to the API
     payload = input_data.dict()
-    API_URL = "http://127.0.0.1:8000/generate"
-
-    def stream_and_format_questions(response):
-        """Parses SSE, formats questions in real-time, and yields them for streaming display."""
-        full_response_str = ""
-        processed_question_count = 0
-        for line in response.iter_lines():
-            if line:
-                decoded_line = line.decode('utf-8')
-                if decoded_line.startswith('data: '):
-                    json_str = decoded_line[6:]
-                    try:
-                        content_chunk = json.loads(json_str)
-                        if isinstance(content_chunk, dict) and 'error' in content_chunk:
-                            st.error(f"An error occurred on the server: {content_chunk['error']}")
-                            return
-
-                        full_response_str += content_chunk
-                        
-                        # Attempt to find all complete questions in the accumulated string
-                        # This regex finds all "question": "..." pairs
-                        # It handles escaped quotes inside the question text
-                        found_questions = re.findall(r'"question"\s*:\s*"((?:\\"|[^\"])*)"', full_response_str)
-                        
-                        new_question_count = len(found_questions)
-                        
-                        if new_question_count > processed_question_count:
-                            # Yield the new questions that haven't been processed yet
-                            for i in range(processed_question_count, new_question_count):
-                                question_text = found_questions[i]
-                                yield f"{i + 1}. {question_text}\n\n"
-                            processed_question_count = new_question_count
-
-                    except (json.JSONDecodeError, re.error):
-                        continue
-        # Store the final complete JSON for summary generation
-        st.session_state['full_response_json'] = full_response_str
-
     try:
         with col2:
             with st.spinner('1on1 템플릿 생성중...'):
@@ -181,15 +143,9 @@ if submit_button:
                     st.info(summary_result.get('template_summary', 'No summary generated.'))
 
                 # 2. Generate Questions (Streaming)
-                # Make the streaming request to the API
-                response = requests.post(API_URL, json=payload, stream=True)
-                response.raise_for_status()  # Raise an exception for bad status codes
-
                 with questions_placeholder.container():
                     st.subheader("AI가 생성한 1-on-1 질문")
-                    st.write_stream(stream_and_format_questions(response))
-
-    except requests.exceptions.RequestException as e:
-        st.error(f"API 요청 중 오류가 발생했습니다: {e}")
+                    # Directly call the generator and stream its output
+                    st.write_stream(generate_template(input_data))
     except Exception as e:
         st.error(f"알 수 없는 오류가 발생했습니다: {e}")
