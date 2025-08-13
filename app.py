@@ -2,6 +2,7 @@ import streamlit as st
 import asyncio
 import json
 import re
+from src.services.template_generator.generate_template import generate_template
 from src.services.template_generator.generate_template_streaming import generate_template_streaming
 from src.services.template_generator.generate_summary import generate_summary
 from src.utils.template_schemas import TemplateGeneratorInput
@@ -117,6 +118,19 @@ if submit_button:
     purpose_en = [PURPOSE_MAP[p] for p in purpose_kr]
     num_questions_en = NUM_QUESTIONS_MAP[num_questions_kr]
     question_composition_en = [QUESTION_COMPOSITION_MAP[name]['en'] for name, selected in question_composition_selections.items() if selected]
+
+    st.write("--- DEBUG DATA ---")
+    st.write(f"{user_id=}")
+    st.write(f"{target_info=}")
+    st.write(f"{purpose_en=}")
+    st.write(f"{detailed_context=}")
+    st.write(f"{use_previous_data=}")
+    st.write(f"{previous_summary=}")
+    st.write(f"{num_questions_en=}")
+    st.write(f"{question_composition_en=}")
+    st.write(f"{tone_and_manner=}")
+    st.write(f"{language=}")
+    st.write("--- END DEBUG DATA ---")
 
     input_data = TemplateGeneratorInput(
         user_id=user_id,
