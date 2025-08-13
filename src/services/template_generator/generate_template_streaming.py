@@ -76,7 +76,7 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
         target_info = input_data.target_info
         previous_summary_section = ""
 
-        if input_data.user_id == "default_user":
+        if input_data.user_id.strip().lower() == "default_user":
             # 'default_user'인 경우, 이전 대화 기록을 사용하지 않음
             previous_summary_section = "None (This is the first meeting or no history exists)"
         else:
