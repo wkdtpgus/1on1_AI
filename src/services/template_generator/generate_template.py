@@ -56,17 +56,18 @@ async def generate_template(input_data: TemplateGeneratorInput) -> Dict:
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
     """
 
-    # user_id로 사용자 정보 가져오기
-    user_data = get_user_data_by_id(input_data.user_id)
-    if not user_data:
-        raise ValueError(f"User with ID '{input_data.user_id}' not found.")
+    user_data = None
+    if input_data.user_id != "default_user":
+        user_data = get_user_data_by_id(input_data.user_id)
+        if not user_data:
+            raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
     # target_info가 비어있으면 DB에서 조회한 정보로 채워주기
     target_info = input_data.target_info #or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
 
     # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
     previous_summary_section = ""
-    if input_data.use_previous_data:
+    if input_data.use_previous_data and user_data:
 
         history = user_data.get("one_on_one_history")
         if history:  # 기록이 있는 경우

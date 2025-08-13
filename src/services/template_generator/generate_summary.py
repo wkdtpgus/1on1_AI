@@ -52,14 +52,18 @@ async def generate_summary(input_data: TemplateGeneratorInput) -> dict:
     """
     chain = get_summary_generator_chain()
 
-    user_data = get_user_data_by_id(input_data.user_id)
-    if not user_data:
-        raise ValueError(f"User with ID '{input_data.user_id}' not found.")
+    user_data = None
+    if input_data.user_id != "default_user":
+        user_data = get_user_data_by_id(input_data.user_id)
+        if not user_data:
+            raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
-    target_info = input_data.target_info or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
+    target_info = input_data.target_info
+    if user_data:
+        target_info = input_data.target_info or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
 
     previous_summary_section = ""
-    if input_data.use_previous_data and user_data.get("one_on_one_history"):
+    if input_data.use_previous_data and user_data and user_data.get("one_on_one_history"):
         last_meeting = user_data["one_on_one_history"][-1]
         summary = last_meeting.get("summary", {})
         action_items = last_meeting.get("action_items", {})
