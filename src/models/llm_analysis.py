@@ -8,7 +8,7 @@ import os
 import logging
 
 # 설정 가져오기
-from src.config.config import (
+from src.config.stt_config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     VERTEX_AI_MODEL,
@@ -24,7 +24,7 @@ from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.prompts.planning_meeting_prompts import SYSTEM_PROMPT as PLANNING_SYSTEM_PROMPT, USER_PROMPT as PLANNING_USER_PROMPT
 from src.prompts.general_meeting_prompts import SYSTEM_PROMPT as GENERAL_SYSTEM_PROMPT, USER_PROMPT as GENERAL_USER_PROMPT
 from src.prompts.weekly_meeting_prompts import SYSTEM_PROMPT as WEEKLY_SYSTEM_PROMPT, USER_PROMPT as WEEKLY_USER_PROMPT
-from src.utils.schema import MeetingAnalysis, PlanningMeetingAnalysis, GeneralMeetingAnalysis, WeeklyMeetingAnalysis
+from src.utils.stt_schema import MeetingAnalysis, PlanningMeetingAnalysis, GeneralMeetingAnalysis, WeeklyMeetingAnalysis
 
 # 로깅 설정
 logger = logging.getLogger(__name__)

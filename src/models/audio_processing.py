@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any, List, Union
 from enum import Enum
 
 # 설정 값들 가져오기
-from src.config.config import (
+from src.config.stt_config import (
     OUTPUT_DIR,
     # AssemblyAI 설정
     ASSEMBLYAI_API_KEY,
