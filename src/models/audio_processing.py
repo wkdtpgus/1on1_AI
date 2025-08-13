@@ -1,3 +1,10 @@
+"""
+음성 처리 (Speech-to-Text) 메인 모듈
+
+AssemblyAI를 사용한 음성 전사 처리를 담당합니다.
+전사 결과의 후처리는 별도의 TranscriptionFormatter 유틸리티를 통해 수행됩니다.
+"""
+
 import assemblyai as aai
 import os
 import time
@@ -5,8 +12,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Union
-from enum import Enum
+from typing import Optional, Dict, Any, List
 
 # 설정 값들 가져오기
 from src.config.stt_config import (
@@ -24,133 +30,16 @@ from src.config.stt_config import (
     ASSEMBLYAI_SPEAKERS_EXPECTED
 )
 
+# 전사 결과 포맷팅 유틸리티
+from src.utils.transcription_formatter import TranscriptionFormatter, ProcessingStatus
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("audio_processing")
 
-
-# 상수들
-class ProcessingStatus(Enum):
-    """처리 상태 값들을 위한 열거형"""
-    SUCCESS = "success"
-    ERROR = "error"
-    SUCCESS_NO_UTTERANCES = "success_but_no_utterances"
-    PROCESSING = "processing"
-
-
 # 설정과 상수들
 TRANSCRIPT_POLL_INTERVAL = 5  # 전사 상태 확인 간격(초)
 FILE_TIMESTAMP_FORMAT = "%Y%m%d_%H%M%S"
-TIME_DISPLAY_FORMAT = "{minutes}분 {seconds}초"
-SPEAKER_ALPHABET_START = 65  # ASCII 'A'
-
-
-
-class TranscriptionFormatter:
-    """전사 결과의 포매팅과 분석을 처리"""
-    
-    @staticmethod
-    def create_error_result(message: str, audio_file: str = "") -> Dict[str, Any]:
-        """표준화된 에러 결과 생성"""
-        return {
-            "status": ProcessingStatus.ERROR.value,
-            "message": message,
-            "audio_file": audio_file,
-            "timestamp": datetime.now().isoformat()
-        }
-    
-    @staticmethod
-    def format_time_display(seconds: float) -> str:
-        """초를 MM분 SS초 표시 형식으로 포매팅"""
-        minutes = int(seconds // 60)
-        seconds_remainder = int(seconds % 60)
-        return TIME_DISPLAY_FORMAT.format(minutes=minutes, seconds=seconds_remainder)
-    
-    @staticmethod
-    def format_timestamp_display(seconds: float) -> str:
-        """초를 MM:SS 타임스탬프 형식으로 포매팅"""
-        minutes = int(seconds // 60)
-        seconds_remainder = int(seconds % 60)
-        return f"{minutes:02d}:{seconds_remainder:02d}"
-    
-    @staticmethod
-    def create_speaker_mapping(
-        unique_labels: List[str], 
-        participants_info: Optional[Dict[str, Dict[str, str]]]
-    ) -> Dict[str, str]:
-        """화자 라벨에서 표시 이름으로의 매핑 생성"""
-        speaker_mapping = {}
-        
-        for i, label in enumerate(sorted(unique_labels)):
-            if participants_info and label in participants_info:
-                speaker_name = participants_info[label]["name"]
-            else:
-                speaker_name = chr(SPEAKER_ALPHABET_START + i)  # A, B, C...
-            speaker_mapping[label] = speaker_name
-            
-        return speaker_mapping
-    
-    @staticmethod
-    def calculate_speaker_times(utterances: List[Any]) -> Dict[str, float]:
-        """각 화자의 총 발언 시간을 밀리초 단위로 계산"""
-        speaker_times = {}
-        
-        for utterance in utterances:
-            speaker = utterance.speaker
-            duration = utterance.end - utterance.start  # 밀리초
-            
-            speaker_times[speaker] = speaker_times.get(speaker, 0) + duration
-            
-        return speaker_times
-    
-    @staticmethod
-    def create_speaker_time_info(
-        speaker_times: Dict[str, float], 
-        speaker_mapping: Dict[str, str],
-        total_time_seconds: float
-    ) -> Dict[str, Dict[str, Union[float, str]]]:
-        """상세한 화자 시간 정보 생성"""
-        speaker_time_info = {}
-        
-        for speaker, time_ms in speaker_times.items():
-            time_seconds = time_ms / 1000
-            percentage = (time_seconds / total_time_seconds * 100) if total_time_seconds > 0 else 0
-            speaker_name = speaker_mapping.get(speaker, "참석자")
-            
-            speaker_time_info[speaker_name] = {
-                "total_seconds": round(time_seconds, 2),
-                "formatted_time": TranscriptionFormatter.format_time_display(time_seconds),
-                "percentage": round(percentage, 1)
-            }
-            
-        return speaker_time_info
-    
-    @staticmethod
-    def create_utterances_info(
-        utterances: List[Any], 
-        speaker_mapping: Dict[str, str]
-    ) -> List[Dict[str, Any]]:
-        """프론트엔드를 위한 상세한 발화 정보 생성"""
-        utterances_info = []
-        
-        for utterance in utterances:
-            speaker_name = speaker_mapping.get(utterance.speaker, "참석자")
-            start_seconds = utterance.start / 1000  # 밀리초에서 초로
-            end_seconds = utterance.end / 1000
-            duration = end_seconds - start_seconds
-            
-            utterances_info.append({
-                "speaker": speaker_name,
-                "start_time": round(start_seconds, 1),
-                "end_time": round(end_seconds, 1),
-                "duration": round(duration, 1),
-                "text": utterance.text,
-                "formatted_start": TranscriptionFormatter.format_timestamp_display(start_seconds)
-            })
-            
-        return utterances_info
-    
-    
 
 
 class STTProcessor:
@@ -266,22 +155,7 @@ class STTProcessor:
         speaker_mapping: Dict[str, str]
     ) -> str:
         """Gemini 모델에 최적화된 전사 텍스트 형식 생성"""
-        lines = []
-        
-        # 명확한 구분자로 시작
-        lines.append("## 회의 전사 내용")
-        lines.append("")
-        
-        
-        # 대화 내용
-        lines.append("### 대화 내용")
-        for utterance in utterances:
-            speaker_name = speaker_mapping.get(utterance.speaker, '참석자')
-            start_time = TranscriptionFormatter.format_timestamp_display(utterance.start / 1000)
-            # 간소화된 형식: [타임스탬프] 화자명: 내용
-            lines.append(f"[{start_time}] {speaker_name}: {utterance.text}")
-        
-        return "\n".join(lines)
+        return TranscriptionFormatter.create_gemini_formatted_transcript(utterances, speaker_mapping)
     
     def _create_transcription_config(self, expected_speakers: Optional[int] = None) -> aai.TranscriptionConfig:
         """AssemblyAI 전사 구성 생성
@@ -292,6 +166,7 @@ class STTProcessor:
         try:
             # 동적으로 화자 수 설정 (최소 2명, 최대 10명으로 제한)
             speakers_count = expected_speakers if expected_speakers is not None else ASSEMBLYAI_SPEAKERS_EXPECTED
+            speakers_count = max(2, min(speakers_count, 10))
             
             logger.debug(f"화자 수 설정: {speakers_count}명")
             
@@ -382,7 +257,6 @@ class STTProcessor:
             speaker_times, speaker_mapping, total_speaking_time_seconds
         )
         
-        
         # Gemini용 구조화된 전사 텍스트 생성
         gemini_formatted_transcript = self._create_gemini_formatted_transcript(
             transcript.utterances, speaker_mapping
@@ -391,7 +265,6 @@ class STTProcessor:
         # 상세한 발화 정보 생성
         utterances = TranscriptionFormatter.create_utterances_info(transcript.utterances, speaker_mapping)
         
-
         return {
             # Gemini 모델 최적화된 전사 내용
             "transcript": gemini_formatted_transcript,
@@ -399,7 +272,7 @@ class STTProcessor:
             "timestamp": datetime.now().isoformat(),
             
             # 화자 통계 정보
-            "speaker_times": speaker_time_info,
+            "speaker_stats": speaker_time_info,
             "total_duration_seconds": round(total_meeting_duration_seconds, 2),
             "total_speaking_time_seconds": round(total_speaking_time_seconds, 2),
             
@@ -441,7 +314,6 @@ class AudioProcessor:
         except Exception as e:
             logger.error(f"AudioProcessor 초기화 실패: {e}")
             raise
-
 
     def transcribe_existing_file(
         self, 
