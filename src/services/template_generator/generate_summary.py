@@ -1,3 +1,6 @@
+import streamlit as st
+import json
+from google.oauth2 import service_account
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -19,10 +22,17 @@ def get_summary_generator_chain():
     """
     1on1 템플릿 요약 생성을 위한 LangChain 체인을 생성합니다.
     """
+    credentials = None
+    # Streamlit Cloud에서 실행 중인 경우, secrets에서 서비스 계정 정보 로드
+    if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
+        gcp_creds_dict = dict(st.secrets["gcp_service_account"])
+        credentials = service_account.Credentials.from_service_account_info(gcp_creds_dict)
+
     model = ChatVertexAI(
         project=GOOGLE_CLOUD_PROJECT,
         location=GOOGLE_CLOUD_LOCATION,
         model_name=GEMINI_MODEL,
+        credentials=credentials,
         max_output_tokens=MAX_TOKENS,
         temperature=GEMINI_TEMPERATURE,
         model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
