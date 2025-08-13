@@ -42,7 +42,27 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
         if temp_creds_path:
             credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
         
-        # 3. Vertex AI 초기화 (수동 로드한 인증 정보 직접 주입)
+        # 3. Vertex AI 초기화 전, 인증 정보 존재 여부 강제 확인
+        if not credentials:
+            raise ValueError(
+                "GCP credentials could not be loaded. "
+                "Please check Streamlit secrets configuration."
+            )
+
+        # --- DIAGNOSTIC CODE START ---
+        print("Attempting to authenticate with Google Cloud Storage to verify credentials...")
+        try:
+            from google.cloud import storage
+            storage_client = storage.Client(
+                project=GOOGLE_CLOUD_PROJECT,
+                credentials=credentials
+            )
+            buckets = list(storage_client.list_buckets(max_results=1))
+            print(f"SUCCESS: Successfully authenticated and listed buckets. Found: {buckets}")
+        except Exception as e:
+            print(f"ERROR: Failed to authenticate with Google Cloud Storage. Error: {e}")
+        # --- DIAGNOSTIC CODE END ---
+
         vertexai.init(
             project=GOOGLE_CLOUD_PROJECT, 
             location=GOOGLE_CLOUD_LOCATION, 
