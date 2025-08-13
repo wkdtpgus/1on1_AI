@@ -12,6 +12,7 @@ from src.utils.utils import get_user_data_by_name
 st.set_page_config(layout="wide")
 
 st.title("1-on-1 템플릿 생성기")
+st.info("v2.2: Deployment Check - Fail-fast logic applied.")
 
 # --- MOCK DATA and OPTIONS ---
 USER_NAMES = [user['name'] for user in MOCK_USER_DATA]
