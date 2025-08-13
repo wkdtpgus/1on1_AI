@@ -21,10 +21,7 @@ from src.config.stt_config import (
     LANGSMITH_PROJECT
 )
 from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
-from src.prompts.planning_meeting_prompts import SYSTEM_PROMPT as PLANNING_SYSTEM_PROMPT, USER_PROMPT as PLANNING_USER_PROMPT
-from src.prompts.general_meeting_prompts import SYSTEM_PROMPT as GENERAL_SYSTEM_PROMPT, USER_PROMPT as GENERAL_USER_PROMPT
-from src.prompts.weekly_meeting_prompts import SYSTEM_PROMPT as WEEKLY_SYSTEM_PROMPT, USER_PROMPT as WEEKLY_USER_PROMPT
-from src.utils.stt_schema import MeetingAnalysis, PlanningMeetingAnalysis, GeneralMeetingAnalysis, WeeklyMeetingAnalysis
+from src.utils.stt_schema import MeetingAnalysis
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
@@ -140,132 +137,6 @@ class BaseMeetingAnalyzer(ABC):
             
         except Exception as e:
             return self._handle_analysis_error(e, "1:1 회의 분석 오류")
-    
-    def analyze_planning_meeting(self, transcript: str, 
-                                speaker_stats: Dict = None, 
-                                participants: Dict = None) -> str:
-        """기획회의 분석 메서드"""
-        try:
-            # 화자 통계 준비
-            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
-            
-            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
-            full_transcript = transcript
-            if speaker_stats_text:
-                full_transcript += f"\n{speaker_stats_text}"
-            
-            # 기획회의 프롬프트 템플릿 사용
-            user_prompt_template = PromptTemplate(
-                input_variables=["transcript", "participants_info"],
-                template=PLANNING_USER_PROMPT
-            )
-
-            # 프롬프트 체인 구성
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", PLANNING_SYSTEM_PROMPT),
-                ("human", user_prompt_template.template)
-            ])
-            
-            # 체인 생성
-            chain = prompt | self.llm.with_structured_output(PlanningMeetingAnalysis)
-            
-            # 참가자 정보를 JSON으로 직접 전달
-            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
-            
-            # 체인 실행
-            input_data = {
-                "transcript": full_transcript,
-                "participants_info": participants_info_text
-            }
-            
-            return self._execute_chain(chain, input_data, "기획회의 분석")
-            
-        except Exception as e:
-            return self._handle_analysis_error(e, "기획회의 분석 오류")
-    
-    def analyze_general_meeting(self, transcript: str, 
-                               speaker_stats: Dict = None, 
-                               participants: Dict = None) -> str:
-        """일반회의 분석 메서드"""
-        try:
-            # 화자 통계 준비
-            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
-            
-            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
-            full_transcript = transcript
-            if speaker_stats_text:
-                full_transcript += f"\n{speaker_stats_text}"
-            
-            # 일반회의 프롬프트 템플릿 사용
-            user_prompt_template = PromptTemplate(
-                input_variables=["transcript", "participants_info"],
-                template=GENERAL_USER_PROMPT
-            )
-            
-            # 프롬프트 체인 구성
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", GENERAL_SYSTEM_PROMPT),
-                ("human", user_prompt_template.template)
-            ])
-            
-            # 체인 생성
-            chain = prompt | self.llm.with_structured_output(GeneralMeetingAnalysis)
-            
-            # 참가자 정보를 JSON으로 직접 전달
-            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
-            
-            # 체인 실행
-            input_data = {
-                "transcript": full_transcript,
-                "participants_info": participants_info_text
-            }
-            
-            return self._execute_chain(chain, input_data, "일반회의 분석")
-            
-        except Exception as e:
-            return self._handle_analysis_error(e, "일반회의 분석 오류")
-    
-    def analyze_weekly_meeting(self, transcript: str, 
-                              speaker_stats: Dict = None, 
-                              participants: Dict = None) -> str:
-        """주간회의 분석 메서드"""
-        try:
-            # 화자 통계 준비
-            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
-            
-            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
-            full_transcript = transcript
-            if speaker_stats_text:
-                full_transcript += f"\n{speaker_stats_text}"
-            
-            # 주간회의 프롬프트 템플릿 사용
-            user_prompt_template = PromptTemplate(
-                input_variables=["transcript", "participants_info"],
-                template=WEEKLY_USER_PROMPT
-            )
-            
-            # 프롬프트 체인 구성
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", WEEKLY_SYSTEM_PROMPT),
-                ("human", user_prompt_template.template)
-            ])
-            
-            # 체인 생성
-            chain = prompt | self.llm.with_structured_output(WeeklyMeetingAnalysis)
-            
-            # 참가자 정보를 JSON으로 직접 전달
-            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
-            
-            # 체인 실행
-            input_data = {
-                "transcript": full_transcript,
-                "participants_info": participants_info_text
-            }
-            
-            return self._execute_chain(chain, input_data, "주간회의 분석")
-            
-        except Exception as e:
-            return self._handle_analysis_error(e, "주간회의 분석 오류")
 
 
 class GeminiMeetingAnalyzer(BaseMeetingAnalyzer):    

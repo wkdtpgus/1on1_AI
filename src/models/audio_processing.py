@@ -292,7 +292,6 @@ class STTProcessor:
         try:
             # 동적으로 화자 수 설정 (최소 2명, 최대 10명으로 제한)
             speakers_count = expected_speakers if expected_speakers is not None else ASSEMBLYAI_SPEAKERS_EXPECTED
-            speakers_count = max(2, min(speakers_count, 10))
             
             logger.debug(f"화자 수 설정: {speakers_count}명")
             
