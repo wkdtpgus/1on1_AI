@@ -14,24 +14,17 @@ from src.config.stt_config import (
     VERTEX_AI_MODEL,
     VERTEX_AI_TEMPERATURE,
     VERTEX_AI_MAX_TOKENS,
-    # LangSmith 설정
     LANGSMITH_TRACING,
-    LANGSMITH_ENDPOINT,
-    LANGSMITH_API_KEY,
     LANGSMITH_PROJECT
 )
 from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.stt_schema import MeetingAnalysis
 
 # 로깅 설정
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("llm_analysis")
 
-# LangSmith 추적 설정
-if LANGSMITH_TRACING and LANGSMITH_API_KEY:
-    os.environ["LANGSMITH_TRACING"] = "true"
-    os.environ["LANGSMITH_ENDPOINT"] = LANGSMITH_ENDPOINT
-    os.environ["LANGSMITH_API_KEY"] = LANGSMITH_API_KEY
-    os.environ["LANGSMITH_PROJECT"] = LANGSMITH_PROJECT
+# LangSmith 추적 상태 로깅 (config에서 이미 환경변수 설정됨)
+if LANGSMITH_TRACING:
     logger.info(f"LangSmith 추적 활성화됨 - 프로젝트: {LANGSMITH_PROJECT}")
 else:
     logger.info("LangSmith 추적이 비활성화되어 있습니다")

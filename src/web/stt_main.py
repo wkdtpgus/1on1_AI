@@ -21,7 +21,7 @@ from src.config.stt_config import (
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("stt_main")
 
 # 전역 변수
 audio_processor = None
