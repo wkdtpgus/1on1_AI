@@ -26,15 +26,14 @@ if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
 # Vertex AI 초기화
 vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=GOOGLE_CLOUD_LOCATION, credentials=credentials)
 
-# 스트리밍을 위한 모델 직접 초기화
-streaming_model = GenerativeModel(GEMINI_MODEL)
-
 
 @traceable(run_type="llm", name="generate_template_streaming")
 async def generate_template_streaming(input_data: TemplateGeneratorInput) -> AsyncIterator[str]:
     """
     입력 데이터를 기반으로 1on1 템플릿을 비동기적으로 생성합니다.
     """
+    # 함수 내에서 모델을 초기화하여 인증 정보가 확실히 적용되도록 함
+    streaming_model = GenerativeModel(GEMINI_MODEL)
 
     # user_id로 사용자 정보 가져오기
     user_data = None
@@ -108,7 +107,7 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
         "temperature": GEMINI_TEMPERATURE,
     }
 
-    # 모델의 generate_content_async를 직접 호출하여 스트리밍
+    # 모델의 generate_content를 직접 호출하여 스트리밍
     responses = streaming_model.generate_content(
         contents,
         generation_config=generation_config,
