@@ -3,7 +3,7 @@ import json
 from src.utils.mock_db import MOCK_USER_DATA
 
 # FastAPI 서버의 v2 스트리밍 엔드포인트 URL
-url = "http://127.0.0.1:8002/templates/generate-streaming-v2"
+url = "http://127.0.0.1:8000/generate"
 
 # 테스트할 사용자 ID
 USER_ID_TO_TEST = "user_001"
@@ -34,17 +34,28 @@ headers = {
 
 try:
     # 스트리밍 요청 보내기
-    with requests.post(url, data=json.dumps(payload), headers=headers, stream=True, timeout=300) as response:
+    with requests.post(url, data=json.dumps(payload), headers=headers, stream=True, timeout=300) as response: 
         # 응답 상태 코드 확인
         if response.status_code == 200:
-            print("--- 스트리밍 시작 ---")
             # 인코딩 설정
-            response.encoding = 'utf-8'
-            # 청크 단위로 응답 내용 출력
-            for chunk in response.iter_content(chunk_size=None, decode_unicode=True):
-                if chunk:
-                    print(chunk, end='', flush=True)
-            print("\n--- 스트리밍 종료 ---")
+            # SSE (Server-Sent Events) 스트림을 실시간으로 처리
+            print("--- 생성된 1on1 질문 목록 (스트리밍) ---")
+            question_count = 1
+            for line in response.iter_lines(decode_unicode=True):
+                # SSE 데이터는 "data: "로 시작합니다.
+                if line.startswith('data: '):
+                    # "data: " 접두사를 제거하여 실제 JSON 데이터를 추출합니다.
+                    json_data = line[len('data: '):]
+                    try:
+                        # 서버에서 오는 데이터 조각(chunk)을 파싱합니다.
+                        content_chunk = json.loads(json_data)
+                        # 줄바꿈 없이 이어서 출력하여 타이핑 효과를 냅니다.
+                        print(content_chunk, end="", flush=True)
+                    except json.JSONDecodeError:
+                        # 파싱에 실패한 경우, 원본 데이터를 출력하여 디버깅을 돕습니다.
+                        print(f"JSON 파싱 오류: {json_data}")
+            # 스트리밍이 모두 끝난 후 한 줄을 띄워줍니다.
+            print("\n-------------------------------------") # Add a newline for cleaner terminal output after the stream.
         else:
             print(f"에러 발생: {response.status_code}")
             print(f"응답 내용: {response.text}")

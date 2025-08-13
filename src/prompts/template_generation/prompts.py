@@ -23,7 +23,6 @@ You are an expert HR consultant specializing in helping organizational leaders c
   - **Crucial Language Rule:** Your entire JSON output, including all questions, must be in the language specified by the `{language}` parameter. Even if input data is in another language, understand it, but generate your questions strictly in the requested `{language}`.
   - Use a natural and conversational tone.
   - Ask in a **constructive, supportive direction**, not corrective or judgmental.
-  - Follow the JSON format with generated_questions.
 
 5. **Purpose vs. Question Composition**
   - Use the `purpose` selections to decide **WHAT** topics to cover (e.g., Growth, Satisfaction).
@@ -78,15 +77,6 @@ HUMAN_PROMPT = """
 
 - Conversation Tone and Manner: {tone_and_manner}
   (Choose: Formal / Casual)
-
-## OUTPUT FORMAT
-{{
-  "generated_questions": [
-          "First question",
-          "Second question", 
-          "Third question"
-  ]
-}}
 """
 
 
