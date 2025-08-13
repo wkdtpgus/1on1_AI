@@ -1,6 +1,8 @@
 from typing import AsyncIterator
 
+import streamlit as st
 import vertexai
+from google.oauth2 import service_account
 from langsmith import traceable
 from vertexai.generative_models import GenerativeModel, Part
 
@@ -15,8 +17,14 @@ from src.prompts.template_generation.prompts import HUMAN_PROMPT, SYSTEM_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
+# Streamlit Cloud 환경에 맞는 인증 정보 로드
+credentials = None
+if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
+    gcp_creds_dict = dict(st.secrets["gcp_service_account"])
+    credentials = service_account.Credentials.from_service_account_info(gcp_creds_dict)
+
 # Vertex AI 초기화
-vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=GOOGLE_CLOUD_LOCATION)
+vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=GOOGLE_CLOUD_LOCATION, credentials=credentials)
 
 # 스트리밍을 위한 모델 직접 초기화
 streaming_model = GenerativeModel(GEMINI_MODEL)
@@ -29,16 +37,20 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
     """
 
     # user_id로 사용자 정보 가져오기
-    user_data = get_user_data_by_id(input_data.user_id)
-    if not user_data:
-        raise ValueError(f"User with ID '{input_data.user_id}' not found.")
+    user_data = None
+    if input_data.user_id != "default_user":
+        user_data = get_user_data_by_id(input_data.user_id)
+        if not user_data:
+            raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
     # target_info가 비어있으면 DB에서 조회한 정보로 채워주기
-    target_info = input_data.target_info #or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
+    target_info = input_data.target_info
+    if user_data:
+        target_info = input_data.target_info or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
 
     # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
     previous_summary_section = ""
-    if input_data.use_previous_data:
+    if input_data.use_previous_data and user_data:
 
         history = user_data.get("one_on_one_history")
         if history:  # 기록이 있는 경우
