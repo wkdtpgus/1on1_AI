@@ -76,8 +76,9 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
         target_info = input_data.target_info
         previous_summary_section = ""
 
-        if input_data.user_id.strip().lower() == "default_user":
-            # 'default_user'인 경우, 이전 대화 기록을 사용하지 않음
+        print(f"[DIAGNOSTIC] generate_template_streaming: Checking user_id: '{input_data.user_id}' (type: {type(input_data.user_id)})")
+        if not input_data.user_id or input_data.user_id.strip().lower() == "default_user":
+            # 'default_user' 또는 ID가 없는 경우, 이전 대화 기록을 사용하지 않음
             previous_summary_section = "None (This is the first meeting or no history exists)"
         else:
             # 실제 사용자인 경우, 데이터베이스에서 정보를 가져옴
