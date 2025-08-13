@@ -119,18 +119,9 @@ if submit_button:
     num_questions_en = NUM_QUESTIONS_MAP[num_questions_kr]
     question_composition_en = [QUESTION_COMPOSITION_MAP[name]['en'] for name, selected in question_composition_selections.items() if selected]
 
-    st.write("--- DEBUG DATA ---")
-    st.write(f"{user_id=}")
-    st.write(f"{target_info=}")
-    st.write(f"{purpose_en=}")
-    st.write(f"{detailed_context=}")
-    st.write(f"{use_previous_data=}")
-    st.write(f"{previous_summary=}")
-    st.write(f"{num_questions_en=}")
-    st.write(f"{question_composition_en=}")
-    st.write(f"{tone_and_manner=}")
-    st.write(f"{language=}")
-    st.write("--- END DEBUG DATA ---")
+    if user_id is None:
+        user_id = "default_user"  # 또는 다른 적절한 기본값
+
 
     input_data = TemplateGeneratorInput(
         user_id=user_id,
