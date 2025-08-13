@@ -59,6 +59,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    """메인 페이지"""
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/index.html")
+
+@app.get("/api.js")
+async def api_js():
+    """API JavaScript 파일"""
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/api.js", media_type="application/javascript")
+
+@app.get("/app.js")
+async def app_js():
+    """앱 JavaScript 파일"""
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/app.js", media_type="application/javascript")
+
+@app.get("/favicon.ico")
+async def favicon():
+    """파비콘"""
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/favicon.ico", media_type="image/x-icon")
 
 @app.post("/api/analyze")
 async def analyze_meeting(
