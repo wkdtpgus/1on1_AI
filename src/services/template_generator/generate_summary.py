@@ -48,17 +48,19 @@ async def generate_summary(input_data: TemplateGeneratorInput) -> dict:
     credentials = None
     temp_creds_path = None
     try:
-        if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
-            gcp_creds_dict = dict(st.secrets["gcp_service_account"])
-            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
-                json.dump(gcp_creds_dict, temp_creds_file)
-                temp_creds_path = temp_creds_file.name
-            
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_creds_path
-            credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
+        if not hasattr(st, 'secrets') or "gcp_service_account" not in st.secrets:
+            raise ValueError("GCP service account credentials not found in Streamlit secrets.")
+
+        gcp_creds_dict = dict(st.secrets["gcp_service_account"])
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
+            json.dump(gcp_creds_dict, temp_creds_file)
+            temp_creds_path = temp_creds_file.name
+        
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_creds_path
+        credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
 
         if not credentials:
-            raise ValueError("GCP credentials could not be loaded.")
+            raise ValueError("Failed to load GCP credentials from the temporary file.")
 
         chain = get_summary_generator_chain(credentials)
 

@@ -28,11 +28,13 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
     credentials = None
     try:
         # 1. Streamlit secrets에서 인증 정보를 가져와 임시 파일로 저장
-        if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
-            gcp_creds_dict = dict(st.secrets["gcp_service_account"])
-            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
-                json.dump(gcp_creds_dict, temp_creds_file)
-                temp_creds_path = temp_creds_file.name
+        if not hasattr(st, 'secrets') or "gcp_service_account" not in st.secrets:
+            raise ValueError("GCP service account credentials not found in Streamlit secrets.")
+
+        gcp_creds_dict = dict(st.secrets["gcp_service_account"])
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
+            json.dump(gcp_creds_dict, temp_creds_file)
+            temp_creds_path = temp_creds_file.name
 
         # 2. 라이브러리 지연 임포트 및 수동 인증
         import vertexai
