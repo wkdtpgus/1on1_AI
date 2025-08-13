@@ -1,6 +1,5 @@
 import assemblyai as aai
 import os
-import time
 import json
 import logging
 from datetime import datetime
@@ -8,22 +7,10 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 # 설정 값들 가져오기
-from src.config.stt_config import (
-    OUTPUT_DIR,
-    # AssemblyAI 설정
-    ASSEMBLYAI_API_KEY,
-    ASSEMBLYAI_LANGUAGE,
-    ASSEMBLYAI_PUNCTUATE,
-    ASSEMBLYAI_FORMAT_TEXT,
-    ASSEMBLYAI_DISFLUENCIES,
-    ASSEMBLYAI_SPEAKER_LABELS,
-    ASSEMBLYAI_LANGUAGE_DETECTION,
-    ASSEMBLYAI_WORD_BOOST,
-    ASSEMBLYAI_BOOST_PARAM,
-    ASSEMBLYAI_SPEAKERS_EXPECTED
-)
+from src.config.stt_config import OUTPUT_DIR
 
-# 전사 결과 포맷팅 유틸리티
+# 모델 및 유틸리티 임포트
+from src.models.assembly import AssemblyAIProcessor
 from src.utils.transcription_formatter import TranscriptionFormatter, ProcessingStatus
 
 # 로깅 설정
@@ -31,42 +18,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("audio_processing")
 
 # 설정과 상수들
-TRANSCRIPT_POLL_INTERVAL = 5  # 전사 상태 확인 간격(초)
 FILE_TIMESTAMP_FORMAT = "%Y%m%d_%H%M%S"
 
 
 class STTProcessor:
-    """포괄적인 에러 처리를 포함한 AssemblyAI 기반 음성-텍스트 처리"""
+    """AssemblyAI 모델을 사용한 음성-텍스트 처리 서비스"""
 
     def __init__(self, api_key: Optional[str] = None) -> None:
-        """API 키 검증과 함께 STTProcessor 초기화"""
-        self.api_key = self._resolve_api_key(api_key)
-        self._configure_assemblyai()
-        
+        """STTProcessor 초기화"""
+        self.assembly_processor = AssemblyAIProcessor(api_key=api_key)
         logger.debug("STTProcessor가 성공적으로 초기화되었습니다")
-    
-    def _resolve_api_key(self, api_key: Optional[str]) -> str:
-        """검증과 함께 여러 소스에서 API 키 해결"""
-        resolved_key = api_key or ASSEMBLYAI_API_KEY or os.getenv("ASSEMBLYAI_API_KEY")
-        
-        if not resolved_key:
-            error_msg = (
-                "AssemblyAI API 키가 필요합니다. "
-                "파라미터, config.py 또는 ASSEMBLYAI_API_KEY 환경 변수를 통해 제공하세요."
-            )
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-            
-        return resolved_key
-    
-    def _configure_assemblyai(self) -> None:
-        """AssemblyAI 설정 구성"""
-        try:
-            aai.settings.api_key = self.api_key
-            logger.debug("AssemblyAI가 성공적으로 구성되었습니다")
-        except Exception as e:
-            logger.error(f"AssemblyAI 구성 실패: {e}")
-            raise
 
     def transcribe_audio(
         self, 
@@ -74,7 +35,7 @@ class STTProcessor:
         participants_info: Optional[Dict[str, Dict[str, str]]] = None,
         expected_speakers: Optional[int] = None
     ) -> Dict[str, Any]:
-        """오디오 파일을 AssemblyAI를 사용하여 전사하고 결과를 포맷팅
+        """오디오 파일을 전사하고 결과를 포맷팅
         
         Args:
             audio_file: 처리할 오디오 파일 경로
@@ -95,7 +56,7 @@ class STTProcessor:
 
         try:
             # 전사 수행
-            transcript = self._execute_transcription(audio_file, expected_speakers)
+            transcript = self.assembly_processor.execute_transcription(audio_file, expected_speakers)
             
             if not transcript:
                 return self._handle_transcription_error("전사 실패", audio_file)
@@ -109,20 +70,6 @@ class STTProcessor:
 
         except Exception as e:
             return self._handle_transcription_error(str(e), audio_file, include_traceback=True)
-    
-    def _execute_transcription(self, audio_file: str, expected_speakers: Optional[int]) -> Optional[aai.Transcript]:
-        """전사 실행을 위한 내부 메서드"""
-        # 전사 구성 생성
-        config = self._create_transcription_config(expected_speakers)
-        
-        # 전사 수행
-        transcript = self._perform_transcription(audio_file, config)
-        
-        if transcript and transcript.status == aai.TranscriptStatus.error:
-            logger.error(f"전사 실패: {transcript.error}")
-            return None
-            
-        return transcript
     
     def _handle_transcription_error(self, message: str, audio_file: str = "", 
                                    include_traceback: bool = False) -> Dict[str, Any]:
@@ -149,62 +96,6 @@ class STTProcessor:
     ) -> str:
         """Gemini 모델에 최적화된 전사 텍스트 형식 생성"""
         return TranscriptionFormatter.create_gemini_formatted_transcript(utterances, speaker_mapping)
-    
-    def _create_transcription_config(self, expected_speakers: Optional[int] = None) -> aai.TranscriptionConfig:
-        """AssemblyAI 전사 구성 생성
-        
-        Args:
-            expected_speakers: 예상 화자 수 (None이면 기본값 사용)
-        """
-        try:
-            # 동적으로 화자 수 설정 (최소 2명, 최대 10명으로 제한)
-            speakers_count = expected_speakers if expected_speakers is not None else ASSEMBLYAI_SPEAKERS_EXPECTED
-            speakers_count = max(2, min(speakers_count, 10))
-            
-            logger.debug(f"화자 수 설정: {speakers_count}명")
-            
-            config = aai.TranscriptionConfig(
-                language_code=ASSEMBLYAI_LANGUAGE,
-                punctuate=ASSEMBLYAI_PUNCTUATE,
-                format_text=ASSEMBLYAI_FORMAT_TEXT,
-                disfluencies=ASSEMBLYAI_DISFLUENCIES,
-                speaker_labels=ASSEMBLYAI_SPEAKER_LABELS,
-                language_detection=ASSEMBLYAI_LANGUAGE_DETECTION,
-                speakers_expected=speakers_count
-            )
-
-            # 구성된 경우 단어 부스트 추가
-            if ASSEMBLYAI_WORD_BOOST:
-                config.word_boost = ASSEMBLYAI_WORD_BOOST
-                config.boost_param = ASSEMBLYAI_BOOST_PARAM
-                
-            logger.debug("전사 구성이 생성되었습니다")
-            return config
-            
-        except Exception as e:
-            logger.error(f"전사 구성 생성 실패: {e}")
-            raise
-    
-    def _perform_transcription(self, audio_file: str, config: aai.TranscriptionConfig) -> Optional[aai.Transcript]:
-        """상태 폴링과 함께 전사 수행"""
-        try:
-            transcriber = aai.Transcriber(config=config)
-            transcript = transcriber.transcribe(audio_file)
-            
-            logger.info("전사 완료를 기다리고 있습니다...")
-            
-            # 적절한 에러 처리와 함께 완료 여부 폴링
-            while transcript.status not in [aai.TranscriptStatus.completed, aai.TranscriptStatus.error]:
-                logger.debug(f"전사 상태: {transcript.status}")
-                time.sleep(TRANSCRIPT_POLL_INTERVAL)
-                transcript = transcript.get()
-                
-            logger.info(f"전사 완료, 상태: {transcript.status}")
-            return transcript
-            
-        except Exception as e:
-            logger.error(f"전사 실패: {e}")
-            return None
 
     def _format_transcription_result(
         self, 
@@ -295,15 +186,15 @@ class AudioProcessor:
     """오디오 파일 전사 처리를 위한 서버용 인터페이스"""
     
     def __init__(self, assemblyai_api_key: Optional[str] = None) -> None:
-        """전사 기능만으로 AudioProcessor 초기화
+        """전사 기능으로 AudioProcessor 초기화
         
         Args:
             assemblyai_api_key: 전사 서비스를 위한 AssemblyAI API 키
         """
         try:
-            # STT 처리만 사용 (서버 환경)
+            # STT 처리 초기화
             self.stt_processor = STTProcessor(api_key=assemblyai_api_key)
-            logger.debug("AudioProcessor가 성공적으로 초기화되었습니다 (전사 전용)")
+            logger.debug("AudioProcessor가 성공적으로 초기화되었습니다")
         except Exception as e:
             logger.error(f"AudioProcessor 초기화 실패: {e}")
             raise

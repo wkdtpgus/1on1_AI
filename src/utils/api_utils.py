@@ -95,8 +95,8 @@ async def initialize_services(assemblyai_key: str, google_project: str, google_l
     """서비스 초기화"""
     global audio_processor, meeting_analyzer
     
-    from src.models.audio_processing import AudioProcessor
-    from src.models.llm_analysis import GeminiMeetingAnalyzer
+    from src.services.stt_processor.audio_processing import AudioProcessor
+    from src.models.gemini import GeminiMeetingAnalyzer
     
     try:
         setup_google_credentials(google_credentials)

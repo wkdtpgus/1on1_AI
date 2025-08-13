@@ -1,9 +1,3 @@
-"""
-STT (Speech-to-Text) 설정 관련 내용
-- STT 모델 및 오디오 처리 관련 설정을 중앙에서 관리
-- 설정 변경 시 이 파일만 수정하면 전체 시스템에 반영됨
-"""
-
 import os
 from dotenv import load_dotenv
 
