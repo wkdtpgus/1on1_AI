@@ -120,7 +120,8 @@ if submit_button:
     question_composition_en = [QUESTION_COMPOSITION_MAP[name]['en'] for name, selected in question_composition_selections.items() if selected]
 
     if user_id is None:
-        user_id = "default_user"  # 또는 다른 적절한 기본값
+        # user_id가 없는 경우, 유효성 검사 오류 방지를 위해 기본값 설정
+        user_id = "default_user"
 
 
     input_data = TemplateGeneratorInput(
