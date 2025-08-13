@@ -63,7 +63,7 @@ async def generate_template(input_data: TemplateGeneratorInput) -> Dict:
         chain = get_template_generator_chain(credentials)
 
         user_data = None
-        if input_data.user_id != "default_user":
+        if input_data.user_id.strip().lower() != "default_user":
             user_data = get_user_data_by_id(input_data.user_id)
             if not user_data:
                 raise ValueError(f"User with ID '{input_data.user_id}' not found.")
