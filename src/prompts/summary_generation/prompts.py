@@ -14,7 +14,6 @@ IMPORTANT: Refering sensitive problem or issue in very subtle and indirect way b
 HUMAN_PROMPT = """
 ## [Basic Information]
 - Target: {target_info}
-- Type: {dialogue_type}
 
 ## [Purpose and Situation]
 - Purpose/Background: {purpose}
@@ -25,6 +24,6 @@ HUMAN_PROMPT = """
 
 ## OUTPUT FORMAT
 {{
-  "template_summary": "Generated summary about the 1-on-1 session. The summary should start with 'Dear [Name], this 1-on-1 meeting will cover...'"
+  "template_summary": "Generated summary about the 1-on-1 session. The summary should start with an appropriate greeting based on the language and must mention the target person's name.
 }}
 """

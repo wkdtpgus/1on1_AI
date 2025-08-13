@@ -2,41 +2,24 @@ import logging
 import json
 import re
 from typing import AsyncIterable
-from langchain_google_vertexai import ChatVertexAI
 from langchain_core.prompts import ChatPromptTemplate
 from langsmith import traceable
-# streaming true공통설정 따로 빼두기
+
 # Configure basic logging to see INFO level messages
 logging.basicConfig(level=logging.INFO)
 
-from src.config.template_config import (
-    GOOGLE_CLOUD_PROJECT,
-    GOOGLE_CLOUD_LOCATION,
-    GEMINI_MODEL,
-    MAX_TOKENS,
-    GEMINI_TEMPERATURE,
-    GEMINI_THINKING_BUDGET,
-)
+from src.utils.model import llm_streaming
 from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
 def get_streaming_chain():
     """1on1 템플릿 생성을 위한 스트리밍 LangChain 체인을 생성합니다. (v2)"""
-    model = ChatVertexAI(
-        project=GOOGLE_CLOUD_PROJECT,
-        location=GOOGLE_CLOUD_LOCATION,
-        model_name=GEMINI_MODEL,
-        max_output_tokens=MAX_TOKENS,
-        temperature=GEMINI_TEMPERATURE,
-        model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
-        streaming=True,  # 스트리밍 활성화
-    )
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", HUMAN_PROMPT)
     ])
-    return prompt | model
+    return prompt | llm_streaming
 
 chain = get_streaming_chain()
 
@@ -49,10 +32,6 @@ async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable
     user_data = get_user_data_by_id(input_data.user_id)
     if not user_data:
         raise ValueError(f"User with ID '{input_data.user_id}' not found.")
-
-    # target_info가 비어있으면 DB에서 조회한 정보로 채워주기
-    # (비활)
-    target_info = input_data.target_info
 
     # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
     # 여기서 받기만하고 테스트파일에서 만들어야함(더미데이터활용하는것이기 때문) - 프론트에서 묶어서 매핑할 수 없음
@@ -97,7 +76,7 @@ async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable
         "target_info": safe_value(input_data.target_info),
         "purpose": purpose_str,
         "detailed_context": safe_value(input_data.detailed_context),
-        "dialogue_type": safe_value(input_data.dialogue_type),
+
         "previous_summary_section": previous_summary_section,
         "num_questions": safe_value(input_data.num_questions),
         "question_composition": question_composition_str,
@@ -110,11 +89,14 @@ async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable
     # 이 방식은 클라이언트에서 한 글자씩 또는 단어씩 렌더링되어
     # Stream the response from the chain
     try:
+        # 스트리밍 응답을 모아서 하나의 완전한 JSON으로 만들기
+        full_response = ""
         async for chunk in chain.astream(prompt_variables):
             if chunk.content:
                 # 각 청크의 내용을 SSE 형식으로 포장하여 스트리밍합니다.
-                yield f"data: {json.dumps(chunk.content)}\n\n"
+                # ensure_ascii=False로 한글이 제대로 표시되도록 설정
+                yield f"data: {json.dumps(chunk.content, ensure_ascii=False)}\n\n"
     except Exception as e:
         error_message = f"Error during stream generation: {e}"
         # Yield a formatted error message to the client
-        yield f"data: {json.dumps({'error': error_message})}\n\n"
+        yield f"data: {json.dumps({'error': error_message}, ensure_ascii=False)}\n\n"

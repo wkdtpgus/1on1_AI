@@ -1,15 +1,7 @@
-from langchain_google_vertexai import ChatVertexAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from src.config.template_config import (
-    GOOGLE_CLOUD_PROJECT,
-    GOOGLE_CLOUD_LOCATION,
-    GEMINI_MODEL,
-    MAX_TOKENS,
-    GEMINI_TEMPERATURE,
-    GEMINI_THINKING_BUDGET,
-)
+from src.utils.model import llm
 from src.prompts.summary_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import SummaryGeneratorOutput
 from src.utils.template_schemas import TemplateGeneratorInput
@@ -19,21 +11,13 @@ def get_summary_generator_chain():
     """
     1on1 템플릿 요약 생성을 위한 LangChain 체인을 생성합니다.
     """
-    model = ChatVertexAI(
-        project=GOOGLE_CLOUD_PROJECT,
-        location=GOOGLE_CLOUD_LOCATION,
-        model_name=GEMINI_MODEL,
-        max_output_tokens=MAX_TOKENS,
-        temperature=GEMINI_TEMPERATURE,
-        model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
-    )
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", HUMAN_PROMPT)
     ])
     
     parser = JsonOutputParser(pydantic_object=SummaryGeneratorOutput)
-    chain = prompt | model | parser
+    chain = prompt | llm | parser
     return chain
 
 async def generate_summary(input_data: TemplateGeneratorInput) -> dict:
@@ -77,7 +61,7 @@ async def generate_summary(input_data: TemplateGeneratorInput) -> dict:
         "target_info": target_info,
         "purpose": purpose_str,
         "detailed_context": safe_value(input_data.detailed_context),
-        "dialogue_type": safe_value(input_data.dialogue_type),
+
         "previous_summary_section": previous_summary_section,
         "language": safe_value(input_data.language),
     }

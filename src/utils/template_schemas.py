@@ -27,9 +27,6 @@ class TemplateGeneratorInput(BaseModel):
     detailed_context: Optional[str] = Field(None, description="Detailed context, specific situations, or key issues to discuss. The AI will focus on the core problem described here.")
 
     # --- 커스터마이징 옵션 ---
-    dialogue_type: Optional[Literal['New', 'Recurring']] = Field(
-        None, description="Whether the conversation is new or recurring."
-    )
     use_previous_data: bool = Field(
         False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부."
     )
