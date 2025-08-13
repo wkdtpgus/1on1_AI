@@ -55,6 +55,8 @@ async def generate_template(input_data: TemplateGeneratorInput) -> Dict:
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
                 json.dump(gcp_creds_dict, temp_creds_file)
                 temp_creds_path = temp_creds_file.name
+
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_creds_path
             credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
 
         if not credentials:

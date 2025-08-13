@@ -40,6 +40,7 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
         from vertexai.generative_models import GenerativeModel, Part
 
         if temp_creds_path:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_creds_path
             credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
         
         # 3. Vertex AI 초기화 전, 인증 정보 존재 여부 강제 확인
