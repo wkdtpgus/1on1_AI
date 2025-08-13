@@ -1,13 +1,13 @@
 import streamlit as st
-import asyncio
+import requests
 import json
 import re
 from src.services.template_generator.generate_template import generate_template
-from src.services.template_generator.generate_template_streaming import generate_template_streaming
 from src.services.template_generator.generate_summary import generate_summary
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.mock_db import MOCK_USER_DATA
 from src.utils.utils import get_user_data_by_name
+import asyncio
 
 st.set_page_config(layout="wide")
 
@@ -95,17 +95,16 @@ with col2:
 
 # --- FORM SUBMISSION LOGIC ---
 if submit_button:
-    user_id = None
-    previous_summary = None
-    user_data = None
+    # Initialize variables
+    user_id = selected_user_name  # Set default value for user_id
+    previous_summary = ""
 
     if use_previous_data:
         user_name_to_find = selected_user_name
-        if user_name_to_find:
-            user_data = get_user_data_by_name(user_name_to_find)
-        
+        user_data = get_user_data_by_name(user_name_to_find) if user_name_to_find else None
+
         if user_data and user_data.get('one_on_one_history'):
-            user_id = user_data['user_id']
+            user_id = user_data['user_id']  # Use the actual user_id from data if history exists
             latest_history = user_data['one_on_one_history'][-1]
             previous_summary = f"Date: {latest_history['date']}\nSummary:\n{latest_history['summary']}"
         elif user_name_to_find:
@@ -132,6 +131,46 @@ if submit_button:
         language=language
     )
 
+    # This dictionary will be sent as a JSON payload to the API
+    payload = input_data.dict()
+    API_URL = "http://127.0.0.1:8000/generate"
+
+    def stream_and_format_questions(response):
+        """Parses SSE, formats questions in real-time, and yields them for streaming display."""
+        full_response_str = ""
+        processed_question_count = 0
+        for line in response.iter_lines():
+            if line:
+                decoded_line = line.decode('utf-8')
+                if decoded_line.startswith('data: '):
+                    json_str = decoded_line[6:]
+                    try:
+                        content_chunk = json.loads(json_str)
+                        if isinstance(content_chunk, dict) and 'error' in content_chunk:
+                            st.error(f"An error occurred on the server: {content_chunk['error']}")
+                            return
+
+                        full_response_str += content_chunk
+                        
+                        # Attempt to find all complete questions in the accumulated string
+                        # This regex finds all "question": "..." pairs
+                        # It handles escaped quotes inside the question text
+                        found_questions = re.findall(r'"question"\s*:\s*"((?:\\"|[^\"])*)"', full_response_str)
+                        
+                        new_question_count = len(found_questions)
+                        
+                        if new_question_count > processed_question_count:
+                            # Yield the new questions that haven't been processed yet
+                            for i in range(processed_question_count, new_question_count):
+                                question_text = found_questions[i]
+                                yield f"{i + 1}. {question_text}\n\n"
+                            processed_question_count = new_question_count
+
+                    except (json.JSONDecodeError, re.error):
+                        continue
+        # Store the final complete JSON for summary generation
+        st.session_state['full_response_json'] = full_response_str
+
     try:
         with col2:
             with st.spinner('1on1 템플릿 생성중...'):
@@ -142,56 +181,15 @@ if submit_button:
                     st.info(summary_result.get('template_summary', 'No summary generated.'))
 
                 # 2. Generate Questions (Streaming)
+                # Make the streaming request to the API
+                response = requests.post(API_URL, json=payload, stream=True)
+                response.raise_for_status()  # Raise an exception for bad status codes
+
                 with questions_placeholder.container():
-                    st.subheader("생성된 질문")
-                    
-                    async def stream_and_format_questions(input_data):
-                        full_response = ""
-                        buffer = ""
-                        question_index = 1
-                        in_questions_array = False
+                    st.subheader("AI가 생성한 1-on-1 질문")
+                    st.write_stream(stream_and_format_questions(response))
 
-                        async for chunk in generate_template_streaming(input_data):
-                            full_response += chunk
-                            buffer += chunk
-
-                            # Find the start of the questions array
-                            if not in_questions_array and '"generated_questions": [' in buffer:
-                                in_questions_array = True
-                                # Clear buffer up to the start of the array content
-                                buffer = buffer.split('"generated_questions": [', 1)[1]
-
-                            if in_questions_array:
-                                while True:
-                                    # This regex correctly handles escaped quotes and other characters within a JSON string.
-                                    match = re.search(r'"((?:\\.|[^"\\])*)"', buffer)
-                                    if match:
-                                        # The raw content is in group 1.
-                                        question_raw = match.group(1)
-                                        
-                                        # Un-escape the string content for display.
-                                        try:
-                                            # Use json.loads to properly handle all JSON string escapes (\n, \t, \", etc.)
-                                            # We wrap it in quotes to make it a valid JSON string for the parser.
-                                            question = json.loads(f'"{question_raw}"')
-                                        except json.JSONDecodeError:
-                                            # Fallback for any unexpected format, though the regex should prevent this.
-                                            question = question_raw.replace('\\n', '\n').replace('\"', '"')
-
-                                        # Format for Streamlit markdown.
-                                        formatted_question = question.replace('\n', '  \n')
-                                        yield f"**{question_index}. {formatted_question}**\n\n"
-                                        question_index += 1
-                                        
-                                        # Clean up buffer: move past the processed question and any trailing comma/whitespace.
-                                        buffer = buffer[match.end():].lstrip()
-                                        if buffer.startswith(','):
-                                            buffer = buffer[1:]
-                                    else:
-                                        # No complete question found in the buffer, wait for more chunks.
-                                        break
-
-                    st.write_stream(stream_and_format_questions(input_data))
-
+    except requests.exceptions.RequestException as e:
+        st.error(f"API 요청 중 오류가 발생했습니다: {e}")
     except Exception as e:
-        st.error(f"An error occurred: {e}")
+        st.error(f"알 수 없는 오류가 발생했습니다: {e}")

@@ -103,9 +103,13 @@ async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable
     #응답 스트리밍처리
     # LLM에서 생성되는 콘텐츠 청크를 받아 즉시 클라이언트로 전달합니다.
     # 이 방식은 클라이언트에서 한 글자씩 또는 단어씩 렌더링되어
-    # 타이핑과 같은 자연스러운 스트리밍 효과를 만들어냅니다.
-    async for chunk in chain.astream(prompt_variables):
-        if chunk.content:
-            # 각 청크의 내용을 SSE 형식으로 포장하여 스트리밍합니다.
-            yield f"data: {json.dumps(chunk.content)}\n\n"
-
+    # Stream the response from the chain
+    try:
+        async for chunk in chain.astream(prompt_variables):
+            if chunk.content:
+                # 각 청크의 내용을 SSE 형식으로 포장하여 스트리밍합니다.
+                yield f"data: {json.dumps(chunk.content)}\n\n"
+    except Exception as e:
+        error_message = f"Error during stream generation: {e}"
+        # Yield a formatted error message to the client
+        yield f"data: {json.dumps({'error': error_message})}\n\n"
