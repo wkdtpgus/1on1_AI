@@ -1,10 +1,3 @@
-"""
-전사 결과 포맷팅 및 후처리 유틸리티
-
-이 모듈은 AssemblyAI STT 결과를 프로젝트 요구사항에 맞게 변환하고 포맷팅하는 기능을 제공합니다.
-화자 정보 매핑, 시간 통계 계산, UI 표시용 데이터 생성 등의 후처리 작업을 담당합니다.
-"""
-
 import logging
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Union

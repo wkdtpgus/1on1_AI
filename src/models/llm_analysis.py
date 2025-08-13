@@ -1,10 +1,9 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, List
 from abc import ABC
 from langchain_google_vertexai import ChatVertexAI
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 import json
-import os
 import logging
 
 # 설정 가져오기

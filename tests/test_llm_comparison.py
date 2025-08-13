@@ -3,7 +3,6 @@ import sys
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
 
 # 프로젝트 루트를 Python 경로에 추가
 project_root = Path(__file__).parent.parent

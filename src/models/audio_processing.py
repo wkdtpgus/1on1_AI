@@ -1,10 +1,3 @@
-"""
-음성 처리 (Speech-to-Text) 메인 모듈
-
-AssemblyAI를 사용한 음성 전사 처리를 담당합니다.
-전사 결과의 후처리는 별도의 TranscriptionFormatter 유틸리티를 통해 수행됩니다.
-"""
-
 import assemblyai as aai
 import os
 import time
