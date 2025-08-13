@@ -1,6 +1,8 @@
 import streamlit as st
 import json
-from google.oauth2 import service_account
+import tempfile
+import os
+import google.auth
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -18,16 +20,10 @@ from src.utils.template_schemas import SummaryGeneratorOutput
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
-def get_summary_generator_chain():
+def get_summary_generator_chain(credentials):
     """
     1on1 템플릿 요약 생성을 위한 LangChain 체인을 생성합니다.
     """
-    credentials = None
-    # Streamlit Cloud에서 실행 중인 경우, secrets에서 서비스 계정 정보 로드
-    if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
-        gcp_creds_dict = dict(st.secrets["gcp_service_account"])
-        credentials = service_account.Credentials.from_service_account_info(gcp_creds_dict)
-
     model = ChatVertexAI(
         project=GOOGLE_CLOUD_PROJECT,
         location=GOOGLE_CLOUD_LOCATION,
@@ -41,7 +37,6 @@ def get_summary_generator_chain():
         ("system", SYSTEM_PROMPT),
         ("human", HUMAN_PROMPT)
     ])
-    
     parser = JsonOutputParser(pydantic_object=SummaryGeneratorOutput)
     chain = prompt | model | parser
     return chain
@@ -50,51 +45,65 @@ async def generate_summary(input_data: TemplateGeneratorInput) -> dict:
     """
     입력 데이터를 기반으로 1on1 템플릿 요약을 비동기적으로 생성합니다.
     """
-    chain = get_summary_generator_chain()
+    credentials = None
+    temp_creds_path = None
+    try:
+        if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
+            gcp_creds_dict = dict(st.secrets["gcp_service_account"])
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_creds_file:
+                json.dump(gcp_creds_dict, temp_creds_file)
+                temp_creds_path = temp_creds_file.name
+            credentials, _ = google.auth.load_credentials_from_file(temp_creds_path)
 
-    user_data = None
-    if input_data.user_id != "default_user":
-        user_data = get_user_data_by_id(input_data.user_id)
-        if not user_data:
-            raise ValueError(f"User with ID '{input_data.user_id}' not found.")
+        if not credentials:
+            raise ValueError("GCP credentials could not be loaded.")
 
-    target_info = input_data.target_info
-    if user_data:
-        target_info = input_data.target_info or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
+        chain = get_summary_generator_chain(credentials)
 
-    previous_summary_section = ""
-    if input_data.use_previous_data and user_data and user_data.get("one_on_one_history"):
-        last_meeting = user_data["one_on_one_history"][-1]
-        summary = last_meeting.get("summary", {})
-        action_items = last_meeting.get("action_items", {})
-        # 항상 영어로 요약 및 액션 아이템 포맷팅
-        formatted_summary = "- **Previous Conversation Summary**:\n"
-        for topic, details in summary.items():
-            formatted_summary += f"  - {topic}:\n"
-            if details.get("Done"): formatted_summary += f"    - Done: {', '.join(details['Done'])}\n"
-            if details.get("ToDo"): formatted_summary += f"    - ToDo: {', '.join(details['ToDo'])}\n"
-        if action_items.get("pending"): formatted_summary += f"- **Pending Action Items**: {', '.join(action_items['pending'])}\n"
-        if action_items.get("completed"): formatted_summary += f"- **Completed Action Items**: {', '.join(action_items['completed'])}\n"
-        previous_summary_section = formatted_summary.strip()
-    elif input_data.use_previous_data:
-        previous_summary_section = "- **Previous Conversation Summary**: None"
+        user_data = None
+        if input_data.user_id != "default_user":
+            user_data = get_user_data_by_id(input_data.user_id)
+            if not user_data:
+                raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
-    # 모든 기본값은 영어로 통일
-    default_value = "Not specified"
+        target_info = input_data.target_info
+        if user_data:
+            target_info = input_data.target_info or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
 
-    def safe_value(value, default=default_value):
-        return value if value is not None else default
+        previous_summary_section = ""
+        if input_data.use_previous_data and user_data and user_data.get("one_on_one_history"):
+            last_meeting = user_data["one_on_one_history"][-1]
+            summary = last_meeting.get("summary", {})
+            action_items = last_meeting.get("action_items", {})
+            formatted_summary = "- **Previous Conversation Summary**:\n"
+            for topic, details in summary.items():
+                formatted_summary += f"  - {topic}:\n"
+                if details.get("Done"): formatted_summary += f"    - Done: {', '.join(details['Done'])}\n"
+                if details.get("ToDo"): formatted_summary += f"    - ToDo: {', '.join(details['ToDo'])}\n"
+            if action_items.get("pending"): formatted_summary += f"- **Pending Action Items**: {', '.join(action_items['pending'])}\n"
+            if action_items.get("completed"): formatted_summary += f"- **Completed Action Items**: {', '.join(action_items['completed'])}\n"
+            previous_summary_section = formatted_summary.strip()
+        elif input_data.use_previous_data:
+            previous_summary_section = "- **Previous Conversation Summary**: None"
 
-    purpose_str = ", ".join(input_data.purpose) if input_data.purpose else default_value
+        default_value = "Not specified"
+        def safe_value(value, default=default_value):
+            return value if value is not None else default
 
-    prompt_variables = {
-        "target_info": target_info,
-        "purpose": purpose_str,
-        "detailed_context": safe_value(input_data.detailed_context),
-        "dialogue_type": safe_value(input_data.dialogue_type),
-        "previous_summary_section": previous_summary_section,
-        "language": safe_value(input_data.language),
-    }
+        purpose_str = ", ".join(input_data.purpose) if input_data.purpose else default_value
 
-    response = await chain.ainvoke(prompt_variables)
-    return response
+        prompt_variables = {
+            "target_info": target_info,
+            "purpose": purpose_str,
+            "detailed_context": safe_value(input_data.detailed_context),
+            "dialogue_type": safe_value(input_data.dialogue_type),
+            "previous_summary_section": previous_summary_section,
+            "language": safe_value(input_data.language),
+        }
+
+        response = await chain.ainvoke(prompt_variables)
+        return response
+
+    finally:
+        if temp_creds_path and os.path.exists(temp_creds_path):
+            os.remove(temp_creds_path)
