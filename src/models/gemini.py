@@ -17,7 +17,7 @@ from src.config.stt_config import (
 )
 from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.stt_schemas import MeetingAnalysis
-from src.services.stt_processor.processor import BaseMeetingAnalyzer
+from src.services.meeting_analyze.analyzer import BaseMeetingAnalyzer
 
 # 로깅 설정
 logger = logging.getLogger("llm_analysis")

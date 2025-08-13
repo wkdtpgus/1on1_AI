@@ -7,9 +7,10 @@ import logging
 
 from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.stt_schemas import MeetingAnalysis
+from .speaker_stats import prepare_speaker_stats
 
 # 로깅 설정
-logger = logging.getLogger("base_analyzer")
+logger = logging.getLogger("meeting_analyzer")
 
 
 class BaseMeetingAnalyzer(ABC):    
@@ -18,15 +19,6 @@ class BaseMeetingAnalyzer(ABC):
     def __init__(self):
         pass
     
-    def _prepare_speaker_stats(self, speaker_stats: Optional[Dict]) -> str:
-        #화자 통계 텍스트 준비
-        if not speaker_stats:
-            return ""
-        
-        stats_text = "\n화자별 발언 점유율:\n"
-        for speaker_name, stats in speaker_stats.items():
-            stats_text += f"- {speaker_name}: {stats['percentage']}% ({stats['formatted_time']})\n"
-        return stats_text
     
 
     def analyze_1on1_meeting(self, transcript: str, 
@@ -35,7 +27,7 @@ class BaseMeetingAnalyzer(ABC):
         """1:1 회의 종합 분석"""
         try:
             # 화자 통계 준비
-            speaker_stats_text = self._prepare_speaker_stats(speaker_stats)
+            speaker_stats_text = prepare_speaker_stats(speaker_stats)
             
             # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
             full_transcript = transcript
