@@ -19,7 +19,7 @@ from src.config.stt_config import (
 )
 
 # 로깅 설정
-logger = logging.getLogger("assembly_model")
+logger = logging.getLogger("transcription_model")
 
 # 설정과 상수들
 TRANSCRIPT_POLL_INTERVAL = 5  # 전사 상태 확인 간격(초)

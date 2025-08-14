@@ -20,7 +20,7 @@ from src.utils.stt_schemas import MeetingAnalysis
 from src.services.meeting_analyze.analyzer import BaseMeetingAnalyzer
 
 # 로깅 설정
-logger = logging.getLogger("llm_analysis")
+logger = logging.getLogger("analysis_model")
 
 # LangSmith 추적 상태 로깅 (config에서 이미 환경변수 설정됨)
 if LANGSMITH_TRACING:
