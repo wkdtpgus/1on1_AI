@@ -1,16 +1,18 @@
-import assemblyai as aai
-import os
+# 1. 표준 라이브러리
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-# 설정 값들 가져오기
-from src.config.stt_config import OUTPUT_DIR
+# 2. 서드파티 라이브러리
+import assemblyai as aai
 
-# 모델 및 유틸리티 임포트
+# 3. 내부 모듈
+from src.config.stt_config import OUTPUT_DIR
 from src.models.assembly import AssemblyAIProcessor
+from src.services.meeting_analyze.speaker_stats import SpeakerStatsProcessor
 from src.utils.transcription_formatter import TranscriptionFormatter, ProcessingStatus
 
 # 로깅 설정
@@ -95,6 +97,7 @@ class STTProcessor:
         speaker_mapping: Dict[str, str]
     ) -> str:
         """Gemini 모델에 최적화된 전사 텍스트 형식 생성"""
+        # TranscriptionFormatter는 speaker_mapping이 필요한 포맷팅만 담당
         return TranscriptionFormatter.create_gemini_formatted_transcript(utterances, speaker_mapping)
 
     def _format_transcription_result(
@@ -120,24 +123,19 @@ class STTProcessor:
 
         # 고유한 화자들을 추출하고 매핑 생성
         unique_labels = list(set(u.speaker for u in transcript.utterances))
-        speaker_mapping = TranscriptionFormatter.create_speaker_mapping(unique_labels, participants_info)
+        speaker_mapping = SpeakerStatsProcessor.create_speaker_mapping(unique_labels, participants_info)
         
         # 화자 시간 계산
-        speaker_times = TranscriptionFormatter.calculate_speaker_times(transcript.utterances)
+        speaker_times = SpeakerStatsProcessor.calculate_speaker_times(transcript.utterances)
         
         # 클로바 노트 방식: 순수 발언 시간 합계를 기준으로 점유율 계산 (침묵 구간 제외)
         total_speaking_time_seconds = sum(speaker_times.values()) / 1000  # 밀리초에서 초로 변환
         
         # 실제 회의 전체 시간 계산 (통계용)
-        if transcript.utterances:
-            meeting_start = min(u.start for u in transcript.utterances)
-            meeting_end = max(u.end for u in transcript.utterances)
-            total_meeting_duration_seconds = (meeting_end - meeting_start) / 1000  # 밀리초에서 초로
-        else:
-            total_meeting_duration_seconds = 0
+        total_meeting_duration_seconds = SpeakerStatsProcessor.calculate_meeting_duration(transcript.utterances)
         
         # 상세한 화자 시간 정보 생성 (클로바 노트 방식: 순수 발언 시간 기준)
-        speaker_time_info = TranscriptionFormatter.create_speaker_time_info(
+        speaker_time_info = SpeakerStatsProcessor.create_speaker_time_info(
             speaker_times, speaker_mapping, total_speaking_time_seconds
         )
         

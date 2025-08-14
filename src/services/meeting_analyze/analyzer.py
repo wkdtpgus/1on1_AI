@@ -26,25 +26,23 @@ class BaseMeetingAnalyzer(ABC):
                             participants: Dict = None) -> str:
         """1:1 회의 종합 분석"""
         try:
-            # 화자 통계 준비
-            speaker_stats_text = prepare_speaker_stats(speaker_stats)
-            
-            # 전사 텍스트에 화자 통계만 추가 (참석자 정보는 별도 필드로 전달)
-            full_transcript = transcript
-            if speaker_stats_text:
-                full_transcript += f"\n{speaker_stats_text}"
+            # 화자 통계에서 percentage만 추출하여 간소화
+            simplified_stats = {}
+            if speaker_stats:
+                for speaker_name, stats in speaker_stats.items():
+                    # speaker_name이 이미 화자 이름으로 되어있음 (예: "김준희", "이영희")
+                    simplified_stats[speaker_name] = stats.get('percentage', 0)
             
             # 사용자 프롬프트 템플릿
             user_prompt_template = PromptTemplate(
-                input_variables=["transcript", "participants_info", "qa_pairs_json"],
+                input_variables=["transcript", "speaker_stats", "participants", "qa_pairs"],
                 template=USER_PROMPT
             )
             
-            # Q&A JSON 준비
+            # 모든 데이터를 JSON 문자열로 변환
+            speaker_stats_json = json.dumps(simplified_stats, ensure_ascii=False) if simplified_stats else "{}"
             qa_pairs_json = json.dumps(qa_pairs, ensure_ascii=False) if qa_pairs else "[]"
-            
-            # 참석자 정보를 JSON으로 직접 전달
-            participants_info_text = json.dumps(participants, ensure_ascii=False) if participants else ""
+            participants_json = json.dumps(participants, ensure_ascii=False) if participants else "{}"
             
             # 프롬프트 체인 구성
             prompt = ChatPromptTemplate.from_messages([
@@ -55,12 +53,12 @@ class BaseMeetingAnalyzer(ABC):
             # 체인 생성
             chain = prompt | self.llm.with_structured_output(MeetingAnalysis)
             
-            
             # 체인 실행 및 결과 처리
             input_data = {
-                "transcript": full_transcript,
-                "participants_info": participants_info_text,
-                "qa_pairs_json": qa_pairs_json
+                "transcript": transcript,  # 순수한 대화 내용만
+                "speaker_stats": speaker_stats_json,  # 간소화된 화자 비율
+                "participants": participants_json,  # 참가자 정보
+                "qa_pairs": qa_pairs_json  # Q&A 쌍
             }
             
             result = chain.invoke(input_data)

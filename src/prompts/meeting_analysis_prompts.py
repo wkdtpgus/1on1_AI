@@ -127,16 +127,20 @@ USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide res
 # Meeting Transcript:
 {transcript}
 
-# Participants Information:
-{participants_info}
+# Speaker Statistics (발화 비율 %):
+{speaker_stats}
 
-# User-provided Q&A (JSON):
-{qa_pairs_json}
+# Participants Information:
+{participants}
+
+# Q&A Pairs:
+{qa_pairs}
 
 # Important:
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
+• **Speaker Statistics Analysis**: Use the speaker_stats data to evaluate conversation balance. The ideal 1-on-1 should have the employee speaking 70% and manager 30%. Include this in your feedback if there's significant imbalance
 • **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic

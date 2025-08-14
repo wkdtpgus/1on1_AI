@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Union
+from typing import Dict, Any, List
 from enum import Enum
 
 # 로깅 설정
@@ -16,7 +16,6 @@ class ProcessingStatus(Enum):
 
 # 설정과 상수들
 TIME_DISPLAY_FORMAT = "{minutes}분 {seconds}초"
-SPEAKER_ALPHABET_START = 65  # ASCII 'A'
 
 
 class TranscriptionFormatter:
@@ -45,58 +44,6 @@ class TranscriptionFormatter:
         minutes = int(seconds // 60)
         seconds_remainder = int(seconds % 60)
         return f"{minutes:02d}:{seconds_remainder:02d}"
-    
-    @staticmethod
-    def create_speaker_mapping(
-        unique_labels: List[str], 
-        participants_info: Optional[Dict[str, Dict[str, str]]]
-    ) -> Dict[str, str]:
-        """화자 라벨에서 표시 이름으로의 매핑 생성"""
-        speaker_mapping = {}
-        
-        for i, label in enumerate(sorted(unique_labels)):
-            if participants_info and label in participants_info:
-                speaker_name = participants_info[label]["name"]
-            else:
-                speaker_name = chr(SPEAKER_ALPHABET_START + i)  # A, B, C...
-            speaker_mapping[label] = speaker_name
-            
-        return speaker_mapping
-    
-    @staticmethod
-    def calculate_speaker_times(utterances: List[Any]) -> Dict[str, float]:
-        """각 화자의 총 발언 시간을 밀리초 단위로 계산"""
-        speaker_times = {}
-        
-        for utterance in utterances:
-            speaker = utterance.speaker
-            duration = utterance.end - utterance.start  # 밀리초
-            
-            speaker_times[speaker] = speaker_times.get(speaker, 0) + duration
-            
-        return speaker_times
-    
-    @staticmethod
-    def create_speaker_time_info(
-        speaker_times: Dict[str, float], 
-        speaker_mapping: Dict[str, str],
-        total_time_seconds: float
-    ) -> Dict[str, Dict[str, Union[float, str]]]:
-        """상세한 화자 시간 정보 생성"""
-        speaker_time_info = {}
-        
-        for speaker, time_ms in speaker_times.items():
-            time_seconds = time_ms / 1000
-            percentage = (time_seconds / total_time_seconds * 100) if total_time_seconds > 0 else 0
-            speaker_name = speaker_mapping.get(speaker, "참석자")
-            
-            speaker_time_info[speaker_name] = {
-                "total_seconds": round(time_seconds, 2),
-                "formatted_time": TranscriptionFormatter.format_time_display(time_seconds),
-                "percentage": round(percentage, 1)
-            }
-            
-        return speaker_time_info
     
     @staticmethod
     def create_utterances_info(
