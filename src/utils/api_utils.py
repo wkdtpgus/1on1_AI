@@ -35,7 +35,7 @@ def create_temp_file(content: bytes, file_ext: str) -> str:
 
 def process_audio_transcription(audio_processor, temp_audio_path: str) -> dict:
     """오디오 전사 처리"""
-    transcript_result = audio_processor.transcribe_existing_file(temp_audio_path, expected_speakers=2)
+    transcript_result = audio_processor.transcribe_audio(temp_audio_path, expected_speakers=2)
     if not transcript_result or 'transcript' not in transcript_result:
         raise HTTPException(status_code=500, detail="STT 처리에 실패했습니다")
     return transcript_result
@@ -95,12 +95,12 @@ async def initialize_services(assemblyai_key: str, google_project: str, google_l
     """서비스 초기화"""
     global audio_processor, meeting_analyzer
     
-    from src.services.stt_processor.audio_processing import AudioProcessor
+    from src.utils.formatter import STTProcessor
     from src.models.gemini import GeminiMeetingAnalyzer
     
     try:
         setup_google_credentials(google_credentials)
-        audio_processor = AudioProcessor(assemblyai_api_key=assemblyai_key)
+        audio_processor = STTProcessor(api_key=assemblyai_key)
         meeting_analyzer = GeminiMeetingAnalyzer(
             google_project=google_project, 
             google_location=google_location

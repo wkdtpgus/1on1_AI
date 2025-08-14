@@ -9,7 +9,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.models.llm_analysis import GeminiMeetingAnalyzer
-from src.models.audio_processing import AudioProcessor
+from src.utils.formatter import STTProcessor
 try:
     from pydub import AudioSegment
     PYDUB_AVAILABLE = True
@@ -380,12 +380,12 @@ def _run_audio_processing_test():
     print("3. 화자 분리 전사")
     print("4. Gemini 분석")
     
-    # AudioProcessor 초기화
+    # STTProcessor 초기화
     try:
-        processor = AudioProcessor()
-        print("\n✅ AudioProcessor 초기화 완료")
+        processor = STTProcessor()
+        print("\n✅ STTProcessor 초기화 완료")
     except Exception as e:
-        print(f"❌ AudioProcessor 초기화 실패: {e}")
+        print(f"❌ STTProcessor 초기화 실패: {e}")
         return
     
     # 녹음 옵션 선택
@@ -456,7 +456,7 @@ def _run_audio_processing_test():
         
         # 전사 수행
         print("\n🔄 오디오 파일 전사 중 (화자 분리)...")
-        transcription_result = processor.transcribe_existing_file(audio_file, participants_info)
+        transcription_result = processor.transcribe_audio(audio_file, participants_info)
     else:
         print("❌ 잘못된 선택입니다.")
         return
