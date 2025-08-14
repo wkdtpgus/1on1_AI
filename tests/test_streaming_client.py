@@ -1,9 +1,14 @@
-import requests
+# 1. 표준 라이브러리
 import json
 import os
 from datetime import datetime
+
+# 2. 서드파티 라이브러리
+import requests
 from dotenv import load_dotenv
 from langsmith import traceable
+
+# 3. 내부 모듈
 from src.utils.mock_db import MOCK_USER_DATA
 from src.utils.utils import collect_streaming_response, process_streaming_response, save_questions_to_json
 
@@ -52,6 +57,8 @@ def create_previous_summary_from_mock_db(user_data, use_previous_data: bool = Tr
         f"{chr(10).join(summary_sections)}"
     )
 
+
+
 # use_previous_data 설정에 따라 이전 미팅 기록 동적 생성
 use_previous_data = False  # 테스트 시 이 값을 변경하여 동작 확인 가능
 if use_previous_data:
@@ -60,8 +67,8 @@ else:
     previous_summary_data = None
 
 # 모든 데이터를 문자열로 전처리
-purpose_str = ", ".join(["Growth", "Work"])
-question_composition_str = ", ".join(["Growth/Goal-oriented", "Reflection/Thought-provoking", "Action/Implementation-focused"])
+purpose_str = "Growth, Work"  # 직접 문자열로 정의
+question_composition_str = "Growth/Goal-oriented, Reflection/Thought-provoking, Action/Implementation-focused"  # 직접 문자열로 정의
 
 payload = {
     "user_id": user_data["user_id"], #필수
@@ -104,11 +111,11 @@ def test_streaming():
                     generated_questions = process_streaming_response(full_response_str)
                     
                     if generated_questions:
-                        # 파일 저장 및 데이터 반환 (utils.py의 함수 사용)
+                        # 파일 저장 및 데이터 반환
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         output_path = f"data/generated_templates/questions_streamed_{timestamp}.json"
                         
-                        # save_questions_to_json이 디렉토리 생성과 저장을 모두 처리
+                        # 디렉토리 생성과 저장
                         saved_data = save_questions_to_json(generated_questions, output_path)
                         return saved_data
                         

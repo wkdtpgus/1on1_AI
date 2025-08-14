@@ -1,10 +1,8 @@
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-
 from src.utils.model import llm
 from src.prompts.summary_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from src.utils.template_schemas import SummaryGeneratorOutput
-from src.utils.template_schemas import TemplateGeneratorInput
+from src.utils.template_schemas import SummaryGeneratorOutput, TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
 def get_summary_generator_chain():
@@ -30,40 +28,19 @@ async def generate_summary(input_data: TemplateGeneratorInput) -> dict:
     if not user_data:
         raise ValueError(f"User with ID '{input_data.user_id}' not found.")
 
-    target_info = input_data.target_info or f"{user_data.get('name', '')}, {user_data.get('team', '')}, {user_data.get('role', '')}"
-
+    # '지난 기록 활용하기'가 선택되었을 경우, 이전 미팅 내용을 프롬프트에 추가
+    # use_previous_data가 True이고 previous_summary가 있을 때만 사용
     previous_summary_section = ""
-    if input_data.use_previous_data and user_data.get("one_on_one_history"):
-        last_meeting = user_data["one_on_one_history"][-1]
-        summary = last_meeting.get("summary", {})
-        action_items = last_meeting.get("action_items", {})
-        # 항상 영어로 요약 및 액션 아이템 포맷팅
-        formatted_summary = "- **Previous Conversation Summary**:\n"
-        for topic, details in summary.items():
-            formatted_summary += f"  - {topic}:\n"
-            if details.get("Done"): formatted_summary += f"    - Done: {', '.join(details['Done'])}\n"
-            if details.get("ToDo"): formatted_summary += f"    - ToDo: {', '.join(details['ToDo'])}\n"
-        if action_items.get("pending"): formatted_summary += f"- **Pending Action Items**: {', '.join(action_items['pending'])}\n"
-        if action_items.get("completed"): formatted_summary += f"- **Completed Action Items**: {', '.join(action_items['completed'])}\n"
-        previous_summary_section = formatted_summary.strip()
-    elif input_data.use_previous_data:
-        previous_summary_section = "- **Previous Conversation Summary**: None"
-
-    # 모든 기본값은 영어로 통일
-    default_value = "Not specified"
-
-    def safe_value(value, default=default_value):
-        return value if value is not None else default
-
-    purpose_str = ", ".join(input_data.purpose) if input_data.purpose else default_value
+    if input_data.use_previous_data and input_data.previous_summary:
+        previous_summary_section = input_data.previous_summary
 
     prompt_variables = {
-        "target_info": target_info,
-        "purpose": purpose_str,
-        "detailed_context": safe_value(input_data.detailed_context),
-
+        # 스키마에서 필수값과 기본값이 이미 설정되어 있어서 직접 사용
+        "target_info": input_data.target_info,
+        "purpose": input_data.purpose,
+        "detailed_context": input_data.detailed_context,
         "previous_summary_section": previous_summary_section,
-        "language": safe_value(input_data.language),
+        "language": input_data.language,
     }
 
     response = await chain.ainvoke(prompt_variables)
