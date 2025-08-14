@@ -77,7 +77,7 @@ async def test_summary_generation():
         purpose="Growth, Work",  # 문자열로 전달 (쉼표로 구분)
         detailed_context="보상 관련 논의예정",
         use_previous_data=use_previous_data,
-        previous_summary=previous_summary_data,  # utils.py 함수로 생성된 데이터
+        previous_summary=previous_summary_data,  
         num_questions="Standard",
         question_composition="Growth/Goal-oriented, Reflection/Thought-provoking",
         tone_and_manner="Formal",
