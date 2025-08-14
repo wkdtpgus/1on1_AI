@@ -1,62 +1,66 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Union, Literal
 
 class TemplateGeneratorInput(BaseModel):
     """
     1on1 템플릿 생성을 위한 입력 데이터 모델
     """
+    # --- 필수 필드 (반드시 입력해야 함) ---
     user_id: str = Field(..., description="조회할 사용자의 고유 ID")
-    # --- 필수 입력 데이터 (누락 가능) ---
-    # option빼기(디폴트값으로 설정하는 방법)
-    # 함수 만들지말고 스키마로 다음과 같이 처리
-    #       detailed_context: str = Field(
-    #          default="Not specified",  # None 대신 기본값
-    #          description="..."
-    #      )
-    target_info: Optional[str] = Field(None, description="1on1 대상자에 대한 정보 (팀, 직급, 이름 등)")
-    purpose: List[Literal[
-        'Growth',
-        'Satisfaction',
-        'Relationships',
-        'Junior Development',
-        'Work'
-    ]] = Field(
-        default_factory=list,
-        description="Categories of information the leader wants to gain from the 1on1 (multiple selections possible)"
+    target_info: str = Field(..., description="1on1 대상자에 대한 정보 (팀, 직급, 이름 등)")
+    purpose: str = Field(
+        ...,
+        description="1on1에서 리더가 얻고자 하는 정보의 카테고리 (쉼표로 구분된 값들)"
     )
-    detailed_context: Optional[str] = Field(None, description="Detailed context, specific situations, or key issues to discuss. The AI will focus on the core problem described here.")
 
-    # --- 커스터마이징 옵션 ---
-    use_previous_data: bool = Field(
-        False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부."
+    @field_validator('purpose')
+    @classmethod
+    def validate_purpose(cls, v):
+        if not v:
+            return v
+        
+        allowed_values = {'Growth', 'Satisfaction', 'Relationships', 'Junior Development', 'Work'}
+        input_values = {val.strip() for val in v.split(',')}
+        
+        invalid_values = input_values - allowed_values
+        if invalid_values:
+            raise ValueError(f"Invalid purpose values: {invalid_values}. Allowed values are: {allowed_values}")
+        
+        return v
+    detailed_context: str = Field(default="Not specified", description="상세한 맥락, 구체적인 상황, 논의할 핵심 이슈. AI는 여기서 설명된 핵심 문제에 집중합니다.")
+    num_questions: Literal['Simple', 'Standard', 'Advanced'] = Field(default="Standard", description="생성할 질문 수. Simple(~3개), Standard(~5개), Advanced(~7개).")
+    question_composition: str = Field(
+        default="Experience/Story-based",
+        description="질문 유형 조합 (쉼표로 구분된 값들). 예시: 'Experience/Story-based, Growth/Goal-oriented'"
     )
-    previous_summary: Optional[str] = Field(
-        None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보."
-    )
-    num_questions: Optional[Literal['Simple', 'Standard', 'Advanced']] = Field(
-        None, description="Number of questions to generate. Simple(~3), Standard(~5), Advanced(~7)."
-    )
-    question_composition: List[Literal[
-        'Experience/Story-based', 
-        'Reflection/Thought-provoking', 
-        'Action/Implementation-focused', 
-        'Relationship/Collaboration', 
-        'Growth/Goal-oriented', 
-        'Multiple choice'
-    ]] = Field(
-        default_factory=list,
-        description="Question type combination. Example: ['Experience/Story-based', 'Growth/Goal-oriented']"
-    )
-    tone_and_manner: str = Field(
-        ...,
-        description="The desired tone and manner of the questions.",
-        example='Formal'
-    )
-    language: str = Field(
-        ...,
-        description="The language for the generated questions.",
-        example='English'
-    )
+
+    @field_validator('question_composition')
+    @classmethod
+    def validate_question_composition(cls, v):
+        if not v:
+            return v
+        
+        allowed_values = {
+            'Experience/Story-based', 
+            'Reflection/Thought-provoking', 
+            'Action/Implementation-focused', 
+            'Relationship/Collaboration', 
+            'Growth/Goal-oriented', 
+            'Multiple choice'
+        }
+        input_values = {val.strip() for val in v.split(',')}
+        
+        invalid_values = input_values - allowed_values
+        if invalid_values:
+            raise ValueError(f"Invalid question_composition values: {invalid_values}. Allowed values are: {allowed_values}")
+        
+        return v
+    tone_and_manner: str = Field(default="Formal", description="질문의 톤과 매너", example='Formal')
+    language: str = Field(default="Korean", description="생성될 질문의 언어", example='Korean')
+    
+    # 선택 필드
+    use_previous_data: bool = Field(default=False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부.")
+    previous_summary: Optional[str] = Field(default=None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보.")
 
 
 class TemplateGeneratorOutput(BaseModel):
