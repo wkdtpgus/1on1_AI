@@ -8,7 +8,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.models.analysis import GeminiMeetingAnalyzer
+from src.utils.model import GeminiMeetingAnalyzer
 from src.utils.formatter import STTProcessor
 try:
     from pydub import AudioSegment

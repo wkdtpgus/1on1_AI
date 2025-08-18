@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     
     # 서비스 초기화 (각 클래스가 자체 검증 수행)
     from src.utils.formatter import STTProcessor
-    from src.models.analysis import GeminiMeetingAnalyzer
+    from src.utils.model import GeminiMeetingAnalyzer
     
     audio_processor = STTProcessor(api_key=ASSEMBLYAI_API_KEY)
     meeting_analyzer = GeminiMeetingAnalyzer(

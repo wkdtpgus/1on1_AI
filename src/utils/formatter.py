@@ -12,7 +12,7 @@ import assemblyai as aai
 
 # 3. 내부 모듈
 from src.config.config import OUTPUT_DIR
-from src.models.transcription import AssemblyAIProcessor
+from src.utils.model import AssemblyAIProcessor
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
