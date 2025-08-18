@@ -283,6 +283,30 @@ function clearQAData() {
     qaCounter = 0;
 }
 
+// Transcript 포맷팅 함수
+function formatTranscript(transcript) {
+    // transcript가 화자별 발화 배열인 경우
+    if (Array.isArray(transcript)) {
+        return transcript.map(utterance => {
+            const speaker = utterance.speaker || 'Unknown';
+            const text = utterance.text || '';
+            return `${speaker}: ${text}`;
+        }).join('\n\n');
+    }
+    
+    // transcript가 문자열이거나 다른 형태인 경우
+    if (typeof transcript === 'string') {
+        return transcript;
+    }
+    
+    // transcript 객체에 text 필드가 있는 경우 (이전 형식)
+    if (transcript && transcript.text) {
+        return transcript.text;
+    }
+    
+    return '스크립트를 불러올 수 없습니다.';
+}
+
 // 알림 표시 함수
 function showNotification(message, type = 'info') {
     // 알림 요소 생성
@@ -704,7 +728,8 @@ function displayActualResults(results) {
     // 전체 스크립트 업데이트
     const transcriptElement = document.getElementById('transcriptContent');
     if (transcriptElement) {
-        transcriptElement.innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${results.transcript || '스크립트를 불러올 수 없습니다.'}</p>`;
+        const transcriptText = formatTranscript(results.transcript);
+        transcriptElement.innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${transcriptText || '스크립트를 불러올 수 없습니다.'}</p>`;
     } else {
     }
     
@@ -759,7 +784,8 @@ function displayMockResults(results) {
     document.getElementById('qaContent').innerHTML = qaHtml;
     
     // 전체 스크립트
-    document.getElementById('transcriptContent').innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${results.transcript}</p>`;
+    const transcriptText = formatTranscript(results.transcript);
+    document.getElementById('transcriptContent').innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${transcriptText}</p>`;
 }
 
 // 텍스트에 줄바꿈 포맷팅 적용
@@ -978,7 +1004,8 @@ function displayPlanningResults(results) {
     // 전체 스크립트 업데이트
     const transcriptElement = document.getElementById('transcriptContent');
     if (transcriptElement) {
-        transcriptElement.innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${results.transcript || '스크립트를 불러올 수 없습니다.'}</p>`;
+        const transcriptText = formatTranscript(results.transcript);
+        transcriptElement.innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${transcriptText || '스크립트를 불러올 수 없습니다.'}</p>`;
     }
     
     // 처리 완료 후 첫 번째 탭(요약)으로 자동 전환
@@ -1056,7 +1083,8 @@ function displayWeeklyResults(results) {
     }
     
     // 전체 스크립트
-    document.getElementById('transcriptContent').innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${results.transcript}</p>`;
+    const transcriptText = formatTranscript(results.transcript);
+    document.getElementById('transcriptContent').innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${transcriptText}</p>`;
     
     // 처리 완료 후 첫 번째 탭(요약)으로 자동 전환
     const summaryTabBtn = document.querySelector('[data-tab="summary"]');
@@ -1133,7 +1161,8 @@ function displayGeneralResults(results) {
     }
     
     // 전체 스크립트
-    document.getElementById('transcriptContent').innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${results.transcript}</p>`;
+    const transcriptText = formatTranscript(results.transcript);
+    document.getElementById('transcriptContent').innerHTML = `<p class="text-gray-700 whitespace-pre-wrap">${transcriptText}</p>`;
     
     // 처리 완료 후 첫 번째 탭(요약)으로 자동 전환
     const summaryTabBtn = document.querySelector('[data-tab="summary"]');

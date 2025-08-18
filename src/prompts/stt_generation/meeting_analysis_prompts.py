@@ -124,8 +124,10 @@ List 1-3 specific behaviors the manager performed well
 
 USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide results in the specified JSON format.
 
-# Meeting Transcript:
+# Meeting Transcript (화자별 발화 리스트):
 {transcript}
+
+Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "A", "text": "발화 내용"}}, ...]. Analyze the conversation flow and content based on this speaker-separated format.
 
 # Speaker Statistics (발화 비율 %):
 {speaker_stats}

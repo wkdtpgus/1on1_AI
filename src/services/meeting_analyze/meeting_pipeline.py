@@ -165,11 +165,20 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             ("human", user_prompt_template.template)
         ])
         
+        # LLM에 필요한 transcript 데이터만 추출
+        transcript_for_llm = [
+            {
+                "speaker": utterance["speaker"],
+                "text": utterance["text"]
+            }
+            for utterance in state["transcript"].get("utterances", [])
+        ]
+        
         # 체인 생성 및 실행
         chain = prompt | analyzer.llm.with_structured_output(MeetingAnalysis)
         
         input_data = {
-            "transcript": state["transcript"],
+            "transcript": transcript_for_llm,
             "speaker_stats": speaker_stats_json,
             "participants": participants_json,
             "qa_pairs": qa_pairs_json
@@ -179,6 +188,13 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         
         if result is None:
             raise ValueError("1:1 회의 분석 실패")
+        
+        # LLM 응답 상세 로깅
+        logger.info(f"LLM 응답 타입: {type(result)}")
+        logger.info(f"LLM 응답 필드: {result.__dict__.keys() if hasattr(result, '__dict__') else 'N/A'}")
+        if hasattr(result, 'detailed_discussion'):
+            logger.info(f"detailed_discussion 길이: {len(result.detailed_discussion) if result.detailed_discussion else 0}")
+            logger.info(f"detailed_discussion 마지막 100자: {result.detailed_discussion[-100:] if result.detailed_discussion else 'N/A'}")
         
         analysis_result = result.model_dump_json(indent=2)
         
