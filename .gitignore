@@ -154,29 +154,20 @@ temp/
 *.tmp
 *.temp
 
-
 # 캐시 파일 
 __pycache__/
 
-# vertex ai
+# Google Cloud Service Account Key
 thetimecollabo-38646deba34a.json
 
-# .claude
+#.vercel
+.vercel/
+
+# railway   
+.railway/
+
+#Procfile   
+.Procfile
+
+# Claude
 .claude/
-
-# Vercel
-.vercel
-
-# Audio files
-*.wav
-*.mp3
-*.m4a
-
-# Test files
-test_*.txt
-*.txt
-!requirements.txt
-
-# Large test files
-주간회의_테스트*.wav
-김준희.txt
