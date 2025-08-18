@@ -3,12 +3,15 @@ FastAPI server for testing streaming template generation.
 Run with: uvicorn test_streaming_api:app --reload --port 8000
 """
 
+import json
+from typing import AsyncGenerator, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from src.utils.template_schemas import TemplateGeneratorInput, EmailGeneratorOutput
+from src.utils.template_schemas import TemplateGeneratorInput, EmailGeneratorOutput, UsageGuideInput
 from src.services.template_generator.generate_template import generate
 from src.services.template_generator.generate_email import generate_email
+from src.services.template_generator.generate_usage_guide import generate_usage_guide
 
 
 app = FastAPI(title="1on1 Template Generator API")
@@ -54,6 +57,26 @@ async def generate_email_endpoint(input_data: TemplateGeneratorInput):
         return result
     except Exception as e:
         print(f"Error during email generation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate_usage_guide")
+async def generate_usage_guide_endpoint(input_data: UsageGuideInput):
+    """
+    Generate a usage guide with a streaming response (Server-Sent Events).
+    """
+    try:
+        return StreamingResponse(
+            generate_usage_guide(input_data),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            }
+        )
+    except Exception as e:
+        print(f"Error during usage guide generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

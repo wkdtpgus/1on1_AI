@@ -77,7 +77,7 @@ class UsageGuideInput(BaseModel):
     detailed_context: str = Field(..., description="상세 맥락")
     
     # 생성된 템플릿 데이터
-    generated_questions: List[Dict[str, str]] = Field(..., description="생성된 질문들 (question, intent 포함)")
+    generated_questions: Dict[str, str] = Field(..., description="생성된 질문들 (key: 질문 번호, value: 질문 내용)")
     
     # 추가 메타데이터
     language: str = Field(default="Korean", description="출력 언어")

@@ -43,3 +43,33 @@ Please generate a 3-sentence usage guide that helps the leader effectively condu
   "flow_management": "Third sentence about overall sequence, context, and information gathering strategy"
 }}
 """
+
+# Prompt for analyzing the intent of each question
+INTENT_ANALYSIS_PROMPT = """
+You are an expert in understanding the nuances of conversational questions.
+Your task is to analyze a list of questions for a 1-on-1 meeting and determine the core intent behind each one.
+
+Analyze the following questions and respond with a JSON object. The keys should be the question numbers,
+and the value for each key should be another JSON object containing the original "question" and your inferred "intent".
+The "intent" should be a short, descriptive phrase (2-3 words) in `{language}`.
+
+## [Questions to Analyze]
+{questions_for_intent_analysis}
+
+## [Overall Context]
+- Target Person: {target_info}
+- Purpose: {purpose}
+- Detailed Context: {detailed_context}
+
+## OUTPUT FORMAT
+{{
+    "1": {{
+        "question": "The first question text...",
+        "intent": "Inferred intent..."
+    }},
+    "2": {{
+        "question": "The second question text...",
+        "intent": "Inferred intent..."
+    }}
+}}
+"""
