@@ -106,23 +106,20 @@ async def test_summary_generation():
             
             print(f"💾 요약이 '{output_path}'에 저장되었습니다.")
             
-            # LangSmith 추적을 위해 결과 반환
-            return summary_result
+            # 테스트 검증
+            assert summary_result is not None, "요약 생성이 실패했습니다"
+            assert isinstance(summary_result, dict), "요약 결과가 딕셔너리 형태가 아닙니다"
             
         else:
             print("\n⚠️ 요약 생성에 실패했습니다.")
-            return None
+            assert False, "요약 생성에 실패했습니다"
             
     except Exception as e:
         print(f"\n❌ 요약 생성 중 오류 발생: {e}")
-        return None
+        assert False, f"요약 생성 중 오류 발생: {e}"
 
 # 메인 실행
 if __name__ == "__main__":
-    # asyncio 이벤트 루프에서 실행
-    result = asyncio.run(test_summary_generation())
-    
-    if result:
-        print("\n--- LangSmith 추적용 완전한 JSON ---")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
-        print("----------------------------------------")
+    # asyncio 이벤트 루프에서 테스트 실행
+    asyncio.run(test_summary_generation())
+    print("\n✅ 테스트 완료!")

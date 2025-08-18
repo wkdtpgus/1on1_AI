@@ -111,21 +111,22 @@ def test_streaming():
                     generated_questions = process_streaming_response(full_response_str)
                     
                     if generated_questions:
-                        # 파일 저장 및 데이터 반환
+                        # 파일 저장 및 데이터 검증
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         output_path = f"data/generated_templates/questions_streamed_{timestamp}.json"
                         
                         # 디렉토리 생성과 저장
                         saved_data = save_questions_to_json(generated_questions, output_path)
-                        return saved_data
+                        assert saved_data is not None, "데이터 저장이 실패했습니다"
+                        assert len(saved_data) > 0, "저장된 데이터가 비어있습니다"
                         
                     else:
                         print("\n⚠️ 생성된 질문이 없습니다.")
-                        return None
+                        assert False, "생성된 질문이 없습니다"
                         
                 except Exception as save_error:
                     print(f"\n❌ 파일 저장 중 오류 발생: {save_error}")
-                    return None
+                    assert False, f"파일 저장 중 오류 발생: {save_error}"
                 
             else:
                 print(f"에러 발생: {response.status_code}")
