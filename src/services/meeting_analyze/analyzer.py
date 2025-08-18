@@ -7,7 +7,6 @@ import logging
 
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.stt_schemas import MeetingAnalysis
-from src.utils.formatter import prepare_speaker_stats
 
 # 로깅 설정
 logger = logging.getLogger("meeting_analyzer")

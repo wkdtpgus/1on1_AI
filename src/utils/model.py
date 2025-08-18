@@ -148,10 +148,14 @@ class AssemblyAIProcessor:
 # Vertex AI Gemini 분석 모델 (STT 분석용)
 # =============================================================================
 
-class GeminiMeetingAnalyzer:    
+# analyzer 기능을 import
+from src.services.meeting_analyze.analyzer import BaseMeetingAnalyzer
+
+class GeminiMeetingAnalyzer(BaseMeetingAnalyzer):    
     """Google Vertex AI Gemini 모델을 사용한 회의 분석기"""
     
     def __init__(self, google_project: Optional[str] = None, google_location: Optional[str] = None):
+        super().__init__()  # BaseMeetingAnalyzer 초기화
         self.google_project = google_project or GOOGLE_CLOUD_PROJECT
         self.google_location = google_location or GOOGLE_CLOUD_LOCATION
         
