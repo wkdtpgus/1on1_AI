@@ -62,33 +62,17 @@ class MeetingAPI {
             
             // 백엔드에서 이미 포맷된 형식으로 반환하므로 그대로 사용
             if (data.status === 'success') {
-                // 기획회의 구조인 경우
-                if (data.meeting_type === 'planning' && (data.strategic_insights || data.next_steps)) {
-                    return {
-                        meeting_type: data.meeting_type,
-                        quick_review: data.quick_review || {},
-                        detailed_discussion: data.detailed_discussion || '',
-                        strategic_insights: data.strategic_insights || [],
-                        innovation_ideas: data.innovation_ideas || [],
-                        risks_challenges: data.risks_challenges || [],
-                        next_steps: data.next_steps || [],
-                        transcript: data.transcript || '스크립트를 불러올 수 없습니다.',
-                        title: data.title || '기획회의 분석 결과'
-                    };
-                }
-                // 새로운 JSON 구조가 있는 경우 그대로 반환 (1on1 등)
-                else if (data.quick_review || data.detailed_discussion) {
-                    return {
-                        meeting_type: data.meeting_type || '1on1',
-                        quick_review: data.quick_review || {},
-                        detailed_discussion: data.detailed_discussion || '',
-                        feedback: data.feedback || [],
-                        positive_aspects: data.positive_aspects || [],
-                        qa_summary: data.qa_summary || [],
-                        transcript: data.transcript || '스크립트를 불러올 수 없습니다.',
-                        title: data.title || '1on1 미팅 분석 결과'
-                    };
-                }
+                // 새로운 JSON 구조로 그대로 반환
+                return {
+                    meeting_type: data.meeting_type || '1on1',
+                    title: data.title || '1on1 미팅 분석 결과',
+                    action_items: data.action_items || '',
+                    detailed_discussion: data.detailed_discussion || '',
+                    feedback: data.feedback || [],
+                    positive_aspects: data.positive_aspects || [],
+                    qa_summary: data.qa_summary || [],
+                    transcript: data.transcript || '스크립트를 불러올 수 없습니다.'
+                };
                 // 기존 구조 지원 (하위 호환성)
                 return {
                     meeting_type: data.meeting_type || '1on1',

@@ -565,7 +565,7 @@ async function simulateAnalysis() {
 function showResults(results) {
     console.log('🔍 showResults 호출됨:', results);
     console.log('🔍 results.meeting_type:', results.meeting_type);
-    console.log('🔍 results.quick_review 존재:', !!results.quick_review);
+    console.log('🔍 results.action_items 존재:', !!results.action_items);
     console.log('🔍 results.detailed_discussion 존재:', !!results.detailed_discussion);
     
     // 분석 결과를 전역 변수에 저장 (복사 기능용)
@@ -592,7 +592,7 @@ function showResults(results) {
         console.log('✅ displayGeneralResults 호출');
         // 일반회의 결과 구조로 표시
         displayGeneralResults(results);
-    } else if (results.quick_review || results.detailed_discussion) {
+    } else if (results.action_items || results.detailed_discussion) {
         console.log('✅ displayActualResults 호출');
         // 실제 분석 결과 구조로 표시
         displayActualResults(results);
@@ -608,18 +608,10 @@ function displayActualResults(results) {
     console.log('🔍 displayActualResults 시작:', results);
     
     // Quick Review 섹션 업데이트
-    if (results.quick_review) {
-        const takeawaysElement = document.getElementById('quickReviewTakeaways');
-        const decisionsElement = document.getElementById('quickReviewDecisions');
-        const actionsElement = document.getElementById('quickReviewActions');
-        const supportElement = document.getElementById('quickReviewSupport');
-        
-        if (takeawaysElement) takeawaysElement.textContent = results.quick_review.key_takeaways || '핵심 내용이 없습니다.';
-        if (decisionsElement) decisionsElement.innerHTML = formatTextWithBreaks(results.quick_review.decisions_made || '결정사항이 없습니다.');
-        if (actionsElement) actionsElement.innerHTML = formatTextWithBreaks(results.quick_review.action_items || '액션 아이템이 없습니다.');
-        if (supportElement) supportElement.innerHTML = formatTextWithBreaks(results.quick_review.support_needs_blockers || '지원 요청사항이 없습니다.');
-    } else {
-        console.log('❌ No quick_review data found');
+    // action_items만 표시
+    const actionsElement = document.getElementById('quickReviewActions');
+    if (actionsElement) {
+        actionsElement.innerHTML = formatTextWithBreaks(results.action_items || '액션 아이템이 없습니다.');
     }
     
     // 세부 상세 요약 업데이트
@@ -1606,16 +1598,11 @@ copySummaryBtn.addEventListener('click', async () => {
     try {
         let summaryText = `# ${currentAnalysisResults.title || '미팅 분석 결과'}\n\n`;
         
-        // 회의 타입별로 요약 내용 추출
-        if (currentAnalysisResults.meeting_type === '1on1' && currentAnalysisResults.quick_review) {
-            const qr = currentAnalysisResults.quick_review;
-            summaryText += `## 핵심 리뷰\n\n`;
-            summaryText += `### 주요 내용\n${qr.key_takeaways || '내용 없음'}\n\n`;
-            summaryText += `### 결정사항\n${Array.isArray(qr.decisions_made) ? qr.decisions_made.join('\n') : qr.decisions_made || '없음'}\n\n`;
-            summaryText += `### 액션 아이템\n${Array.isArray(qr.action_items) ? qr.action_items.join('\n') : qr.action_items || '없음'}\n\n`;
-        } else {
-            summaryText += currentAnalysisResults.detailed_discussion || '상세 내용이 없습니다.';
+        // 액션 아이템과 상세 요약 추출
+        if (currentAnalysisResults.action_items) {
+            summaryText += `## 액션 아이템\n${currentAnalysisResults.action_items}\n\n`;
         }
+        summaryText += `## 상세 요약\n${currentAnalysisResults.detailed_discussion || '상세 내용이 없습니다.'}`;
         
         await navigator.clipboard.writeText(summaryText);
         showCopySuccess(copySummaryBtn, '요약이 복사되었습니다!');

@@ -153,12 +153,7 @@ USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide res
 {{
   "title": "One-line summary of the entire meeting (in Korean, e.g., '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')",
   
-  "quick_review": {{
-    "key_takeaways": "core content of the meeting (in Korean)",
-    "decisions_made": "Joint decisions from the meeting (in Korean)",
-    "action_items": "Action items with owner and deadline (in Korean)",
-    "support_needs_blockers": "Support requests and blockers with action plans (in Korean)"
-  }},
+  "action_items": "Action items with owner and deadline (in Korean)",
   
   "detailed_discussion": "Detailed Discussion Summary following the hierarchical structure specified in system prompt (in Korean)",
   
