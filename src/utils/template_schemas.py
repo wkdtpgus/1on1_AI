@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Union, Literal
+from typing import List, Optional, Union, Literal, Dict
 
 class TemplateGeneratorInput(BaseModel):
     """
@@ -62,7 +62,6 @@ class TemplateGeneratorInput(BaseModel):
     use_previous_data: bool = Field(default=False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부.")
     previous_summary: Optional[str] = Field(default=None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보.")
 
-
 class TemplateGeneratorOutput(BaseModel):
     """
     생성된 1on1 템플릿 결과 모델
@@ -74,3 +73,32 @@ class SummaryGeneratorOutput(BaseModel):
     생성된 1on1 템플릿 요약 결과 모델
     """
     template_summary: str = Field(..., description="사용자 입력을 바탕으로 한 템플릿 구성 요약")
+
+class UsageGuideInput(BaseModel):
+    """활용 가이드 생성을 위한 입력 스키마"""
+    # 원본 입력 데이터
+    user_id: str = Field(..., description="사용자 ID")
+    target_info: str = Field(..., description="1on1 대상자 정보")
+    purpose: str = Field(..., description="1on1 목적")
+    detailed_context: str = Field(..., description="상세 맥락")
+    
+    # 생성된 템플릿 데이터
+    generated_questions: List[Dict[str, str]] = Field(..., description="생성된 질문들 (question, intent 포함)")
+    
+    # 추가 메타데이터
+    language: str = Field(default="Korean", description="출력 언어")
+
+
+class UsageGuideOutput(BaseModel):
+    """활용 가이드 출력 스키마 - 3문장 구조"""
+    opening_strategy: str = Field(..., description="리더가 질문을 어떻게 활용할지, 1on1 흐름과 분위기 조성 방법")
+    needs_reflection: str = Field(..., description="어떤 니즈를 어떤 질문으로 반영했는지에 대한 안내")
+    flow_management: str = Field(..., description="전체 질문들의 흐름, 맥락, 정보 획득 전략")
+
+
+class GuideMetadata(BaseModel):
+    """가이드 생성을 위한 분석 메타데이터"""
+    total_questions: int
+    intent_distribution: Dict[str, int]
+    sensitive_topics: List[str]
+    question_flow_pattern: str

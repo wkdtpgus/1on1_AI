@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 from dotenv import load_dotenv
 from src.utils.mock_db import MOCK_USER_DATA
-from src.services.template_generator.generate_summary import generate_summary
+from src.services.template_generator.generate_email import generate_email
 from src.utils.template_schemas import TemplateGeneratorInput
 
 # .env 파일 로드
@@ -87,7 +87,7 @@ async def test_summary_generation():
     try:
         # 요약 생성 실행
         print("요약 생성 중...")
-        summary_result = await generate_summary(input_data)
+        summary_result = await generate_email(input_data)
         
         if summary_result:
             print("\n✅ 요약 생성 완료!")
