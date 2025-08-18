@@ -62,17 +62,11 @@ class TemplateGeneratorInput(BaseModel):
     use_previous_data: bool = Field(default=False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부.")
     previous_summary: Optional[str] = Field(default=None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보.")
 
-class TemplateGeneratorOutput(BaseModel):
+class EmailGeneratorOutput(BaseModel):
     """
-    생성된 1on1 템플릿 결과 모델
+    생성된 1on1 요약 이메일 결과 모델
     """
-    generated_questions: List[str] = Field(..., description="생성된 1on1 질문 목록")
-
-class SummaryGeneratorOutput(BaseModel):
-    """
-    생성된 1on1 템플릿 요약 결과 모델
-    """
-    template_summary: str = Field(..., description="사용자 입력을 바탕으로 한 템플릿 구성 요약")
+    generated_email: str = Field(..., description="사용자 입력을 바탕으로 생성된 이메일 본문")
 
 class UsageGuideInput(BaseModel):
     """활용 가이드 생성을 위한 입력 스키마"""

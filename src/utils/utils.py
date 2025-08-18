@@ -17,43 +17,38 @@ def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:
     return _MOCK_USER_DATA_BY_ID.get(user_id)
 
 
-def save_questions_to_json(questions: List[str], file_path: str):
+def save_questions_to_json(questions_data: Dict[str, str], file_path: str) -> Dict[str, str]:
     """
-    질문 리스트를 번호가 키인 딕셔너리 형태로 JSON 파일에 저장합니다.
+    번호가 매겨진 질문 딕셔너리를 JSON 파일에 그대로 저장합니다.
 
     Args:
-        questions (List[str]): 저장할 질문 리스트
+        questions_data (Dict[str, str]): 저장할 질문 딕셔너리 (e.g., {"1": "...", "2": "..."})
         file_path (str): 저장할 JSON 파일 경로
     
     Returns:
-        dict: 저장된 데이터를 딕셔너리 형태로 반환 (즉시 사용 가능)
+        dict: 저장된 데이터 (입력과 동일)
     """
-    output_data = {str(i + 1): question for i, question in enumerate(questions)}
-
-    # 디렉토리 생성
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
     with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(output_data, f, ensure_ascii=False, indent=4)
-    
-    return output_data
+        json.dump(questions_data, f, ensure_ascii=False, indent=4)
+    return questions_data
 
-def process_streaming_response(response_text: str) -> Optional[List[str]]:
+def process_streaming_response(response_text: str) -> Optional[Dict[str, str]]:
     """
-    스트리밍 응답에서 JSON을 추출하고 generated_questions를 반환합니다.
+    스트리밍 응답에서 JSON 객체 전체를 추출하여 반환합니다.
 
     Args:
         response_text (str): 스트리밍 응답 텍스트
 
     Returns:
-        Optional[List[str]]: 추출된 질문 리스트 또는 None
+        Optional[Dict[str, str]]: 추출된 질문 딕셔너리 또는 None
     """
     try:
         json_match = re.search(r'```json\s*(\{.*?\})\s*```', response_text, re.DOTALL)
         if json_match:
             json_str = json_match.group(1)
-            full_response = json.loads(json_str)
-            return full_response.get('generated_questions', [])
+            # JSON 문자열을 파이썬 딕셔너리로 변환하여 반환
+            return json.loads(json_str)
         return None
     except Exception as e:
         print(f"JSON 파싱 오류: {e}")

@@ -1,11 +1,11 @@
 import json
 import logging
-from typing import AsyncIterable
+from typing import AsyncIterable, AsyncGenerator
 from langchain_core.prompts import ChatPromptTemplate
 from src.utils.model import llm_streaming
 from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput
-from src.utils.utils import get_user_data_by_id
+from src.utils.utils import get_user_data_by_id, process_streaming_response
 
 
 logging.basicConfig(level=logging.INFO)
@@ -20,9 +20,9 @@ def get_streaming_chain():
 
 chain = get_streaming_chain()
 
-async def generate_template(input_data: TemplateGeneratorInput) -> AsyncIterable[str]:
+async def generate(input_data: TemplateGeneratorInput) -> AsyncGenerator[str, None]:
     """
-    입력 데이터를 기반으로 1on1 템플릿을 스트리밍 방식으로 비동기적으로 생성합니다.
+    사용자 입력을 기반으로 1on1 템플릿 질문을 스트리밍 방식으로 생성합니다.
     """
 
     user_data = get_user_data_by_id(input_data.user_id)

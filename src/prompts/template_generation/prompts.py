@@ -80,11 +80,9 @@ HUMAN_PROMPT = """
 
 ## OUTPUT FORMAT
 {{
-  "generated_questions": [
-          "First question",
-          "Second question", 
-          "Third question"
-  ]
+    "1": "First question",
+    "2": "Second question", 
+    "3": "Third question"
 }}
 """
 

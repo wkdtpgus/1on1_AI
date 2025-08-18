@@ -16,7 +16,7 @@ from src.utils.utils import collect_streaming_response, process_streaming_respon
 load_dotenv()
 
 # FastAPI 서버의 v2 스트리밍 엔드포인트 URL
-url = "http://127.0.0.1:8000/generate"
+url = "http://127.0.0.1:8000/generate_template"
 
 # 테스트할 사용자 ID
 USER_ID_TO_TEST = "user_001"
@@ -108,17 +108,19 @@ def test_streaming():
                 # 스트리밍 완료 후 JSON 추출 및 저장
                 try:
                     # utils.py의 함수를 사용하여 JSON 추출
-                    generated_questions = process_streaming_response(full_response_str)
+                    generated_questions_dict = process_streaming_response(full_response_str)
                     
-                    if generated_questions:
+                    if generated_questions_dict:
                         # 파일 저장 및 데이터 검증
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         output_path = f"data/generated_templates/questions_streamed_{timestamp}.json"
                         
                         # 디렉토리 생성과 저장
-                        saved_data = save_questions_to_json(generated_questions, output_path)
+                        saved_data = save_questions_to_json(generated_questions_dict, output_path)
                         assert saved_data is not None, "데이터 저장이 실패했습니다"
+                        assert isinstance(saved_data, dict), "저장된 데이터가 딕셔너리 형태가 아닙니다."
                         assert len(saved_data) > 0, "저장된 데이터가 비어있습니다"
+                        assert "1" in saved_data, "결과에 첫 번째 질문('1')이 포함되어 있지 않습니다."
                         
                     else:
                         print("\n⚠️ 생성된 질문이 없습니다.")
