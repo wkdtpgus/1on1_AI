@@ -15,7 +15,8 @@ llm = ChatVertexAI(
     model_name=GEMINI_MODEL,
     max_output_tokens=MAX_TOKENS,
     temperature=GEMINI_TEMPERATURE,
-    model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
+    # model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET}, # Deprecated
+    thinking_budget=GEMINI_THINKING_BUDGET, # Pass directly
     streaming=False,
 )
 
@@ -26,6 +27,7 @@ llm_streaming = ChatVertexAI(
     model_name=GEMINI_MODEL,
     max_output_tokens=MAX_TOKENS,
     temperature=GEMINI_TEMPERATURE,
-    model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET},
+    # model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET}, # Deprecated
+    thinking_budget=GEMINI_THINKING_BUDGET, # Pass directly
     streaming=True,
 )

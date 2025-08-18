@@ -43,4 +43,5 @@ async def generate_template_endpoint(input_data: TemplateGeneratorInput):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    # reload=True 옵션을 사용하려면 애플리케이션을 "파일명:객체명" 형태의 문자열로 전달해야 합니다.
+    uvicorn.run("template_main:app", host="0.0.0.0", port=8000, reload=True)
