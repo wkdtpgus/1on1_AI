@@ -134,6 +134,7 @@ dmypy.json
 Thumbs.db
 
 # Project specific
+data/*
 data/raw_audio/*
 data/stt_transcripts/*
 data/generated_templates/*
@@ -153,5 +154,20 @@ temp/
 *.tmp
 *.temp
 
-# Poetry
-# poetry.lock은 버전 관리에 포함되어야 함
+# 캐시 파일 
+__pycache__/
+
+# Google Cloud Service Account Key
+thetimecollabo-38646deba34a.json
+
+#.vercel
+.vercel/
+
+# railway   
+.railway/
+
+#Procfile   
+.Procfile
+
+# Claude
+.claude/
