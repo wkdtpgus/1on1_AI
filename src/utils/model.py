@@ -88,44 +88,34 @@ llm_streaming = ChatVertexAI(
 # AssemblyAI 모델 (음성-텍스트 변환)
 # =============================================================================
 
-class AssemblyAIProcessor:
-    """AssemblyAI 기반 음성-텍스트 처리 모델"""
+class SpeechTranscriber:
+    """AssemblyAI 기반 음성 전사기"""
 
     def __init__(self, api_key: Optional[str] = None) -> None:
-        """API 키 검증과 함께 AssemblyAIProcessor 초기화"""
+        """API 키 검증과 함께 SpeechTranscriber 초기화"""
         self.api_key = api_key or ASSEMBLYAI_API_KEY or os.getenv("ASSEMBLYAI_API_KEY")
         
         if not self.api_key:
             raise ValueError("AssemblyAI API 키가 필요합니다")
             
         aai.settings.api_key = self.api_key
-        logger.debug("AssemblyAIProcessor가 성공적으로 초기화되었습니다")
-
-    def create_config(self, expected_speakers: Optional[int] = None) -> aai.TranscriptionConfig:
-        """AssemblyAI 전사 설정 생성"""
-        # 화자 수 설정 (최소 2명, 최대 10명으로 제한)
-        speakers_count = expected_speakers if expected_speakers is not None else ASSEMBLYAI_SPEAKERS_EXPECTED
-        speakers_count = max(2, min(speakers_count, 10))
-        logger.debug(f"화자 수 설정: {speakers_count}명")
         
-        # 전사 구성 생성
-        config = aai.TranscriptionConfig(
+        # 1on1 미팅용 전사 설정 생성
+        self.config = aai.TranscriptionConfig(
             language_code=ASSEMBLYAI_LANGUAGE,
             punctuate=ASSEMBLYAI_PUNCTUATE,
             format_text=ASSEMBLYAI_FORMAT_TEXT,
             disfluencies=ASSEMBLYAI_DISFLUENCIES,
             speaker_labels=ASSEMBLYAI_SPEAKER_LABELS,
             language_detection=ASSEMBLYAI_LANGUAGE_DETECTION,
-            speakers_expected=speakers_count
+            speakers_expected=ASSEMBLYAI_SPEAKERS_EXPECTED
         )
         
-        return config
+        logger.debug(f"STT 모델 초기화 완료")
 
-# =============================================================================
+#
 # Vertex AI Gemini 분석 모델 (STT 분석용)
-# =============================================================================
-
-class GeminiMeetingAnalyzer:    
+class MeetingAnalyzer:    
     """Google Vertex AI Gemini 모델을 사용한 회의 분석기"""
     
     def __init__(self, google_project: Optional[str] = None, google_location: Optional[str] = None):

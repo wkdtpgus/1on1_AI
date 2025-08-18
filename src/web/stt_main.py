@@ -52,10 +52,10 @@ async def lifespan(app: FastAPI):
     aai.settings.api_key = ASSEMBLYAI_API_KEY
     
     # 서비스 초기화
-    from src.utils.model import GeminiMeetingAnalyzer
+    from src.utils.model import MeetingAnalyzer
     from src.services.meeting_analyze.meeting_pipeline import MeetingPipeline
     
-    meeting_analyzer = GeminiMeetingAnalyzer(
+    meeting_analyzer = MeetingAnalyzer(
         google_project=GOOGLE_CLOUD_PROJECT, 
         google_location=GOOGLE_CLOUD_LOCATION
     )
@@ -73,7 +73,6 @@ async def lifespan(app: FastAPI):
     
     yield
     # 종료시 정리 (필요시)
-    pass
 
 # FastAPI 앱 생성
 app = FastAPI(
@@ -124,6 +123,94 @@ async def get_config():
         "bucket_name": SUPABASE_BUCKET_NAME
     }
 
+
+@app.post("/api/record-and-analyze")
+async def record_and_analyze_meeting(
+    audio_file: bytes = Form(...),
+    filename: str = Form(...),
+    qa_data: Optional[str] = Form(default=None),
+    participants_info: Optional[str] = Form(default=None),
+    bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
+):
+    """
+    음성 파일을 업로드하고 Supabase에 저장한 후 1on1 미팅 분석 수행
+    
+    Args:
+        audio_file: 업로드된 음성 파일 (바이트)
+        filename: 파일명
+        qa_data: Q&A 데이터 (JSON 문자열)
+        participants_info: 참가자 정보 (JSON 문자열)
+        bucket_name: 버킷 이름
+    """
+    if not meeting_pipeline:
+        raise HTTPException(status_code=503, detail="파이프라인이 초기화되지 않았습니다")
+    
+    try:
+        logger.info(f"🎤 음성 파일 업로드 및 분석 시작: {filename}")
+        
+        # 고유한 파일명 생성 (타임스탬프 추가)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_extension = filename.split('.')[-1] if '.' in filename else 'wav'
+        unique_filename = f"{timestamp}_{filename}"
+        
+        # Supabase에 파일 업로드
+        upload_result = supabase.storage.from_(bucket_name).upload(
+            path=unique_filename,
+            file=audio_file,
+            file_options={"content-type": f"audio/{file_extension}"}
+        )
+        
+        if hasattr(upload_result, 'error') and upload_result.error:
+            raise HTTPException(status_code=500, detail=f"파일 업로드 실패: {upload_result.error}")
+        
+        logger.info(f"✅ 파일 업로드 완료: {unique_filename}")
+        
+        # JSON 입력 파싱
+        qa_list = json.loads(qa_data) if qa_data else None
+        participants = json.loads(participants_info) if participants_info else None
+        
+        # LangGraph 파이프라인 실행
+        result = await meeting_pipeline.run(
+            file_id=unique_filename,
+            bucket_name=bucket_name,
+            qa_data=qa_list,
+            participants_info=participants
+        )
+        
+        # 파이프라인 실행 실패 처리
+        if result["status"] == "failed":
+            error_details = "; ".join(result.get("errors", ["알 수 없는 오류"]))
+            raise HTTPException(status_code=500, detail=f"파이프라인 실행 실패: {error_details}")
+        
+        # 성공 응답 생성
+        analysis_data = result.get("analysis_result", {})
+        transcript_data = result.get("transcript", {})
+        
+        response = {
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
+            **analysis_data,
+            "transcript": transcript_data,
+            "file_info": {
+                "file_id": unique_filename,
+                "bucket_name": bucket_name,
+                "file_path": result.get("file_path", ""),
+                "uploaded_filename": filename
+            },
+            "pipeline_info": {
+                "pipeline_status": result["status"],
+                "errors": result.get("errors", [])
+            }
+        }
+        
+        logger.info(f"✅ 음성 파일 업로드 및 분석 완료: {unique_filename}")
+        return JSONResponse(content=response)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"음성 파일 업로드 및 분석 오류: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"음성 파일 처리 중 오류가 발생했습니다: {str(e)}")
 
 
 @app.post("/api/analyze")

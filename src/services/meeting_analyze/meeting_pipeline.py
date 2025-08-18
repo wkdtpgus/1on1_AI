@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, Any
 from langgraph.graph import StateGraph, END
 import assemblyai as aai
 from supabase import Client
@@ -6,8 +6,7 @@ import json
 import logging
 from datetime import datetime
 
-from src.config.config import ASSEMBLYAI_SPEAKERS_EXPECTED
-from src.utils.model import GeminiMeetingAnalyzer, AssemblyAIProcessor
+from src.utils.model import MeetingAnalyzer, SpeechTranscriber
 from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from langchain.prompts import PromptTemplate
@@ -21,13 +20,54 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
     logger.info(f"🔍 Supabase 파일 조회 시작: {state['file_id']}")
     
     try:
-        # 파이프라인 인스턴스에서 supabase 클라이언트 가져오기
-        # 이 부분은 MeetingPipeline 클래스에서 처리됩니다
         state["status"] = "retrieving_file"
         
-        # 실제 파일 검색은 MeetingPipeline.run에서 수행하고
-        # 결과를 state에 미리 설정합니다
-        logger.info(f"✅ 파일 조회 완료: {state.get('file_path', 'N/A')}")
+        # supabase_client 가져오기 (함수 속성으로 전달됨)
+        supabase = getattr(retrieve_from_supabase, '_supabase_client', None)
+        if not supabase:
+            raise ValueError("Supabase 클라이언트가 초기화되지 않았습니다")
+        
+        bucket_name = state["bucket_name"]
+        file_id = state["file_id"]
+        
+        # 재귀적 파일 검색
+        def search_files(path: str = ""):
+            try:
+                files = supabase.storage.from_(bucket_name).list(path)
+                found = []
+                
+                for file in files:
+                    file_path = f"{path}/{file['name']}" if path else file['name']
+                    
+                    if file.get('id') is not None or '.' in file['name']:
+                        if (file['name'] == file_id or 
+                            file_path == file_id or 
+                            file_id in file['name']):
+                            found.append({**file, "full_path": file_path})
+                    else:
+                        try:
+                            sub_found = search_files(file_path)
+                            found.extend(sub_found)
+                        except:
+                            pass
+                return found
+            except:
+                return []
+        
+        found_files = search_files()
+        if not found_files:
+            raise ValueError(f"파일을 찾을 수 없습니다: {file_id}")
+        
+        file_info = found_files[0]
+        file_path = file_info.get('full_path', file_info['name'])
+        file_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
+        
+        # state 업데이트
+        state["file_url"] = file_url
+        state["file_path"] = file_path
+        state["file_metadata"] = file_info
+        
+        logger.info(f"✅ 파일 조회 완료: {file_path}")
         
     except Exception as e:
         error_msg = f"Supabase 파일 조회 실패: {str(e)}"
@@ -48,12 +88,9 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         if not state.get("file_url"):
             raise ValueError("파일 URL이 없습니다")
         
-        # AssemblyAI 설정 생성
-        processor = AssemblyAIProcessor()
-        config = processor.create_config(expected_speakers=ASSEMBLYAI_SPEAKERS_EXPECTED)
-        
-        # STT 처리
-        transcriber = aai.Transcriber(config=config)
+        # AssemblyAI 설정 및 STT 처리
+        speech_transcriber = SpeechTranscriber()
+        transcriber = aai.Transcriber(config=speech_transcriber.config)
         transcript = transcriber.transcribe(state["file_url"])
         
         if transcript.status == aai.TranscriptStatus.error:
@@ -166,20 +203,12 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         
         # LLM 응답 상세 로깅
         logger.info(f"LLM 응답 타입: {type(result)}")
-        logger.info(f"LLM 응답 필드: {result.__dict__.keys() if hasattr(result, '__dict__') else 'N/A'}")
         if hasattr(result, 'detailed_discussion'):
             logger.info(f"detailed_discussion 길이: {len(result.detailed_discussion) if result.detailed_discussion else 0}")
             logger.info(f"detailed_discussion 마지막 100자: {result.detailed_discussion[-100:] if result.detailed_discussion else 'N/A'}")
         
-        analysis_result = result.model_dump_json(indent=2)
-        
-        # JSON 결과 파싱
-        try:
-            analysis_data = json.loads(analysis_result)
-        except json.JSONDecodeError:
-            analysis_data = {"error": "분석 결과 파싱 실패", "raw_result": analysis_result}
-        
-        state["analysis_result"] = analysis_data
+        # Pydantic 객체를 직접 Dict로 변환 (JSON 변환 불필요)
+        state["analysis_result"] = result.model_dump()
         state["status"] = "completed"
         
         logger.info("✅ LLM 분석 완료")
@@ -200,7 +229,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
 class MeetingPipeline:
     """1on1 미팅 분석 파이프라인"""
     
-    def __init__(self, supabase_client: Client, analyzer: GeminiMeetingAnalyzer):
+    def __init__(self, supabase_client: Client, analyzer: MeetingAnalyzer):
         """
         Args:
             supabase_client: Supabase 클라이언트
@@ -215,7 +244,8 @@ class MeetingPipeline:
         """LangGraph 워크플로우 구성"""
         workflow = StateGraph(MeetingPipelineState)
         
-        # analyzer를 노드 함수에 바인딩
+        # supabase_client와 analyzer를 노드 함수에 바인딩
+        retrieve_from_supabase._supabase_client = self.supabase
         analyze_with_llm._analyzer = self.analyzer
         
         # 노드 추가
@@ -231,57 +261,21 @@ class MeetingPipeline:
         
         return workflow.compile()
     
-    async def find_file_in_storage(self, bucket_name: str, file_id: str) -> List[Dict]:
-        """재귀적으로 스토리지에서 파일을 찾는 함수"""
-        def search_files(path: str = ""):
-            try:
-                files = self.supabase.storage.from_(bucket_name).list(path)
-                found = []
-                
-                for file in files:
-                    file_path = f"{path}/{file['name']}" if path else file['name']
-                    
-                    if file.get('id') is not None or '.' in file['name']:
-                        if (file['name'] == file_id or 
-                            file_path == file_id or 
-                            file_id in file['name']):
-                            found.append({**file, "full_path": file_path})
-                    else:
-                        try:
-                            sub_found = search_files(file_path)
-                            found.extend(sub_found)
-                        except:
-                            pass
-                return found
-            except:
-                return []
-        
-        return search_files()
-    
     async def run(self, file_id: str, **kwargs) -> Dict:
         """파이프라인 실행"""
         logger.info(f"🚀 파이프라인 실행 시작: {file_id}")
         
-        # 초기 상태 설정
+        # 초기 상태 설정 (파일 조회는 retrieve 노드에서 처리)
         bucket_name = kwargs.get("bucket_name", "audio-recordings")
-        
-        # Supabase 파일 조회 (LangGraph 실행 전에 수행)
-        found_files = await self.find_file_in_storage(bucket_name, file_id)
-        if not found_files:
-            raise ValueError(f"파일을 찾을 수 없습니다: {file_id}")
-        
-        file_info = found_files[0]
-        file_path = file_info.get('full_path', file_info['name'])
-        file_url = self.supabase.storage.from_(bucket_name).get_public_url(file_path)
         
         initial_state: MeetingPipelineState = {
             "file_id": file_id,
             "bucket_name": bucket_name,
             "qa_data": kwargs.get("qa_data"),
             "participants_info": kwargs.get("participants_info"),
-            "file_url": file_url,
-            "file_path": file_path,
-            "file_metadata": file_info,
+            "file_url": None,  # retrieve 노드에서 설정
+            "file_path": None,  # retrieve 노드에서 설정
+            "file_metadata": None,  # retrieve 노드에서 설정
             "transcript": None,
             "speaker_stats": None,
             "analysis_result": None,

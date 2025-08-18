@@ -43,23 +43,6 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 ## Title (for JSON title field):
 One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검")
 
-## Quick Review Structure (for JSON quick_review field):
-**Key Takeaways**
-• core content of the meeting
-
-**Decisions Made**
-• Joint decisions from the meeting
-• Example: Agreed on Option B for Project A
-
-**Action Items**
-• [Leader] Specific action by date
-• [Employee] Specific action by date
-• [Joint] Shared responsibility items
-
-**Support Needs & Blockers**
-• [Support Request] Description → Action plan
-• [Blocker] Description → Resolution approach
-
 ## Detailed Discussion Structure (for JSON detailed_discussion field):
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
 ### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)

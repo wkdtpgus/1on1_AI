@@ -8,7 +8,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.utils.model import GeminiMeetingAnalyzer
+from src.utils.model import MeetingAnalyzer
 from src.utils.formatter import STTProcessor
 try:
     from pydub import AudioSegment
@@ -348,7 +348,7 @@ def _run_gemini_test():
     # Gemini 분석기 초기화
     print("\n🔧 Gemini 모델 초기화 중...")
     try:
-        analyzer = GeminiMeetingAnalyzer()
+        analyzer = MeetingAnalyzer()
         print("✅ Gemini 분석기 초기화 완료")
     except Exception as e:
         print(f"❌ Gemini 분석기 초기화 실패: {e}")
@@ -905,7 +905,7 @@ def _analyze_with_gemini(transcript_text, speaker_stats=None):
     
     # Gemini 분석기 초기화
     try:
-        analyzer = GeminiMeetingAnalyzer()
+        analyzer = MeetingAnalyzer()
         print("✅ Gemini 분석기 초기화 완료")
     except Exception as e:
         print(f"❌ Gemini 분석기 초기화 실패: {e}")
@@ -950,7 +950,7 @@ def _run_integrated_pipeline_test():
 
     # Gemini 분석기로 통합 분석
     try:
-        analyzer = GeminiMeetingAnalyzer()
+        analyzer = MeetingAnalyzer()
         print("\n✅ Gemini 분석기 초기화 완료")
         
         # STT 데이터에서 전사 텍스트 추출
@@ -1091,7 +1091,7 @@ def _run_qa_analysis_test():
     # Gemini 분석기 초기화
     print("\n🔧 Gemini 모델 초기화 중...")
     try:
-        analyzer = GeminiMeetingAnalyzer()
+        analyzer = MeetingAnalyzer()
         print("✅ Gemini 분석기 초기화 완료")
     except Exception as e:
         print(f"❌ Gemini 분석기 초기화 실패: {e}")
