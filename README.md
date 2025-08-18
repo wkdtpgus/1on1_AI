@@ -1,60 +1,39 @@
 # Orblit 1-on-1 AI
 
-AI 기반 1:1 미팅 피드백 시스템
+AI 기반 1:1 미팅 분석 및 피드백 시스템
 
 ## 프로젝트 개요
 
-OneOnOne_AI_System은 1:1 미팅의 음성 대화를 STT 기술로 자동 기록하고, AI를 통해 분석하는 프로젝트입니다. AI는 미팅 목적에 맞는 질문 템플릿을 생성하고, 대화가 끝난 후 리더에게 맞춤형 피드백을 제공합니다. 이 모든 과정은 리더의 코칭 역량을 강화하고 구성원의 성장을 촉진하는 것을 목표로 합니다.
+리더의 1:1 미팅 스킬 향상을 위한 AI 분석 시스템입니다. 음성 대화를 텍스트로 변환하고 LLM을 활용해 리더에게 맞춤형 피드백을 제공하며, 다음 미팅을 위한 질문 템플릿을 생성합니다.
+
+## 기능 플로우
+
+```
+1. STT: 1on1 미팅 음성 → 텍스트 변환 + 화자 분리
+2. LLM Analysis: 텍스트 → 리더 피드백 분석
+   - 미팅 제목 요약
+   - 미팅 내용 요약
+   - 리더 피드백 (발화 비율, 질문 품질, 개선점)
+   - 질문별 답변 요약
+3. Template Generation: 사용자 프롬프트 → 맞춤형 질문 템플릿
+```
 
 ### 주요 기능
 
-1. **STT 처리기 (STT Processor)**: 
-   - 1:1 미팅 음성 파일(mp3, wav 등)을 입력받아 화자를 구분하는 텍스트 스크립트로 변환
+1. **음성 전사 (STT Processing)**: 
+   - 1:1 미팅 음성을 텍스트로 변환
+   - 화자 분리 (리더/팀원 구분)
+   - AssemblyAI 기반 고정밀 전사
 
-2. **템플릿 생성기 (Template Generator)**: 
-   - "신규 입사자와의 첫 미팅"과 같은 목적을 입력하면 상황에 맞는 1:1 미팅 질문 템플릿 생성
+2. **미팅 분석 (Meeting Analysis)**: 
+   - 미팅 제목 및 내용 요약
+   - 리더의 발화 비율, 질문 품질 분석
+   - 구체적인 개선점과 액션 아이템 제공
+   - 질문별 답변 정리
 
-3. **1:1 피드백 생성기 (1-on-1 Feedback Generator)**: 
-   - STT 텍스트를 분석하여 리더의 발언 비율, 질문의 질, 대화 습관 등을 평가하고 개선 피드백 제공
-
-## 설치 방법
-
-### 사전 요구사항
-
-- Python 3.9 이상
-- Poetry (Python 패키지 관리자)
-
-### 설치 단계
-
-1. 저장소 클론
-```bash
-git clone [repository-url]
-cd Orblit_1on1_AI
-```
-
-2. Poetry를 사용하여 의존성 설치
-```bash
-poetry install
-```
-
-3. 환경 변수 설정
-```bash
-cp .env.example .env
-# .env 파일을 열어 OpenAI API 키 설정
-```
-
-4. 개발 서버 실행
-```bash
-poetry run python src/web/app.py
-```
-
-## API 엔드포인트
-
-- `GET /`: 루트 엔드포인트
-- `GET /health`: 헬스 체크
-- `POST /api/v1/stt/process`: 음성 파일을 텍스트로 변환
-- `POST /api/v1/template/generate`: 미팅 템플릿 생성
-- `POST /api/v1/feedback/generate`: 1:1 피드백 생성
+3. **질문 템플릿 생성 (Template Generation)**: 
+   - 사용자 맞춤형 1:1 미팅 질문 생성
+   - 미팅 목적에 따른 질문 커스터마이징
 
 ## 프로젝트 구조
 
@@ -141,21 +120,43 @@ Orblit_1on1_AI/
 ├── README.md                              # 프로젝트 README
 
 ```
+## 설치 방법
 
-## 개발 가이드
+### 사전 요구사항
 
-### 코드 포맷팅
+- Python 3.9 이상
+- Poetry (Python 패키지 관리자)
+
+### 설치 단계
+
+1. 저장소 클론
 ```bash
+git clone [repository-url]
+cd Orblit_1on1_AI
 ```
 
-### 린팅
+2. Poetry를 사용하여 의존성 설치
 ```bash
+poetry install
 ```
 
-### 테스트 실행
+3. 환경 변수 설정
 ```bash
+cp .env.example .env
+# .env 파일을 열어 OpenAI API 키 설정
 ```
 
-## 라이선스
+4. 개발 서버 실행
+```bash
+poetry run python src/web/main.py
+```
 
-[라이선스 정보 추가 예정]
+## API 엔드포인트
+
+- `GET /`: 루트 엔드포인트
+- `GET /health`: 헬스 체크
+- `POST /api/v1/transcription/process`: 음성 파일을 텍스트로 변환
+- `POST /api/v1/analysis/meeting`: 미팅 텍스트 분석 및 피드백 생성
+- `POST /api/v1/template/generate`: 질문 템플릿 생성
+
+

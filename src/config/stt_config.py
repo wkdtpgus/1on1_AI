@@ -15,7 +15,6 @@ ASSEMBLYAI_FORMAT_TEXT = True  # 텍스트 포맷팅 (대문자, 숫자 등)
 ASSEMBLYAI_DISFLUENCIES = False  # 말더듬, 음성간투사 필터링 (회의에서는 제거)
 ASSEMBLYAI_SPEAKER_LABELS = True  # 화자 분리 (2명 회의에 필수)
 ASSEMBLYAI_LANGUAGE_DETECTION = False  # 언어 자동 감지 (한국어로 고정)
-
 ASSEMBLYAI_WORD_BOOST = []  # 특정 단어 인식 강화 (회사명, 전문용어 등)
 ASSEMBLYAI_BOOST_PARAM = "default"  # 부스트 강도 (low, default, high)
 
@@ -37,27 +36,6 @@ AUDIO_FORMAT = "float32"  # 오디오 포맷
 TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
-<<<<<<<< HEAD:src/config/template_config.py
-
-"""
-템플릿 커스텀 설정 관련 내용
-- 템플릿 생성을 위한 Gemini 모델 및 설정을 중앙에서 관리
-"""
-
-# Gemini 모델 설정
-GEMINI_MODEL = "gemini-2.5-flash"  # 기본 모델 설정 (gemini-2.5-flash 사용)
-GEMINI_TEMPERATURE = 0.7
-GEMINI_THINKING_BUDGET = 0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
-# 모델 토큰 제한
-MAX_TOKENS = 10000
-
-# Google / Vertex AI 설정
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
-GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
-GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", 'true').lower() == 'true'
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") 
-========
 # LLM 설정
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")  # LLM 프로바이더
 
@@ -78,4 +56,3 @@ LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
 LANGSMITH_ENDPOINT = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "oblit-1on1_ai_ui")
->>>>>>>> dev:src/config/stt_config.py
