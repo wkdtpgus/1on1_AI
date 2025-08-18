@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import logging
 
 # 설정 가져오기
-from src.config.stt_config import (
+from src.config.config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     VERTEX_AI_MODEL,

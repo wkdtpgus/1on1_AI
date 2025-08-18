@@ -3,7 +3,7 @@ import os
 import time
 import logging
 from typing import Optional
-from src.config.stt_config import (
+from src.config.config import (
     ASSEMBLYAI_API_KEY,
     ASSEMBLYAI_LANGUAGE,
     ASSEMBLYAI_PUNCTUATE,

@@ -4,11 +4,11 @@ import vertexai
 from langsmith import traceable
 from vertexai.generative_models import GenerativeModel, Part
 
-from src.config.template_config import (
+from src.config.config import (
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
     GEMINI_MODEL,
-    MAX_TOKENS,
+    GEMINI_MAX_TOKENS,
     GEMINI_TEMPERATURE,
 )
 from src.prompts.template_generation.prompts import HUMAN_PROMPT, SYSTEM_PROMPT
@@ -92,7 +92,7 @@ async def generate_template_streaming(input_data: TemplateGeneratorInput) -> Asy
 
     # 생성 설정
     generation_config = {
-        "max_output_tokens": MAX_TOKENS,
+        "max_output_tokens": GEMINI_MAX_TOKENS,
         "temperature": GEMINI_TEMPERATURE,
     }
 

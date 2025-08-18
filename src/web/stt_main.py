@@ -5,7 +5,7 @@ from typing import Optional
 import logging
 
 # 프로젝트 모듈 임포트
-from src.config.stt_config import (
+from src.config.config import (
     ASSEMBLYAI_API_KEY,
     GOOGLE_CLOUD_PROJECT, 
     GOOGLE_CLOUD_LOCATION,
