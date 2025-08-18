@@ -1,24 +1,39 @@
 // API Configuration
 // 환경에 따라 API URL 자동 설정
 const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? `http://localhost:${window.location.port || '8001'}`  // 로컬 개발 환경 - 현재 포트 사용
+    ? `http://localhost:8000`  // 로컬 개발 환경 - 8000 포트로 고정
     : window.VITE_API_URL || window.location.origin; // 현재 도메인 사용
+
+// Config cache
+let APP_CONFIG = null;
 
 // API Functions
 class MeetingAPI {
-    // 오디오 파일을 서버로 전송하고 분석 결과를 받아오는 함수
-    static async analyzeAudio(audioBlob, meetingType = '1on1', questions = null, qaData = null, participantsInfo = null) {
-        const formData = new FormData();
+    
+    // 설정 가져오기
+    static async getConfig() {
+        if (APP_CONFIG) return APP_CONFIG;
         
-        // Blob을 File 객체로 변환
-        const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
-        formData.append('audio_file', audioFile);
-        formData.append('meeting_type', meetingType);
-        
-        // 질문이 있는 경우 추가 (기존 호환성)
-        if (questions && questions.length > 0) {
-            formData.append('questions', JSON.stringify(questions));
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/config`);
+            if (!response.ok) {
+                throw new Error(`Config fetch failed: ${response.status}`);
+            }
+            APP_CONFIG = await response.json();
+            return APP_CONFIG;
+        } catch (error) {
+            console.error('Failed to load config:', error);
+            throw error;
         }
+    }
+    // 오디오를 Supabase에 업로드하고 분석하는 함수
+    static async analyzeAudio(audioBlob, meetingType = '1on1', questions = null, qaData = null, participantsInfo = null) {
+        // 1. Supabase에 오디오 파일 업로드
+        const file_id = await this.uploadToSupabase(audioBlob);
+        
+        // 2. 분석 API 호출
+        const formData = new FormData();
+        formData.append('file_id', file_id);
         
         // Q&A 데이터가 있는 경우 추가
         if (qaData && qaData.length > 0) {
@@ -178,16 +193,51 @@ class MeetingAPI {
             throw error;
         }
     }
+    
+    // Supabase에 오디오 파일 업로드
+    static async uploadToSupabase(audioBlob) {
+        try {
+            // 설정 가져오기
+            const config = await this.getConfig();
+            
+            // UUID + timestamp로 파일 ID 생성
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const uuid = Math.random().toString(36).substring(2, 15);
+            const file_id = `recording_${uuid}_${timestamp}.wav`;
+            
+            // Supabase Storage API를 직접 호출
+            const response = await fetch(`${config.supabase_url}/storage/v1/object/${config.bucket_name}/recordings/${file_id}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${config.supabase_key}`,
+                    'Content-Type': 'audio/wav'
+                },
+                body: audioBlob
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Supabase 업로드 실패: ${response.status} - ${errorText}`);
+            }
+            
+            console.log(`✅ Supabase 업로드 완료: ${file_id}`);
+            return file_id;
+            
+        } catch (error) {
+            console.error('Supabase 업로드 오류:', error);
+            throw error;
+        }
+    }
 }
 
 // Progress tracking with real API
 async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on1', qaData = null, participantsInfo = null) {
     try {
         // 초기 업로드
-        updateProgress(10, '파일 업로드 중...');
+        updateProgress(10, 'Supabase에 파일 업로드 중...');
         
         // 분석 요청 시작
-        updateProgress(20, 'STT 변환 시작...');
+        updateProgress(30, 'STT 변환 시작...');
         
         // 실제 API 호출
         const results = await MeetingAPI.analyzeAudio(audioBlob, meetingType, null, qaData, participantsInfo);

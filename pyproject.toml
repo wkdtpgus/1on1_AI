@@ -27,6 +27,7 @@ langchain-openai = "^0.2.0"
 langchain-google-vertexai = "^2.0.28"
 requests = "^2.32.4"
 streamlit = "^1.48.0"
+supabase = "^2.18.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
