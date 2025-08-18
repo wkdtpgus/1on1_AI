@@ -26,44 +26,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("stt_main")
 
 # 서비스 인스턴스
-audio_processor = None
 meeting_analyzer = None
+meeting_pipeline = None
 supabase: Client = None
 
 # 더 이상 Pydantic 모델이 필요하지 않음 (Form 데이터 직접 처리)
 
-# 헬퍼 함수들
-async def find_file_in_storage(bucket_name: str, file_id: str):
-    """재귀적으로 스토리지에서 파일을 찾는 함수"""
-    def search_files(path: str = ""):
-        try:
-            files = supabase.storage.from_(bucket_name).list(path)
-            found = []
-            
-            for file in files:
-                file_path = f"{path}/{file['name']}" if path else file['name']
-                
-                if file.get('id') is not None or '.' in file['name']:
-                    if (file['name'] == file_id or 
-                        file_path == file_id or 
-                        file_id in file['name']):
-                        found.append({**file, "full_path": file_path})
-                else:
-                    try:
-                        sub_found = search_files(file_path)
-                        found.extend(sub_found)
-                    except:
-                        pass
-            return found
-        except:
-            return []
-    
-    return search_files()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """애플리케이션 생명주기 관리"""
-    global audio_processor, meeting_analyzer, supabase
+    global meeting_analyzer, meeting_pipeline, supabase
     
     # Google 자격증명 설정
     if GOOGLE_APPLICATION_CREDENTIALS_JSON:
@@ -78,18 +51,25 @@ async def lifespan(app: FastAPI):
     # AssemblyAI 초기화
     aai.settings.api_key = ASSEMBLYAI_API_KEY
     
-    # 서비스 초기화 (각 클래스가 자체 검증 수행)
-    from src.utils.formatter import STTProcessor
+    # 서비스 초기화
     from src.utils.model import GeminiMeetingAnalyzer
+    from src.services.meeting_analyze.meeting_pipeline import MeetingPipeline
     
-    audio_processor = STTProcessor(api_key=ASSEMBLYAI_API_KEY)
     meeting_analyzer = GeminiMeetingAnalyzer(
         google_project=GOOGLE_CLOUD_PROJECT, 
         google_location=GOOGLE_CLOUD_LOCATION
     )
+    
+    # LangGraph 파이프라인 초기화
+    meeting_pipeline = MeetingPipeline(
+        supabase_client=supabase,
+        analyzer=meeting_analyzer
+    )
+    
     logger.info("모든 서비스 초기화 완료")
     logger.info(f"Supabase 연결: {SUPABASE_URL}")
     logger.info(f"기본 버킷: {SUPABASE_BUCKET_NAME}")
+    logger.info("LangGraph 파이프라인 초기화 완료")
     
     yield
     # 종료시 정리 (필요시)
@@ -154,7 +134,7 @@ async def analyze_meeting_with_storage(
     bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
 ):
     """
-    Supabase 스토리지 파일을 사용한 1on1 미팅 분석 API
+    LangGraph 파이프라인을 사용한 1on1 미팅 분석 API
     
     Args:
         file_id: Supabase 스토리지 파일 ID
@@ -162,136 +142,57 @@ async def analyze_meeting_with_storage(
         participants_info: 참가자 정보 (JSON 문자열)
         bucket_name: 버킷 이름
     """
-    if not audio_processor or not meeting_analyzer:
-        raise HTTPException(status_code=503, detail="서비스가 초기화되지 않았습니다")
+    if not meeting_pipeline:
+        raise HTTPException(status_code=503, detail="파이프라인이 초기화되지 않았습니다")
     
     try:
-        # 1. 파일 찾기 및 STT 처리
-        logger.info(f"🔍 파일 검색: {file_id}")
+        logger.info(f"🚀 LangGraph 파이프라인 시작: {file_id}")
         
-        found_files = await find_file_in_storage(bucket_name, file_id)
-        if not found_files:
-            raise HTTPException(status_code=404, detail=f"파일을 찾을 수 없습니다: {file_id}")
-        
-        # 2. URL 생성 및 STT 처리
-        file_info = found_files[0]
-        file_path = file_info.get('full_path', file_info['name'])
-        file_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
-        
-        logger.info(f"🌐 공개 URL 생성: {file_url}")
-        
-        # AssemblyAI 설정
-        from src.config.config import (
-            ASSEMBLYAI_LANGUAGE,
-            ASSEMBLYAI_PUNCTUATE,
-            ASSEMBLYAI_FORMAT_TEXT,
-            ASSEMBLYAI_DISFLUENCIES,
-            ASSEMBLYAI_SPEAKER_LABELS,
-            ASSEMBLYAI_SPEAKERS_EXPECTED
-        )
-        
-        config = aai.TranscriptionConfig(
-            language_code=ASSEMBLYAI_LANGUAGE,
-            speaker_labels=ASSEMBLYAI_SPEAKER_LABELS,
-            speakers_expected=ASSEMBLYAI_SPEAKERS_EXPECTED,
-            punctuate=ASSEMBLYAI_PUNCTUATE,
-            format_text=ASSEMBLYAI_FORMAT_TEXT,
-            filter_profanity=ASSEMBLYAI_DISFLUENCIES
-        )
-        
-        # STT 처리 (URL 직접 사용)
-        logger.info(f"🎙️ AssemblyAI STT 처리 시작...")
-        transcriber = aai.Transcriber(config=config)
-        transcript = transcriber.transcribe(file_url)
-        
-        if transcript.status == aai.TranscriptStatus.error:
-            raise Exception(f"STT 처리 실패: {transcript.error}")
-        
-        # AssemblyAI transcript를 dict로 변환
-        transcript_dict = {
-            "id": transcript.id,
-            "status": transcript.status.value,
-            "text": transcript.text,
-            "confidence": transcript.confidence,
-            "audio_duration": transcript.audio_duration,
-            "words": [
-                {
-                    "text": word.text,
-                    "start": word.start,
-                    "end": word.end,
-                    "confidence": word.confidence,
-                    "speaker": getattr(word, 'speaker', None)
-                }
-                for word in transcript.words
-            ] if transcript.words else [],
-            "utterances": [
-                {
-                    "text": utterance.text,
-                    "start": utterance.start,
-                    "end": utterance.end,
-                    "confidence": utterance.confidence,
-                    "speaker": utterance.speaker
-                }
-                for utterance in transcript.utterances
-            ] if transcript.utterances else [],
-            "supabase_metadata": {
-                "file_id": file_id,
-                "file_path": file_path,
-                "file_url": file_url,
-                "bucket_name": bucket_name,
-                "processed_at": datetime.now().isoformat()
-            }
-        }
-        
-        # 3. 화자 통계 계산
-        speaker_stats = {}
-        if transcript_dict.get('utterances'):
-            for utterance in transcript_dict['utterances']:
-                speaker = utterance.get('speaker', 'Unknown')
-                if speaker not in speaker_stats:
-                    speaker_stats[speaker] = {'word_count': 0, 'duration': 0}
-                speaker_stats[speaker]['word_count'] += len(utterance.get('text', '').split())
-                speaker_stats[speaker]['duration'] += utterance.get('end', 0) - utterance.get('start', 0)
-        
-        # 4. JSON 입력 파싱
+        # JSON 입력 파싱
         qa_list = json.loads(qa_data) if qa_data else None
         participants = json.loads(participants_info) if participants_info else None
         
-        # 5. LLM 분석 수행
-        analysis_result = meeting_analyzer.analyze_1on1_meeting(
-            transcript=transcript_dict,
-            speaker_stats=speaker_stats,
-            qa_pairs=qa_list,
-            participants=participants
+        # LangGraph 파이프라인 실행
+        result = await meeting_pipeline.run(
+            file_id=file_id,
+            bucket_name=bucket_name,
+            qa_data=qa_list,
+            participants_info=participants
         )
         
-        try:
-            analysis_data = json.loads(analysis_result)
-        except json.JSONDecodeError:
-            analysis_data = {"error": "분석 결과 파싱 실패", "raw_result": analysis_result}
+        # 파이프라인 실행 실패 처리
+        if result["status"] == "failed":
+            error_details = "; ".join(result.get("errors", ["알 수 없는 오류"]))
+            raise HTTPException(status_code=500, detail=f"파이프라인 실행 실패: {error_details}")
         
-        # transcript 추가
-        if isinstance(analysis_data, dict):
-            analysis_data["transcript"] = transcript_dict
+        # 성공 응답 생성
+        analysis_data = result.get("analysis_result", {})
+        transcript_data = result.get("transcript", {})
         
-        # 6. 성공 응답 생성
         response = {
             "status": "success",
             "timestamp": datetime.now().isoformat(),
             **analysis_data,
+            "transcript": transcript_data,
             "file_info": {
                 "file_id": file_id,
                 "bucket_name": bucket_name,
-                "file_path": file_path
+                "file_path": result.get("file_path", "")
+            },
+            "pipeline_info": {
+                "pipeline_status": result["status"],
+                "errors": result.get("errors", [])
             }
         }
+        
+        logger.info(f"✅ LangGraph 파이프라인 완료: {file_id}")
         return JSONResponse(content=response)
     
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"분석 처리 오류: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"분석 처리 중 오류가 발생했습니다: {str(e)}")
+        logger.error(f"파이프라인 처리 오류: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"파이프라인 처리 중 오류가 발생했습니다: {str(e)}")
 
 
 if __name__ == "__main__":

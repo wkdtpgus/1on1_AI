@@ -3,12 +3,9 @@
 # =============================================================================
 import assemblyai as aai
 import os
-import time
 import logging
-from typing import Optional, Dict, List
+from typing import Optional
 from langchain_google_vertexai import ChatVertexAI
-from langchain.prompts import PromptTemplate
-from langchain_core.prompts import ChatPromptTemplate
 
 from src.config.config import (
     # Google Cloud / Vertex AI 설정
@@ -34,7 +31,9 @@ from src.config.config import (
     ASSEMBLYAI_SPEAKERS_EXPECTED,
     # LangSmith 설정
     LANGSMITH_TRACING,
-    LANGSMITH_PROJECT
+    LANGSMITH_PROJECT,
+    LANGSMITH_API_KEY,
+    LANGSMITH_ENDPOINT
 )
 
 # =============================================================================
@@ -42,6 +41,14 @@ from src.config.config import (
 # =============================================================================
 logger = logging.getLogger("model")
 TRANSCRIPT_POLL_INTERVAL = 5  # 전사 상태 확인 간격(초)
+
+# LangSmith 환경변수 설정
+if LANGSMITH_TRACING:
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_PROJECT"] = LANGSMITH_PROJECT
+    if LANGSMITH_API_KEY:
+        os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY
+    os.environ["LANGCHAIN_ENDPOINT"] = LANGSMITH_ENDPOINT
 
 # LangSmith 추적 상태 로깅
 if LANGSMITH_TRACING:
@@ -94,62 +101,34 @@ class AssemblyAIProcessor:
         aai.settings.api_key = self.api_key
         logger.debug("AssemblyAIProcessor가 성공적으로 초기화되었습니다")
 
-    def execute_transcription(self, audio_file: str, expected_speakers: Optional[int]) -> Optional[aai.Transcript]:
-        """전사 실행을 위한 메서드"""
-        try:
-            # 화자 수 설정 (최소 2명, 최대 10명으로 제한)
-            speakers_count = expected_speakers if expected_speakers is not None else ASSEMBLYAI_SPEAKERS_EXPECTED
-            speakers_count = max(2, min(speakers_count, 10))
-            logger.debug(f"화자 수 설정: {speakers_count}명")
-            
-            # 전사 구성 생성
-            config = aai.TranscriptionConfig(
-                language_code=ASSEMBLYAI_LANGUAGE,
-                punctuate=ASSEMBLYAI_PUNCTUATE,
-                format_text=ASSEMBLYAI_FORMAT_TEXT,
-                disfluencies=ASSEMBLYAI_DISFLUENCIES,
-                speaker_labels=ASSEMBLYAI_SPEAKER_LABELS,
-                language_detection=ASSEMBLYAI_LANGUAGE_DETECTION,
-                speakers_expected=speakers_count
-            )
-
-            
-            # 전사 수행
-            transcriber = aai.Transcriber(config=config)
-            transcript = transcriber.transcribe(audio_file)
-            
-            logger.info("전사 완료를 기다리고 있습니다...")
-            
-            # 완료 여부 폴링
-            while transcript.status not in [aai.TranscriptStatus.completed, aai.TranscriptStatus.error]:
-                logger.debug(f"전사 상태: {transcript.status}")
-                time.sleep(TRANSCRIPT_POLL_INTERVAL)
-                transcript = transcript.get()
-                
-            logger.info(f"전사 완료, 상태: {transcript.status}")
-            
-            if transcript.status == aai.TranscriptStatus.error:
-                logger.error(f"전사 실패: {transcript.error}")
-                return None
-                
-            return transcript
-            
-        except Exception as e:
-            logger.error(f"전사 실패: {e}")
-            return None
+    def create_config(self, expected_speakers: Optional[int] = None) -> aai.TranscriptionConfig:
+        """AssemblyAI 전사 설정 생성"""
+        # 화자 수 설정 (최소 2명, 최대 10명으로 제한)
+        speakers_count = expected_speakers if expected_speakers is not None else ASSEMBLYAI_SPEAKERS_EXPECTED
+        speakers_count = max(2, min(speakers_count, 10))
+        logger.debug(f"화자 수 설정: {speakers_count}명")
+        
+        # 전사 구성 생성
+        config = aai.TranscriptionConfig(
+            language_code=ASSEMBLYAI_LANGUAGE,
+            punctuate=ASSEMBLYAI_PUNCTUATE,
+            format_text=ASSEMBLYAI_FORMAT_TEXT,
+            disfluencies=ASSEMBLYAI_DISFLUENCIES,
+            speaker_labels=ASSEMBLYAI_SPEAKER_LABELS,
+            language_detection=ASSEMBLYAI_LANGUAGE_DETECTION,
+            speakers_expected=speakers_count
+        )
+        
+        return config
 
 # =============================================================================
 # Vertex AI Gemini 분석 모델 (STT 분석용)
 # =============================================================================
 
-# analyzer 기능을 import
-from src.services.meeting_analyze.analyzer import BaseMeetingAnalyzer
-
-class GeminiMeetingAnalyzer(BaseMeetingAnalyzer):    
+class GeminiMeetingAnalyzer:    
     """Google Vertex AI Gemini 모델을 사용한 회의 분석기"""
     
     def __init__(self, google_project: Optional[str] = None, google_location: Optional[str] = None):
-        super().__init__()  # BaseMeetingAnalyzer 초기화
         self.google_project = google_project or GOOGLE_CLOUD_PROJECT
         self.google_location = google_location or GOOGLE_CLOUD_LOCATION
         

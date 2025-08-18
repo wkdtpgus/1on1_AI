@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Dict, TypedDict
 from pydantic import BaseModel, Field
 
 
@@ -16,6 +16,39 @@ class QAItem(BaseModel):
     question: str = Field(description="질문 목록")
     answer: str = Field(description="대화록에서 추출한 답변")
 
+
+# =============================================================================
+# LangGraph 파이프라인 상태 스키마
+# =============================================================================
+
+class MeetingPipelineState(TypedDict):
+    """LangGraph 파이프라인 상태 스키마"""
+    # 입력 데이터
+    file_id: str
+    bucket_name: str
+    qa_data: Optional[List[Dict]]
+    participants_info: Optional[Dict]
+    
+    # Supabase 조회 결과
+    file_url: Optional[str]
+    file_path: Optional[str]
+    file_metadata: Optional[Dict]
+    
+    # STT 결과
+    transcript: Optional[Dict]
+    speaker_stats: Optional[Dict]
+    
+    # LLM 분석 결과
+    analysis_result: Optional[Dict]
+    
+    # 상태 추적
+    errors: List[str]
+    status: str  # "pending", "processing", "completed", "failed"
+
+
+# =============================================================================
+# LLM 출력 스키마
+# =============================================================================
 
 class MeetingAnalysis(BaseModel):
     """1-on-1 회의 분석 결과"""
