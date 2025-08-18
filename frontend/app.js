@@ -285,9 +285,20 @@ function clearQAData() {
 
 // Transcript 포맷팅 함수
 function formatTranscript(transcript) {
+    console.log('📋 formatTranscript 입력:', typeof transcript, transcript);
+    
     // transcript가 화자별 발화 배열인 경우
     if (Array.isArray(transcript)) {
         return transcript.map(utterance => {
+            const speaker = utterance.speaker || 'Unknown';
+            const text = utterance.text || '';
+            return `${speaker}: ${text}`;
+        }).join('\n\n');
+    }
+    
+    // transcript 객체에 utterances 배열이 있는 경우 (새로운 구조)
+    if (transcript && transcript.utterances && Array.isArray(transcript.utterances)) {
+        return transcript.utterances.map(utterance => {
             const speaker = utterance.speaker || 'Unknown';
             const text = utterance.text || '';
             return `${speaker}: ${text}`;
@@ -304,6 +315,7 @@ function formatTranscript(transcript) {
         return transcript.text;
     }
     
+    console.log('❌ formatTranscript: 알 수 없는 형식', transcript);
     return '스크립트를 불러올 수 없습니다.';
 }
 

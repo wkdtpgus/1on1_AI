@@ -16,13 +16,6 @@ from langchain_core.prompts import ChatPromptTemplate
 # 로깅 설정
 logger = logging.getLogger("meeting_pipeline")
 
-# 스키마는 src/utils/stt_schemas.py에서 import
-
-
-# =============================================================================
-# Node 함수들
-# =============================================================================
-
 def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
     """Supabase에서 파일 조회 및 URL 생성"""
     logger.info(f"🔍 Supabase 파일 조회 시작: {state['file_id']}")
@@ -66,51 +59,30 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         if transcript.status == aai.TranscriptStatus.error:
             raise Exception(f"STT 처리 실패: {transcript.error}")
         
-        # transcript를 dict로 변환
+        # 화자 통계 계산 (원본 transcript 사용)
+        speaker_stats = {}
+        if transcript.utterances:
+            for utterance in transcript.utterances:
+                speaker = utterance.speaker or 'Unknown'
+                if speaker not in speaker_stats:
+                    speaker_stats[speaker] = {'word_count': 0, 'duration': 0}
+                speaker_stats[speaker]['word_count'] += len(utterance.text.split()) if utterance.text else 0
+                speaker_stats[speaker]['duration'] += (utterance.end or 0) - (utterance.start or 0)
+        
         transcript_dict = {
-            "id": transcript.id,
-            "status": transcript.status.value,
-            "text": transcript.text,
-            "confidence": transcript.confidence,
-            "audio_duration": transcript.audio_duration,
-            "words": [
-                {
-                    "text": word.text,
-                    "start": word.start,
-                    "end": word.end,
-                    "confidence": word.confidence,
-                    "speaker": getattr(word, 'speaker', None)
-                }
-                for word in transcript.words
-            ] if transcript.words else [],
             "utterances": [
                 {
-                    "text": utterance.text,
-                    "start": utterance.start,
-                    "end": utterance.end,
-                    "confidence": utterance.confidence,
-                    "speaker": utterance.speaker
+                    "speaker": utterance.speaker,
+                    "text": utterance.text
                 }
                 for utterance in transcript.utterances
             ] if transcript.utterances else [],
-            "supabase_metadata": {
+            "metadata": {
                 "file_id": state["file_id"],
-                "file_path": state.get("file_path", ""),
-                "file_url": state["file_url"],
-                "bucket_name": state["bucket_name"],
-                "processed_at": datetime.now().isoformat()
+                "processed_at": datetime.now().isoformat(),
+                "total_duration": transcript.audio_duration
             }
         }
-        
-        # 화자 통계 계산
-        speaker_stats = {}
-        if transcript_dict.get('utterances'):
-            for utterance in transcript_dict['utterances']:
-                speaker = utterance.get('speaker', 'Unknown')
-                if speaker not in speaker_stats:
-                    speaker_stats[speaker] = {'word_count': 0, 'duration': 0}
-                speaker_stats[speaker]['word_count'] += len(utterance.get('text', '').split())
-                speaker_stats[speaker]['duration'] += utterance.get('end', 0) - utterance.get('start', 0)
         
         state["transcript"] = transcript_dict
         state["speaker_stats"] = speaker_stats
@@ -141,12 +113,15 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         if not analyzer:
             raise ValueError("분석기가 초기화되지 않았습니다")
         
-        # 화자 통계 간소화
+        # 화자 통계 간소화 (발언 비율 계산)
         simplified_stats = {}
         speaker_stats = state.get("speaker_stats", {})
         if speaker_stats:
+            total_words = sum(stats.get('word_count', 0) for stats in speaker_stats.values())
             for speaker_name, stats in speaker_stats.items():
-                simplified_stats[speaker_name] = stats.get('percentage', 0)
+                word_count = stats.get('word_count', 0)
+                percentage = round((word_count / total_words) * 100, 1) if total_words > 0 else 0
+                simplified_stats[speaker_name] = percentage
         
         # 프롬프트 데이터 준비
         user_prompt_template = PromptTemplate(
