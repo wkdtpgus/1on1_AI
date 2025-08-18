@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import json
 import logging
 
-from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
+from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.stt_schemas import MeetingAnalysis
 from src.utils.formatter import prepare_speaker_stats
 

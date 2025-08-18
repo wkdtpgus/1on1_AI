@@ -2,7 +2,6 @@ from typing import Optional, Dict, List
 from langchain_google_vertexai import ChatVertexAI
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
-import json
 import logging
 
 # 설정 가져오기
@@ -15,7 +14,7 @@ from src.config.stt_config import (
     LANGSMITH_TRACING,
     LANGSMITH_PROJECT
 )
-from src.prompts.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
+from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.stt_schemas import MeetingAnalysis
 from src.services.meeting_analyze.analyzer import BaseMeetingAnalyzer
 
