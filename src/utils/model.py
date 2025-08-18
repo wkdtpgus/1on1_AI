@@ -31,8 +31,6 @@ from src.config.config import (
     ASSEMBLYAI_DISFLUENCIES,
     ASSEMBLYAI_SPEAKER_LABELS,
     ASSEMBLYAI_LANGUAGE_DETECTION,
-    ASSEMBLYAI_WORD_BOOST,
-    ASSEMBLYAI_BOOST_PARAM,
     ASSEMBLYAI_SPEAKERS_EXPECTED,
     # LangSmith 설정
     LANGSMITH_TRACING,
@@ -115,10 +113,6 @@ class AssemblyAIProcessor:
                 speakers_expected=speakers_count
             )
 
-            # 구성된 경우 단어 부스트 추가
-            if ASSEMBLYAI_WORD_BOOST:
-                config.word_boost = ASSEMBLYAI_WORD_BOOST
-                config.boost_param = ASSEMBLYAI_BOOST_PARAM
             
             # 전사 수행
             transcriber = aai.Transcriber(config=config)
