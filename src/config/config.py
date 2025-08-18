@@ -4,9 +4,8 @@ from dotenv import load_dotenv
 # .env 파일 로드
 load_dotenv()
 
-# =============================================================================
+
 # AssemblyAI STT 설정
-# =============================================================================
 
 # AssemblyAI 모델 설정
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")  # .env 파일에서 자동 로드
@@ -39,9 +38,7 @@ AUDIO_FORMAT = "float32"  # 오디오 포맷
 TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
-# =============================================================================
 # LLM 공통 설정
-# =============================================================================
 
 # LLM 프로바이더 설정
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")  # LLM 프로바이더
@@ -54,18 +51,14 @@ GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lower() == "true"
 
-# =============================================================================
 # STT 분석용 LLM 설정 (Vertex AI)
-# =============================================================================
 
 # Vertex AI 모델 설정 (STT 분석용)
 VERTEX_AI_MODEL = "gemini-2.5-pro"  # Vertex AI 모델명
 VERTEX_AI_TEMPERATURE = 0.0
 VERTEX_AI_MAX_TOKENS = 13000
 
-# =============================================================================
 # 템플릿 생성용 LLM 설정 (Gemini)
-# =============================================================================
 
 # Gemini 모델 설정 (템플릿 생성용)
 GEMINI_MODEL = "gemini-2.5-flash"  # 기본 모델 설정 (gemini-2.5-flash 사용)
@@ -73,9 +66,7 @@ GEMINI_TEMPERATURE = 0.7
 GEMINI_THINKING_BUDGET = 0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
 GEMINI_MAX_TOKENS = 10000  # 템플릿 생성용 토큰 제한
 
-# =============================================================================
 # LangSmith 추적 설정 (선택적)
-# =============================================================================
 
 LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
 LANGSMITH_ENDPOINT = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
