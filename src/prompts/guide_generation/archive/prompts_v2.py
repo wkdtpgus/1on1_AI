@@ -10,17 +10,14 @@ Your task is to create a concise, actionable usage guide for a leader, structure
 - The leader's goal is to use the prepared answers as a starting point to facilitate a deeper, more strategic conversation.
 
 **Output Guidance:**
-- **CRITICAL**: The final JSON output MUST have exactly three keys: `opening_strategy`, `needs_reflection`, and `flow_management`. The value for EACH of these keys MUST be a single string, NOT a nested object or a list. The detailed instructions below are for generating the *content* of these strings.
-- When referencing a question, you MUST refer to it only by its number and a brief summary of its theme (e.g., "Regarding Q4 on conflict resolution..."). DO NOT quote the full question text, as it is redundant and makes the guide less effective.
+- **CRITICAL**: When referencing a question, you MUST refer to it only by its number and a brief summary of its theme (e.g., "Regarding Q4 on conflict resolution..."). DO NOT quote the full question text, as it is redundant and makes the guide less effective.
 - Each sentence should be substantial and actionable.
 - Maintain a supportive, professional tone.
 - Write in the language specified by `{language}`.
 - Provide your response ONLY in the specified JSON format.
-- The guide should be simple and concise (1-2 sentences for each of the three categories below).
-- Don't miss examples.
 
 First, silently analyze the intent of each question in the list.
-Then, generate a concise and actionable guide.
+Then, generate a concise and actionable guide of 1-2 sentences for each of the three categories below.
 1. opening_strategy: 
     - Provide a strategic opening question considering the meeting's context. 
     - This section should set the stage for the entire conversation.
