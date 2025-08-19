@@ -157,26 +157,49 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
     # state에 비용 저장
     state["costs"] = costs
     
-    # 2. 실행 시간 데이터 수집
+    # 2. 노드별 상세 정보 수집
     performance_metrics = state.get("performance_metrics", {})
-    duration_keys = [k for k in performance_metrics.keys() if k.endswith("_duration")]
     
-    node_durations = {}
+    # 모든 노드 정보 수집
+    node_info = {}
     total_duration = 0
     
-    for key in duration_keys:
-        node_name = key.replace("_duration", "")
-        duration = performance_metrics[key]
-        node_durations[node_name] = f"{duration:.2f}초"
-        total_duration += duration
+    # duration이 있는 노드들을 기준으로 정보 수집
+    duration_keys = [k for k in performance_metrics.keys() if k.endswith("_duration")]
+    
+    for duration_key in duration_keys:
+        node_name = duration_key.replace("_duration", "")
+        duration = performance_metrics[duration_key]
+        status = performance_metrics.get(f"{node_name}_status", "unknown")
+        error = performance_metrics.get(f"{node_name}_error", None)
         
-    node_durations["total"] = f"{total_duration:.2f}초"
+        # 노드별 상세 정보 구성
+        node_detail = {
+            "실행시간": f"{duration:.2f}초",
+            "상태": status
+        }
+        
+        # 에러가 있는 경우 추가
+        if error:
+            node_detail["에러"] = str(error)
+        
+        node_info[node_name] = node_detail
+        total_duration += duration
+    
+    # 총 실행 시간 추가
+    if node_info:
+        node_info["전체"] = {
+            "총_실행시간": f"{total_duration:.2f}초",
+            "실행된_노드수": len(duration_keys),
+            "성공한_노드수": len([k for k in duration_keys if performance_metrics.get(k.replace("_duration", "_status")) == "success"]),
+            "실패한_노드수": len([k for k in duration_keys if performance_metrics.get(k.replace("_duration", "_status")) == "failed"])
+        }
     
     # 3. 통합 리포트 구성
     report = {
         "timestamp": datetime.now().isoformat(),
-        "노드별_실행시간": node_durations,
-        "총_실행시간": f"{total_duration:.2f}초"
+        "파이프라인_상태": state.get("status", "unknown"),
+        "노드별_상세정보": node_info
     }
     
     # 토큰 사용량 추가
