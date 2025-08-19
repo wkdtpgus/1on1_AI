@@ -28,6 +28,7 @@ class MeetingPipelineState(TypedDict):
     bucket_name: str
     qa_data: Optional[List[Dict]]
     participants_info: Optional[Dict]
+    meeting_datetime: Optional[str]  # "2024-12-08T14:30:00" 형식
     
     # Supabase 조회 결과
     file_url: Optional[str]

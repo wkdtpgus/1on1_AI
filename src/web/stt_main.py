@@ -130,6 +130,7 @@ async def record_and_analyze_meeting(
     filename: str = Form(...),
     qa_data: Optional[str] = Form(default=None),
     participants_info: Optional[str] = Form(default=None),
+    meeting_datetime: Optional[str] = Form(default=None),
     bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
 ):
     """
@@ -174,7 +175,8 @@ async def record_and_analyze_meeting(
             file_id=unique_filename,
             bucket_name=bucket_name,
             qa_data=qa_list,
-            participants_info=participants
+            participants_info=participants,
+            meeting_datetime=meeting_datetime
         )
         
         # 파이프라인 실행 실패 처리
@@ -218,6 +220,7 @@ async def analyze_meeting_with_storage(
     file_id: str = Form(...),
     qa_data: Optional[str] = Form(default=None),
     participants_info: Optional[str] = Form(default=None),
+    meeting_datetime: Optional[str] = Form(default=None),
     bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
 ):
     """
@@ -244,7 +247,8 @@ async def analyze_meeting_with_storage(
             file_id=file_id,
             bucket_name=bucket_name,
             qa_data=qa_list,
-            participants_info=participants
+            participants_info=participants,
+            meeting_datetime=meeting_datetime
         )
         
         # 파이프라인 실행 실패 처리

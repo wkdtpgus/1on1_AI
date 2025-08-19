@@ -273,6 +273,7 @@ class MeetingPipeline:
             "bucket_name": bucket_name,
             "qa_data": kwargs.get("qa_data"),
             "participants_info": kwargs.get("participants_info"),
+            "meeting_datetime": kwargs.get("meeting_datetime"),
             "file_url": None,  # retrieve 노드에서 설정
             "file_path": None,  # retrieve 노드에서 설정
             "file_metadata": None,  # retrieve 노드에서 설정
