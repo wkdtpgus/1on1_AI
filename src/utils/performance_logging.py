@@ -20,9 +20,6 @@ PRICING = {
 # 환율 (USD to KRW)
 USD_TO_KRW = 1380
 
-
-
-
 def time_node_execution(node_name: str):
     """노드 실행 시간 측정 데코레이터"""
     def decorator(func: Callable) -> Callable:
@@ -60,7 +57,6 @@ def time_node_execution(node_name: str):
                 
         return wrapper
     return decorator
-
 
 class SimpleTokenCallback:
     """간단한 토큰 추적 콜백"""
@@ -110,10 +106,6 @@ class SimpleTokenCallback:
     def on_chat_model_start(self, serialized, messages, **kwargs):
         """Chat 모델 시작 시 호출 (필수 메서드)"""
         pass
-
-
-
-
 
 
 def generate_performance_report(state: Dict) -> Dict[str, Any]:
@@ -227,6 +219,36 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
     # state에 리포트 저장
     state["performance_report"] = report
     
-    logger.info(f"💰 총 비용: ${total_usd:.4f} (₩{costs.get('total_krw', 0):.0f})")
-    logger.info(f"📈 성능 리포트 생성 완료")
+    logger.info(f"총 비용: ${total_usd:.4f} (₩{costs.get('total_krw', 0):.0f})")
+    
+    # 노드별 상세 정보 로그 출력
+    logger.info(f"파이프라인 상태: {report.get('파이프라인_상태', 'unknown')}")
+    
+    node_details = report.get('노드별_상세정보', {})
+    for node_name, details in node_details.items():
+        if node_name == "전체":
+            logger.info(f"[{node_name}] {details.get('총_실행시간', 'N/A')}, 성공: {details.get('성공한_노드수', 0)}/{details.get('실행된_노드수', 0)} 노드")
+        else:
+            status_emoji = "✅" if details.get('상태') == 'success' else "❌" if details.get('상태') == 'failed' else "⚠️"
+            error_info = f", 에러: {details.get('에러', '')}" if details.get('에러') else ""
+            
+            # 노드별 비용 정보 추가
+            cost_info = ""
+            if node_name == "transcribe" and costs.get("stt_usd"):
+                cost_info = f", 비용: ${costs['stt_usd']:.4f}"
+            elif node_name == "analyze" and costs.get("llm_total_usd"):
+                cost_info = f", 비용: ${costs['llm_total_usd']:.4f}"
+            
+            logger.info(f"{status_emoji} [{node_name}] {details.get('실행시간', 'N/A')}, 상태: {details.get('상태', 'unknown')}{cost_info}{error_info}")
+    
+    # 전체 비용 요약 출력
+    if costs:
+        logger.info(f"비용 요약:")
+        if costs.get("stt_usd"):
+            logger.info(f"STT: ${costs['stt_usd']:.4f}")
+        if costs.get("llm_total_usd"):
+            logger.info(f"LLM: ${costs['llm_total_usd']:.4f}")
+        logger.info(f"총계: ${total_usd:.4f} (₩{costs.get('total_krw', 0):.0f})")
+    
+    logger.info(f"성능 리포트 생성 완료")
     return report
