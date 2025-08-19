@@ -720,12 +720,15 @@ function displayActualResults(results) {
             console.log('🔍 마지막 Q&A 항목:', lastItem);
         }
         
-        const qaHtml = results.qa_summary.map((item, index) => `
-            <div class="border-l-4 border-indigo-500 pl-6 py-4">
-                <p class="font-semibold text-gray-900 mb-2">Q${index + 1}: ${(item.question || '질문이 없습니다').replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                <p class="text-gray-700">A: ${(item.answer || '답변이 없습니다').replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-            </div>
-        `).join('');
+        const qaHtml = results.qa_summary.map((item) => {
+            const questionText = qaData[item.question_index - 1]?.question || `질문 ${item.question_index}`;
+            return `
+                <div class="border-l-4 border-indigo-500 pl-6 py-4">
+                    <p class="font-semibold text-gray-900 mb-2">Q${item.question_index}: ${questionText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
+                    <p class="text-gray-700">A: ${(item.answer || '답변이 없습니다').replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
+                </div>
+            `;
+        }).join('');
         const qaElement = document.getElementById('qaContent');
         if (qaElement) {
             qaElement.innerHTML = qaHtml;

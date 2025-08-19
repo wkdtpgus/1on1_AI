@@ -95,7 +95,7 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
 List 1-3 specific behaviors the manager performed well
 
 ## Q&A Summary:
-• If questions provided: Answer each in order
+• If questions provided: Answer each in order using question_index (1, 2, 3...) instead of repeating question text
 • If no questions but transcript contains structured Q&A pairs: Extract all Q&A pairs from the provided content
 • If transcript is general discussion: Extract 3-5 key discussion topics as Q&A pairs
 • For Q&A format transcripts: Combine pre-written answers with any additional context, elaborations, or follow-up discussions that occurred during the actual conversation
@@ -103,6 +103,7 @@ List 1-3 specific behaviors the manager performed well
 • Enhance brief answers with relevant context and details found elsewhere in the transcript
 • If topic not discussed, state: "이 주제는 회의에서 논의되지 않았습니다"
 • Include speaker attribution when possible
+• **IMPORTANT**: Use question_index (1, 2, 3...) to reference questions for exact matching with input
 """
 
 USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide results in the specified JSON format.
@@ -128,6 +129,7 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 • **Speaker Statistics Analysis**: Use the speaker_stats data to evaluate conversation balance. The ideal 1-on-1 should have the employee speaking 70% and manager 30%. Include this in your feedback if there's significant imbalance
 • **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
+• **Q&A Output Format**: Return question_index (1, 2, 3...) instead of question text for precise frontend matching
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
 • For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
 • Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing feedback and positive_aspects

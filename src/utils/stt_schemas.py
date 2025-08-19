@@ -13,7 +13,7 @@ class FeedbackItem(BaseModel):
 
 class QAItem(BaseModel):
     """Q&A 항목"""
-    question: str = Field(description="질문 목록")
+    question_index: int = Field(description="질문 인덱스 (1부터 시작)")
     answer: str = Field(description="대화록에서 추출한 답변")
 
 
