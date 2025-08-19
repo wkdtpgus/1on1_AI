@@ -30,38 +30,8 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
         bucket_name = state["bucket_name"]
         file_id = state["file_id"]
         
-        # 재귀적 파일 검색
-        def search_files(path: str = ""):
-            try:
-                files = supabase.storage.from_(bucket_name).list(path)
-                found = []
-                
-                for file in files:
-                    file_path = f"{path}/{file['name']}" if path else file['name']
-                    
-                    if file.get('id') is not None or '.' in file['name']:
-                        if (file['name'] == file_id or 
-                            file_path == file_id or 
-                            file_id in file['name']):
-                            found.append({**file, "full_path": file_path})
-                    else:
-                        try:
-                            sub_found = search_files(file_path)
-                            found.extend(sub_found)
-                        except:
-                            pass
-                return found
-            except:
-                return []
-        
-        found_files = search_files()
-        if not found_files:
-            logger.error(f"파일을 찾을 수 없습니다: {file_id}")
-            state["status"] = "failed"
-            return state
-        
-        file_info = found_files[0]
-        file_path = file_info.get('full_path', file_info['name'])
+        # 파일 경로 
+        file_path = f"recordings/{file_id}"
         file_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
         
         # state 업데이트
