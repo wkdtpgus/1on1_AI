@@ -108,11 +108,6 @@ async def app_js():
     from fastapi.responses import FileResponse
     return FileResponse("frontend/app.js", media_type="application/javascript")
 
-@app.get("/favicon.ico")
-async def favicon():
-    """파비콘"""
-    from fastapi.responses import FileResponse
-    return FileResponse("frontend/favicon.ico", media_type="image/x-icon")
 
 @app.get("/api/config")
 async def get_config():
