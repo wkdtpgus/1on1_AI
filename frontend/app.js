@@ -601,7 +601,8 @@ async function simulateAnalysis() {
 function showResults(results) {
     console.log('🔍 showResults 호출됨:', results);
     console.log('🔍 results.meeting_type:', results.meeting_type);
-    console.log('🔍 results.action_items 존재:', !!results.action_items);
+    console.log('🔍 results.leader_action_items 존재:', !!results.leader_action_items);
+    console.log('🔍 results.member_action_items 존재:', !!results.member_action_items);
     console.log('🔍 results.detailed_discussion 존재:', !!results.detailed_discussion);
     
     // 분석 결과를 전역 변수에 저장 (복사 기능용)
@@ -628,7 +629,7 @@ function showResults(results) {
         console.log('✅ displayGeneralResults 호출');
         // 일반회의 결과 구조로 표시
         displayGeneralResults(results);
-    } else if (results.action_items || results.detailed_discussion) {
+    } else if (results.leader_action_items || results.member_action_items || results.detailed_discussion) {
         console.log('✅ displayActualResults 호출');
         // 실제 분석 결과 구조로 표시
         displayActualResults(results);
@@ -644,10 +645,142 @@ function displayActualResults(results) {
     console.log('🔍 displayActualResults 시작:', results);
     
     // Quick Review 섹션 업데이트
-    // action_items만 표시
+    // 액션 아이템 표시 (리더와 멤버 구분)
     const actionsElement = document.getElementById('quickReviewActions');
     if (actionsElement) {
-        actionsElement.innerHTML = formatTextWithBreaks(results.action_items || '액션 아이템이 없습니다.');
+        let actionsHTML = '<div class="action-items-container">';
+        
+        if (results.leader_action_items && results.leader_action_items.length > 0) {
+            actionsHTML += `
+                <div class="action-section leader-actions">
+                    <div class="action-header">
+                        <span class="action-icon">👨‍💼</span>
+                        <h4 class="action-title leader">리더 액션 아이템</h4>
+                    </div>
+                    <div class="action-list">
+                        ${results.leader_action_items.map(item => `
+                            <div class="action-item leader">
+                                <span class="action-bullet">▶</span>
+                                <span class="action-text">${item}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (results.member_action_items && results.member_action_items.length > 0) {
+            actionsHTML += `
+                <div class="action-section member-actions">
+                    <div class="action-header">
+                        <span class="action-icon">👤</span>
+                        <h4 class="action-title member">멤버 액션 아이템</h4>
+                    </div>
+                    <div class="action-list">
+                        ${results.member_action_items.map(item => `
+                            <div class="action-item member">
+                                <span class="action-bullet">▶</span>
+                                <span class="action-text">${item}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        actionsHTML += '</div>';
+        
+        // CSS 스타일 추가
+        const actionStyles = `
+            <style>
+                .action-items-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                    margin-top: 10px;
+                }
+                
+                .action-section {
+                    border-radius: 12px;
+                    padding: 16px;
+                    border: 2px solid;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
+                
+                .leader-actions {
+                    background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
+                    border-color: #f87171;
+                }
+                
+                .member-actions {
+                    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                    border-color: #38bdf8;
+                }
+                
+                .action-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 12px;
+                }
+                
+                .action-icon {
+                    font-size: 20px;
+                }
+                
+                .action-title {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                
+                .action-title.leader {
+                    color: #dc2626;
+                }
+                
+                .action-title.member {
+                    color: #0284c7;
+                }
+                
+                .action-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                
+                .action-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    background: rgba(255,255,255,0.6);
+                }
+                
+                .action-item.leader {
+                    border-left: 4px solid #f87171;
+                }
+                
+                .action-item.member {
+                    border-left: 4px solid #38bdf8;
+                }
+                
+                .action-bullet {
+                    color: #6b7280;
+                    font-size: 12px;
+                    margin-top: 2px;
+                    flex-shrink: 0;
+                }
+                
+                .action-text {
+                    flex: 1;
+                    line-height: 1.5;
+                    color: #374151;
+                }
+            </style>
+        `;
+        
+        actionsElement.innerHTML = actionStyles + (actionsHTML || '<div class="no-actions">액션 아이템이 없습니다.</div>');
     }
     
     // 세부 상세 요약 업데이트
@@ -664,8 +797,8 @@ function displayActualResults(results) {
     }
     
     // 피드백 탭 업데이트
-    if (results.feedback && Array.isArray(results.feedback)) {
-        const feedbackHtml = results.feedback.map(item => `
+    if (results.leader_feedback && Array.isArray(results.leader_feedback)) {
+        const feedbackHtml = results.leader_feedback.map(item => `
             <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
                 <h5 class="font-semibold text-red-900 mb-3">${item.title.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</h5>
                 <div class="space-y-3">
@@ -774,14 +907,14 @@ function displayMockResults(results) {
     document.getElementById('detailedDiscussion').textContent = results.summary || '';
     
     // 피드백 탭 (기존 구조)
-    if (results.feedback) {
-        const positiveHtml = (results.feedback.positive || []).map(p => 
+    if (results.leader_feedback) {
+        const positiveHtml = (results.leader_feedback.positive || []).map(p => 
             `<li class="text-gray-700 flex items-start"><i class="ri-check-line text-green-600 mr-2 mt-1"></i>${p}</li>`
         ).join('');
         document.getElementById('positiveAspects').innerHTML = positiveHtml;
         
         // 개선점을 간단한 형태로 표시
-        const improvementHtml = (results.feedback.improvement || []).map(item => `
+        const improvementHtml = (results.leader_feedback.improvement || []).map(item => `
             <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
                 <p class="text-gray-700">${item}</p>
             </div>
@@ -1150,22 +1283,21 @@ function displayGeneralResults(results) {
     }
     
     // Action Items
-    if (results.action_items && results.action_items.length > 0) {
+    if ((results.leader_action_items && results.leader_action_items.length > 0) || 
+        (results.member_action_items && results.member_action_items.length > 0)) {
         const actionsContainer = document.getElementById('qaContent');
         if (actionsContainer) {
             let actionsHtml = '<div class="space-y-4">';
             actionsHtml += '<h4 class="font-semibold text-gray-800 mb-3">✅ 액션 아이템</h4>';
             
-            results.action_items.forEach((item, index) => {
-                const priorityColor = item.priority === 'High' ? 'red' : 
-                                    item.priority === 'Medium' ? 'yellow' : 'green';
-                
+            const allActionItems = [
+                ...(results.leader_action_items || []).map(item => ({type: '리더', text: item})),
+                ...(results.member_action_items || []).map(item => ({type: '멤버', text: item}))
+            ];
+            allActionItems.forEach((item, index) => {
                 actionsHtml += `
                     <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-400">
-                        <h5 class="font-medium text-gray-900">${item.item.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</h5>
-                        <p class="text-sm text-gray-800 mt-1"><strong>담당:</strong> ${item.owner.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                        <p class="text-sm text-gray-700 mt-1"><strong>기한:</strong> ${item.deadline.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                        <p class="text-sm text-gray-700 mt-1"><strong>우선순위:</strong> ${item.priority.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
+                        <h5 class="font-medium text-gray-900">[${item.type}] ${item.text}</h5>
                     </div>
                 `;
             });
@@ -1430,7 +1562,7 @@ function getMock1on1Results() {
             '코드 리뷰 가이드라인 작성 (담당: 이세현, 기한: 8/20)',
             '기술 세미나 주제 선정 (담당: 전체, 기한: 8/18)'
         ],
-        feedback: {
+        leader_feedback: {
             positive: [
                 '팀원의 의견을 적극적으로 경청하고 반영했습니다',
                 '구체적인 액션 아이템과 기한을 명확히 설정했습니다',
@@ -1488,7 +1620,7 @@ function getMockGeneralMeetingResults() {
             'UI 컴포넌트 라이브러리 구축 (담당: 프론트엔드팀, 기한: 8/20)',
             '성능 모니터링 대시보드 구축 (담당: DevOps팀, 기한: 8/25)'
         ],
-        feedback: null, // General meetings don't have leader feedback
+        leader_feedback: null, // General meetings don't have leader feedback
         qa: [
             {
                 question: '현재 가장 큰 기술적 도전 과제는 무엇인가요?',
@@ -1523,7 +1655,7 @@ function getMockWeeklyMeetingResults() {
             '고객 미팅 준비 자료 작성 (담당: 영업팀, 기한: 8/15)',
             '차주 스프린트 계획 수립 (담당: 전체, 기한: 8/16)'
         ],
-        feedback: null,
+        leader_feedback: null,
         qa: [
             {
                 question: '이번 주 주요 성과는 무엇인가요?',
@@ -1564,7 +1696,7 @@ function getMockPlanningMeetingResults() {
             '경쟁사 분석 자료 준비 (담당: 마케팅팀, 기한: 8/18)',
             '인력 채용 계획 수립 (담당: HR팀, 기한: 8/22)'
         ],
-        feedback: null,
+        leader_feedback: null,
         qa: [
             {
                 question: '이 프로젝트의 핵심 차별화 포인트는?',
@@ -1643,8 +1775,14 @@ copySummaryBtn.addEventListener('click', async () => {
         let summaryText = `# ${currentAnalysisResults.title || '미팅 분석 결과'}\n\n`;
         
         // 액션 아이템과 상세 요약 추출
-        if (currentAnalysisResults.action_items) {
-            summaryText += `## 액션 아이템\n${currentAnalysisResults.action_items}\n\n`;
+        if (currentAnalysisResults.leader_action_items || currentAnalysisResults.member_action_items) {
+            summaryText += `## 액션 아이템\n`;
+            if (currentAnalysisResults.leader_action_items && currentAnalysisResults.leader_action_items.length > 0) {
+                summaryText += `### 리더\n${currentAnalysisResults.leader_action_items.map(item => `- ${item}`).join('\n')}\n\n`;
+            }
+            if (currentAnalysisResults.member_action_items && currentAnalysisResults.member_action_items.length > 0) {
+                summaryText += `### 멤버\n${currentAnalysisResults.member_action_items.map(item => `- ${item}`).join('\n')}\n\n`;
+            }
         }
         summaryText += `## 상세 요약\n${currentAnalysisResults.detailed_discussion || '상세 내용이 없습니다.'}`;
         

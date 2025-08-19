@@ -70,6 +70,12 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
    - Specific facts/details → Use single • bullet points (no indentation)
 
 
+## Action Items Extraction Rules:
+• **ONLY extract action items explicitly discussed in the transcript**
+• **Return empty list [] if no action items were discussed**
+• **Separate by responsibility**: leader_action_items for manager tasks, member_action_items for employee tasks
+• **Include deadlines if mentioned** (e.g., "다음 주까지 리포트 작성", "월말까지 검토 완료")
+• **Do NOT invent or suggest action items not present in the conversation**
 
 ## Leader Feedback Structure (for JSON leader_feedback section):
 
@@ -144,7 +150,9 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 {{
   "title": "One-line summary of the entire meeting (in Korean, e.g., '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')",
   
-  "action_items": "Action items with owner and deadline (in Korean)",
+  "leader_action_items": ["Action items for the leader extracted from the transcript", "Another leader action item if discussed"],
+  
+  "member_action_items": ["Action items for the member/employee extracted from the transcript", "Another member action item if discussed"],
   
   "detailed_discussion": "Detailed Discussion Summary following the hierarchical structure specified in system prompt (in Korean)",
   

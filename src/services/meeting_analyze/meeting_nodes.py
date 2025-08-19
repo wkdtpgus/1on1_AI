@@ -177,27 +177,24 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             ("human", user_prompt_template.template)
         ])
         
-        # LLM 입력 데이터 준비 (JSON 변환)
+        # LLM 입력 데이터 준비 (Python 객체로 통일)
         transcript_for_llm = state.get("transcript", {}).get("utterances", [])
         
-        # 화자 통계 JSON 변환
+        # 화자 통계
         speaker_stats = state.get("speaker_stats_percent", {})
-        speaker_stats_json = json.dumps(speaker_stats, ensure_ascii=False) if speaker_stats else "{}"
         
-        # Q&A 데이터 JSON 변환
-        qa_data = state.get("qa_data")
-        qa_pairs_json = json.dumps(qa_data, ensure_ascii=False) if qa_data else "[]"
+        # Q&A 데이터 파싱
+        qa_data = json.loads(state.get("qa_data")) if state.get("qa_data") else []
         
-        # 참가자 정보 JSON 변환
-        participants_info = state.get("participants_info")
-        participants_json = json.dumps(participants_info, ensure_ascii=False) if participants_info else "{}"
+        # 참가자 정보 파싱
+        participants_info = json.loads(state.get("participants_info")) if state.get("participants_info") else {}
         
         input_data = {
             "meeting_datetime": state.get("meeting_datetime", "날짜/시간 정보 없음"),
             "transcript": transcript_for_llm,
-            "speaker_stats": speaker_stats_json,
-            "participants": participants_json,
-            "qa_pairs": qa_pairs_json
+            "speaker_stats": speaker_stats,
+            "participants": participants_info,
+            "qa_pairs": qa_data
         }
         
         # 체인 생성 및 실행
@@ -216,8 +213,11 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         
         logger.info(f"LLM 분석 결과: {type(result).__name__}")
         
-        # Pydantic 객체를 Dict로 변환
-        state["analysis_result"] = result.model_dump()
+        # Pydantic 객체를 Dict로 변환하고 speaker_stats 추가
+        analysis_dict = result.model_dump()
+        analysis_dict["speaker_stats_percent"] = state.get("speaker_stats_percent", {})
+        
+        state["analysis_result"] = analysis_dict
         state["status"] = "completed"
         
         logger.info("✅ LLM 분석 완료")

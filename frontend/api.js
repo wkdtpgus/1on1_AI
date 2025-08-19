@@ -60,32 +60,19 @@ class MeetingAPI {
             
             const data = await response.json();
             
-            // 백엔드에서 이미 포맷된 형식으로 반환하므로 그대로 사용
-            if (data.status === 'success') {
-                // 새로운 JSON 구조로 그대로 반환
-                return {
-                    meeting_type: data.meeting_type || '1on1',
-                    title: data.title || '1on1 미팅 분석 결과',
-                    action_items: data.action_items || '',
-                    detailed_discussion: data.detailed_discussion || '',
-                    feedback: data.feedback || [],
-                    positive_aspects: data.positive_aspects || [],
-                    qa_summary: data.qa_summary || [],
-                    transcript: data.transcript || '스크립트를 불러올 수 없습니다.'
-                };
-                // 기존 구조 지원 (하위 호환성)
-                return {
-                    meeting_type: data.meeting_type || '1on1',
-                    summary: data.summary || '요약 정보가 없습니다.',
-                    decisions: data.decisions || [],
-                    actionItems: data.actionItems || [],
-                    feedback: data.feedback || { positive: [], improvement: [] },
-                    qa: data.qa || [],
-                    transcript: data.transcript || '스크립트를 불러올 수 없습니다.'
-                };
-            } else {
-                throw new Error(data.message || '분석에 실패했습니다.');
-            }
+            // 백엔드에서 분석 결과를 직접 반환
+            return {
+                meeting_type: data.meeting_type || '1on1',
+                title: data.title || '1on1 미팅 분석 결과',
+                leader_action_items: data.leader_action_items || [],
+                member_action_items: data.member_action_items || [],
+                detailed_discussion: data.detailed_discussion || '',
+                leader_feedback: data.leader_feedback || [],
+                positive_aspects: data.positive_aspects || [],
+                qa_summary: data.qa_summary || [],
+                speaker_stats_percent: data.speaker_stats_percent || {},
+                transcript: data.transcript || '스크립트를 불러올 수 없습니다.'
+            };
             
         } catch (error) {
             console.error('Error analyzing audio:', error);
@@ -99,7 +86,7 @@ class MeetingAPI {
             summary: data.summary || '요약 정보가 없습니다.',
             decisions: data.key_decisions || [],
             actionItems: data.action_items || [],
-            feedback: {
+            leader_feedback: {
                 positive: data.leader_feedback?.positive_points || [],
                 improvement: data.leader_feedback?.improvement_points || []
             },

@@ -86,75 +86,12 @@ async def analyze_meeting_with_storage(
     meeting_datetime: Optional[str] = Form(default=None),
     bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
 ):
-    """
-    LangGraph 파이프라인을 사용한 1on1 미팅 분석 API
-    
-    Args:
-        file_id: Supabase 스토리지 파일 ID
-        qa_data: Q&A 데이터 (JSON 문자열)
-        participants_info: 참가자 정보 (JSON 문자열)
-        bucket_name: 버킷 이름
-    """
-    if not meeting_pipeline:
-        raise HTTPException(status_code=503, detail="파이프라인이 초기화되지 않았습니다")
-    
-    try:
-        logger.info(f"🚀 LangGraph 파이프라인 시작: {file_id}")
-        
-        # JSON 입력 파싱
-        qa_list = json.loads(qa_data) if qa_data else None
-        participants = json.loads(participants_info) if participants_info else None
-        
-        # LangGraph 파이프라인 실행
-        result = await meeting_pipeline.run(
-            file_id=file_id,
-            bucket_name=bucket_name,
-            qa_data=qa_list,
-            participants_info=participants,
-            meeting_datetime=meeting_datetime
-        )
-        
-        # 파이프라인 실행 실패 처리
-        if result["status"] == "failed":
-            error_details = "; ".join(result.get("errors", ["알 수 없는 오류"]))
-            raise HTTPException(status_code=500, detail=f"파이프라인 실행 실패: {error_details}")
-        
-        # 성공 응답 생성
-        analysis_data = result.get("analysis_result", {})
-        transcript_data = result.get("transcript", {})
-        speaker_stats_percent = result.get("speaker_stats_percent", {})
-        formatted_transcript = result.get("formatted_transcript", transcript_data.get("utterances", []))
-        
-        response = {
-            "status": "success",
-            "timestamp": datetime.now().isoformat(),
-            **analysis_data,
-            "feedback": analysis_data.get("leader_feedback", []),  # 리더 피드백 매핑
-            "transcript": {
-                "utterances": formatted_transcript
-            },
-            "speaker_stats_percent": speaker_stats_percent,
-            "file_info": {
-                "file_id": file_id,
-                "bucket_name": bucket_name,
-                "file_path": result.get("file_path", "")
-            },
-            "pipeline_info": {
-                "pipeline_status": result["status"],
-                "errors": result.get("errors", [])
-            }
-        }
-        
-        logger.info(f"✅ LangGraph 파이프라인 완료: {file_id}")
-        return JSONResponse(content=response)
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"파이프라인 처리 오류: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"파이프라인 처리 중 오류가 발생했습니다: {str(e)}")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    # LangGraph 파이프라인 실행 
+    result = await meeting_pipeline.run(
+        file_id=file_id,
+        bucket_name=bucket_name,
+        qa_data=qa_data,
+        participants_info=participants_info,
+        meeting_datetime=meeting_datetime
+    )
+    return JSONResponse(content=result.get("analysis_result", {}))
