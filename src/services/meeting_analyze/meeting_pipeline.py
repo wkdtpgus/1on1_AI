@@ -74,7 +74,6 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
         # state 업데이트
         state["file_url"] = file_url
         state["file_path"] = file_path
-        state["file_metadata"] = file_info
         
         logger.info(f"✅ 파일 조회 완료: {file_path}")
         
@@ -127,31 +126,41 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         
         # 화자 통계 계산 (원본 transcript 사용)
         speaker_stats = {}
+        speaker_stats_percent = {}
+        total_duration_ms = 0
+        
         if transcript.utterances:
             for utterance in transcript.utterances:
                 speaker = utterance.speaker or 'Unknown'
                 if speaker not in speaker_stats:
-                    speaker_stats[speaker] = {'word_count': 0, 'duration': 0}
-                speaker_stats[speaker]['word_count'] += len(utterance.text.split()) if utterance.text else 0
-                speaker_stats[speaker]['duration'] += (utterance.end or 0) - (utterance.start or 0)
+                    speaker_stats[speaker] = {'duration': 0}
+                duration_ms = (utterance.end or 0) - (utterance.start or 0)
+                speaker_stats[speaker]['duration'] += duration_ms
+                total_duration_ms += duration_ms
+            
+            # 퍼센트 계산
+            for speaker_name, stats in speaker_stats.items():
+                duration_ms = stats.get('duration', 0)
+                percentage = round((duration_ms / total_duration_ms) * 100, 1) if total_duration_ms > 0 else 0
+                speaker_stats_percent[speaker_name] = percentage
         
-        transcript_dict = {
-            "utterances": [
-                {
-                    "speaker": utterance.speaker,
-                    "text": utterance.text
-                }
-                for utterance in transcript.utterances
-            ] if transcript.utterances else [],
-            "metadata": {
-                "file_id": state["file_id"],
-                "processed_at": datetime.now().isoformat(),
-                "total_duration": transcript.audio_duration
+        # LLM 입력용 포맷된 transcript (speaker, text만 포함)
+        formatted_transcript = [
+            {
+                "speaker": utterance.speaker,
+                "text": utterance.text
             }
+            for utterance in transcript.utterances
+        ] if transcript.utterances else []
+        
+        # transcript 데이터 구조화 (포맷된 데이터 재사용)
+        transcript_dict = {
+            "utterances": formatted_transcript,
+            "total_duration": transcript.audio_duration  # performance_logging에서 STT 계산에 사용
         }
         
         state["transcript"] = transcript_dict
-        state["speaker_stats"] = speaker_stats
+        state["speaker_stats_percent"] = speaker_stats_percent
         
         logger.info("✅ STT 처리 완료")
         
@@ -180,15 +189,8 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         if not analyzer:
             raise ValueError("분석기가 초기화되지 않았습니다")
         
-        # 화자 통계 간소화 (발언 비율 계산)
-        simplified_stats = {}
-        speaker_stats = state.get("speaker_stats", {})
-        if speaker_stats:
-            total_words = sum(stats.get('word_count', 0) for stats in speaker_stats.values())
-            for speaker_name, stats in speaker_stats.items():
-                word_count = stats.get('word_count', 0)
-                percentage = round((word_count / total_words) * 100, 1) if total_words > 0 else 0
-                simplified_stats[speaker_name] = percentage
+        # 이미 계산된 화자 통계 사용
+        simplified_stats = state.get("speaker_stats_percent", {})
         
         # 프롬프트 데이터 준비
         user_prompt_template = PromptTemplate(
@@ -207,14 +209,8 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             ("human", user_prompt_template.template)
         ])
         
-        # LLM에 필요한 transcript 데이터만 추출
-        transcript_for_llm = [
-            {
-                "speaker": utterance["speaker"],
-                "text": utterance["text"]
-            }
-            for utterance in state["transcript"].get("utterances", [])
-        ]
+        # transcript에서 utterances 직접 사용 (이미 포맷됨)
+        transcript_for_llm = state.get("transcript", {}).get("utterances", [])
         
         # 체인 생성 및 실행
         chain = prompt | analyzer.llm.with_structured_output(MeetingAnalysis)
@@ -311,9 +307,8 @@ class MeetingPipeline:
             "meeting_datetime": kwargs.get("meeting_datetime"),
             "file_url": None,  # retrieve 노드에서 설정
             "file_path": None,  # retrieve 노드에서 설정
-            "file_metadata": None,  # retrieve 노드에서 설정
             "transcript": None,
-            "speaker_stats": None,
+            "speaker_stats_percent": None,
             "analysis_result": None,
             "errors": [],
             "status": "pending"

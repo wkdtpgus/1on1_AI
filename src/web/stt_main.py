@@ -182,12 +182,17 @@ async def record_and_analyze_meeting(
         # 성공 응답 생성
         analysis_data = result.get("analysis_result", {})
         transcript_data = result.get("transcript", {})
+        speaker_stats_percent = result.get("speaker_stats_percent", {})
+        formatted_transcript = result.get("formatted_transcript", transcript_data.get("utterances", []))
         
         response = {
             "status": "success",
             "timestamp": datetime.now().isoformat(),
             **analysis_data,
-            "transcript": transcript_data,
+            "transcript": {
+                "utterances": formatted_transcript
+            },
+            "speaker_stats_percent": speaker_stats_percent,
             "file_info": {
                 "file_id": unique_filename,
                 "bucket_name": bucket_name,
@@ -254,12 +259,17 @@ async def analyze_meeting_with_storage(
         # 성공 응답 생성
         analysis_data = result.get("analysis_result", {})
         transcript_data = result.get("transcript", {})
+        speaker_stats_percent = result.get("speaker_stats_percent", {})
+        formatted_transcript = result.get("formatted_transcript", transcript_data.get("utterances", []))
         
         response = {
             "status": "success",
             "timestamp": datetime.now().isoformat(),
             **analysis_data,
-            "transcript": transcript_data,
+            "transcript": {
+                "utterances": formatted_transcript
+            },
+            "speaker_stats_percent": speaker_stats_percent,
             "file_info": {
                 "file_id": file_id,
                 "bucket_name": bucket_name,

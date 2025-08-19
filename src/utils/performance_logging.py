@@ -116,8 +116,8 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
     
     # STT 비용 계산
     transcript = state.get("transcript", {})
-    if transcript and "metadata" in transcript:
-        audio_duration = transcript["metadata"].get("total_duration", 0)
+    if transcript:
+        audio_duration = transcript.get("total_duration", 0)
         if audio_duration:
             costs["stt_usd"] = audio_duration * PRICING["assemblyai"]
             costs["stt_krw"] = costs["stt_usd"] * USD_TO_KRW

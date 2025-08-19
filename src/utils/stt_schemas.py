@@ -33,11 +33,10 @@ class MeetingPipelineState(TypedDict):
     # Supabase 조회 결과
     file_url: Optional[str]
     file_path: Optional[str]
-    file_metadata: Optional[Dict]
     
     # STT 결과
     transcript: Optional[Dict]
-    speaker_stats: Optional[Dict]
+    speaker_stats_percent: Optional[Dict]
     
     # LLM 분석 결과
     analysis_result: Optional[Dict]
