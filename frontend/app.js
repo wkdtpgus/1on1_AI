@@ -648,139 +648,19 @@ function displayActualResults(results) {
     // 액션 아이템 표시 (리더와 멤버 구분)
     const actionsElement = document.getElementById('quickReviewActions');
     if (actionsElement) {
-        let actionsHTML = '<div class="action-items-container">';
+        let actionsHTML = '';
         
         if (results.leader_action_items && results.leader_action_items.length > 0) {
-            actionsHTML += `
-                <div class="action-section leader-actions">
-                    <div class="action-header">
-                        <span class="action-icon">👨‍💼</span>
-                        <h4 class="action-title leader">리더 액션 아이템</h4>
-                    </div>
-                    <div class="action-list">
-                        ${results.leader_action_items.map(item => `
-                            <div class="action-item leader">
-                                <span class="action-bullet">▶</span>
-                                <span class="action-text">${item}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+            actionsHTML += '<h4 style="color: #dc2626; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>👨‍💼</span>리더 액션 아이템</h4>';
+            actionsHTML += '<ul style="margin-bottom: 16px; padding-left: 20px;">' + results.leader_action_items.map(item => `<li style="color: #dc2626; margin-bottom: 4px;">${item}</li>`).join('') + '</ul>';
         }
         
         if (results.member_action_items && results.member_action_items.length > 0) {
-            actionsHTML += `
-                <div class="action-section member-actions">
-                    <div class="action-header">
-                        <span class="action-icon">👤</span>
-                        <h4 class="action-title member">멤버 액션 아이템</h4>
-                    </div>
-                    <div class="action-list">
-                        ${results.member_action_items.map(item => `
-                            <div class="action-item member">
-                                <span class="action-bullet">▶</span>
-                                <span class="action-text">${item}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+            actionsHTML += '<h4 style="color: #0284c7; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>👤</span>멤버 액션 아이템</h4>';
+            actionsHTML += '<ul style="margin-bottom: 16px; padding-left: 20px;">' + results.member_action_items.map(item => `<li style="color: #0284c7; margin-bottom: 4px;">${item}</li>`).join('') + '</ul>';
         }
         
-        actionsHTML += '</div>';
-        
-        // CSS 스타일 추가
-        const actionStyles = `
-            <style>
-                .action-items-container {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                    margin-top: 10px;
-                }
-                
-                .action-section {
-                    border-radius: 12px;
-                    padding: 16px;
-                    border: 2px solid;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                }
-                
-                .leader-actions {
-                    background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
-                    border-color: #f87171;
-                }
-                
-                .member-actions {
-                    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-                    border-color: #38bdf8;
-                }
-                
-                .action-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin-bottom: 12px;
-                }
-                
-                .action-icon {
-                    font-size: 20px;
-                }
-                
-                .action-title {
-                    margin: 0;
-                    font-size: 16px;
-                    font-weight: 600;
-                }
-                
-                .action-title.leader {
-                    color: #dc2626;
-                }
-                
-                .action-title.member {
-                    color: #0284c7;
-                }
-                
-                .action-list {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                }
-                
-                .action-item {
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 8px;
-                    padding: 8px 12px;
-                    border-radius: 8px;
-                    background: rgba(255,255,255,0.6);
-                }
-                
-                .action-item.leader {
-                    border-left: 4px solid #f87171;
-                }
-                
-                .action-item.member {
-                    border-left: 4px solid #38bdf8;
-                }
-                
-                .action-bullet {
-                    color: #6b7280;
-                    font-size: 12px;
-                    margin-top: 2px;
-                    flex-shrink: 0;
-                }
-                
-                .action-text {
-                    flex: 1;
-                    line-height: 1.5;
-                    color: #374151;
-                }
-            </style>
-        `;
-        
-        actionsElement.innerHTML = actionStyles + (actionsHTML || '<div class="no-actions">액션 아이템이 없습니다.</div>');
+        actionsElement.innerHTML = actionsHTML || '액션 아이템이 없습니다.';
     }
     
     // 세부 상세 요약 업데이트
