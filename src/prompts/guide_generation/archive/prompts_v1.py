@@ -15,9 +15,10 @@ Your task is to create a concise, actionable usage guide for a leader, structure
 - Write in the language specified by `{language}`.
 - Provide your response ONLY in the specified JSON format.
 - When it comes to the reference of question number, you shouldn't quote whole question.
+- The guide should be simple and concise (1-2 sentences for each of the three categories below).
 
 First, silently analyze the intent of each question in the list.
-Then, generate a concise and actionable guide of 1-2 sentences for each of the three categories below.
+Then, generate a concise and actionable guide.
 1. opening_strategy: 
     - Provide a strategic opening question considering the meeting's context. 
     - This section should set the stage for the entire conversation.

@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 import json
 from src.utils.model import llm_streaming
-from src.prompts.guide_generation.prompts import HUMAN_PROMPT
+from src.prompts.guide_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import UsageGuideInput
 from typing import AsyncGenerator
 
@@ -10,7 +10,12 @@ def get_usage_guide_chain():
     1on1 템플릿 활용 가이드 생성을 위한 LangChain 체인을 생성합니다.
     (스트리밍, 단일 체인)
     """
-    prompt = ChatPromptTemplate.from_template(HUMAN_PROMPT)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", SYSTEM_PROMPT),
+            ("human", HUMAN_PROMPT),
+        ]
+    )
     # JsonOutputParser를 사용하지 않고 순수한 텍스트 스트림을 받습니다.
     return prompt | llm_streaming
 
