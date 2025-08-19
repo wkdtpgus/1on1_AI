@@ -192,7 +192,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         
         # 프롬프트 데이터 준비
         user_prompt_template = PromptTemplate(
-            input_variables=["transcript", "speaker_stats", "participants", "qa_pairs"],
+            input_variables=["meeting_datetime", "transcript", "speaker_stats", "participants", "qa_pairs"],
             template=USER_PROMPT
         )
         
@@ -220,6 +220,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         chain = prompt | analyzer.llm.with_structured_output(MeetingAnalysis)
         
         input_data = {
+            "meeting_datetime": state.get("meeting_datetime", "날짜/시간 정보 없음"),
             "transcript": transcript_for_llm,
             "speaker_stats": speaker_stats_json,
             "participants": participants_json,

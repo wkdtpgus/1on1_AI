@@ -71,7 +71,7 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
 
 
 
-## Feedback Structure (for JSON feedback section):
+## Leader Feedback Structure (for JSON leader_feedback section):
 
 ### 1. [Improvement Area]
 **Situation**: [Specific quote from transcript]
@@ -108,6 +108,9 @@ List 1-3 specific behaviors the manager performed well
 
 USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide results in the specified JSON format.
 
+# Meeting Date & Time:
+{meeting_datetime}
+
 # Meeting Transcript (화자별 발화 리스트):
 {transcript}
 
@@ -126,13 +129,14 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
+• **Meeting Date & Time**: Use the provided meeting_datetime in the detailed_discussion header format "### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)" - convert ISO format to Korean date format if provided
 • **Speaker Statistics Analysis**: Use the speaker_stats data to evaluate conversation balance. The ideal 1-on-1 should have the employee speaking 70% and manager 30%. Include this in your feedback if there's significant imbalance
 • **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
 • **Q&A Output Format**: Return question_index (1, 2, 3...) instead of question text for precise frontend matching
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
-• For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
-• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing feedback and positive_aspects
+• For leader_feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
+• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing leader_feedback and positive_aspects
 • Follow the "Detailed Discussion Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
 
 
@@ -144,7 +148,7 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   
   "detailed_discussion": "Detailed Discussion Summary following the hierarchical structure specified in system prompt (in Korean)",
   
-  "feedback": [
+  "leader_feedback": [
     {{
       "title": "Specific manager behavior or approach that needs improvement (focus on what the manager did wrong or failed to do, not general joint issues)",
       "situation": "Specific quote from transcript",
