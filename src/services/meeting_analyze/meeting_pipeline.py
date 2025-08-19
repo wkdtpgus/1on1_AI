@@ -9,6 +9,7 @@ from datetime import datetime
 
 from src.utils.model import MeetingAnalyzer, SpeechTranscriber
 from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
+from src.utils.stt_utils import wait_for_transcript, process_transcript
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
@@ -88,8 +89,7 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
 
 @time_node_execution("transcribe")
 def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState:
-    """AssemblyAI로 STT 처리"""
-    logger.info("🎙️ STT 처리 시작")
+    logger.info("STT 처리 시작")
     
     try:
         state["status"] = "transcribing"
@@ -97,70 +97,22 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         if not state.get("file_url"):
             raise ValueError("파일 URL이 없습니다")
         
-        # AssemblyAI 설정 및 STT 처리 (timeout 연장)
+        # AssemblyAI 설정 및 전사 시작
         speech_transcriber = SpeechTranscriber()
         transcriber = aai.Transcriber(config=speech_transcriber.config)
         
-        logger.info(f"🎙️ STT 시작 - 파일 URL: {state['file_url']}")
-        
-        # 폴링 방식으로 전사 처리 (timeout 증가)
+        logger.info(f"STT 시작 - 파일 URL: {state['file_url']}")
         transcript = transcriber.transcribe(state["file_url"])
         
-        # 전사 상태 확인 및 대기
-        import time
-        max_wait_time = 900  # 15분 timeout
-        check_interval = 10   # 10초마다 확인
-        elapsed_time = 0
+        # 전사 상태 확인 및 대기 (타임아웃 관련)
+        transcript = wait_for_transcript(transcriber, transcript)
         
-        while transcript.status in [aai.TranscriptStatus.processing, aai.TranscriptStatus.queued]:
-            if elapsed_time >= max_wait_time:
-                raise TimeoutError(f"STT 처리 시간 초과 ({max_wait_time}초)")
-            
-            logger.info(f"🔄 STT 처리 중... ({elapsed_time}초 경과)")
-            time.sleep(check_interval)
-            elapsed_time += check_interval
-            transcript = transcriber.get_transcript(transcript.id)
+        # transcript 처리 (발화시간 계산 후 포맷팅)
+        processed_data = process_transcript(transcript)
         
-        if transcript.status == aai.TranscriptStatus.error:
-            raise Exception(f"STT 처리 실패: {transcript.error}")
-        
-        # 화자 통계 계산 (원본 transcript 사용)
-        speaker_stats = {}
-        speaker_stats_percent = {}
-        total_duration_ms = 0
-        
-        if transcript.utterances:
-            for utterance in transcript.utterances:
-                speaker = utterance.speaker or 'Unknown'
-                if speaker not in speaker_stats:
-                    speaker_stats[speaker] = {'duration': 0}
-                duration_ms = (utterance.end or 0) - (utterance.start or 0)
-                speaker_stats[speaker]['duration'] += duration_ms
-                total_duration_ms += duration_ms
-            
-            # 퍼센트 계산
-            for speaker_name, stats in speaker_stats.items():
-                duration_ms = stats.get('duration', 0)
-                percentage = round((duration_ms / total_duration_ms) * 100, 1) if total_duration_ms > 0 else 0
-                speaker_stats_percent[speaker_name] = percentage
-        
-        # LLM 입력용 포맷된 transcript (speaker, text만 포함)
-        formatted_transcript = [
-            {
-                "speaker": utterance.speaker,
-                "text": utterance.text
-            }
-            for utterance in transcript.utterances
-        ] if transcript.utterances else []
-        
-        # transcript 데이터 구조화 (포맷된 데이터 재사용)
-        transcript_dict = {
-            "utterances": formatted_transcript,
-            "total_duration": transcript.audio_duration  # performance_logging에서 STT 계산에 사용
-        }
-        
-        state["transcript"] = transcript_dict
-        state["speaker_stats_percent"] = speaker_stats_percent
+        # state 업데이트
+        state["transcript"] = processed_data["transcript_dict"]
+        state["speaker_stats_percent"] = processed_data["speaker_stats_percent"]
         
         logger.info("✅ STT 처리 완료")
         
