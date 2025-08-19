@@ -129,6 +129,7 @@ async def analyze_meeting_with_storage(
             "status": "success",
             "timestamp": datetime.now().isoformat(),
             **analysis_data,
+            "feedback": analysis_data.get("leader_feedback", []),  # 리더 피드백 매핑
             "transcript": {
                 "utterances": formatted_transcript
             },
