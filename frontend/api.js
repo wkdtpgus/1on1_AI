@@ -27,7 +27,7 @@ class MeetingAPI {
         }
     }
     // 오디오를 Supabase에 업로드하고 분석하는 함수
-    static async analyzeAudio(audioBlob, meetingType = '1on1', questions = null, qaData = null, participantsInfo = null) {
+    static async analyzeAudio(audioBlob, meetingType = '1on1', questions = null, qaPairs = null, participantsInfo = null) {
         // 1. Supabase에 오디오 파일 업로드
         const file_id = await this.uploadToSupabase(audioBlob);
         
@@ -36,9 +36,9 @@ class MeetingAPI {
         formData.append('file_id', file_id);
         
         // Q&A 데이터가 있는 경우 추가
-        if (qaData && qaData.length > 0) {
-            formData.append('qa_data', JSON.stringify(qaData));
-            console.log('🔍 API로 전송하는 Q&A 데이터:', qaData);
+        if (qaPairs && qaPairs.length > 0) {
+            formData.append('qa_pairs', JSON.stringify(qaPairs));
+            console.log('🔍 API로 전송하는 Q&A 데이터:', qaPairs);
         }
         
         // 참석자 정보가 있는 경우 추가
@@ -202,7 +202,7 @@ class MeetingAPI {
 }
 
 // Progress tracking with real API
-async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on1', qaData = null, participantsInfo = null) {
+async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on1', qaPairs = null, participantsInfo = null) {
     try {
         // 초기 업로드
         updateProgress(10, 'Supabase에 파일 업로드 중...');
@@ -211,7 +211,7 @@ async function analyzeWithProgress(audioBlob, updateProgress, meetingType = '1on
         updateProgress(30, 'STT 변환 시작...');
         
         // 실제 API 호출
-        const results = await MeetingAPI.analyzeAudio(audioBlob, meetingType, null, qaData, participantsInfo);
+        const results = await MeetingAPI.analyzeAudio(audioBlob, meetingType, null, qaPairs, participantsInfo);
         
         // 진행률 시뮬레이션 (실제로는 백엔드에서 WebSocket으로 진행률 전송)
         const progressSteps = [

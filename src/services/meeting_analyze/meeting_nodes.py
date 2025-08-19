@@ -184,7 +184,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         speaker_stats = state.get("speaker_stats_percent", {})
         
         # Q&A 데이터 파싱
-        qa_data = json.loads(state.get("qa_data")) if state.get("qa_data") else []
+        qa_pairs = json.loads(state.get("qa_pairs")) if state.get("qa_pairs") else []
         
         # 참가자 정보 파싱
         participants_info = json.loads(state.get("participants_info")) if state.get("participants_info") else {}
@@ -194,7 +194,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             "transcript": transcript_for_llm,
             "speaker_stats": speaker_stats,
             "participants": participants_info,
-            "qa_pairs": qa_data
+            "qa_pairs": qa_pairs
         }
         
         # 체인 생성 및 실행

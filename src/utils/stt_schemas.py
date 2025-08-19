@@ -31,7 +31,7 @@ class MeetingPipelineState(TypedDict):
     # 입력 데이터
     file_id: str
     bucket_name: str
-    qa_data: Optional[List[Dict]]
+    qa_pairs: Optional[List[Dict]]
     participants_info: Optional[Dict]
     meeting_datetime: Optional[str]  # "2024-12-08T14:30:00" 형식
     

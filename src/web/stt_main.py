@@ -81,7 +81,7 @@ async def get_config():
 @app.post("/api/analyze")
 async def analyze_meeting_with_storage(
     file_id: str = Form(...),
-    qa_data: Optional[str] = Form(default=None),
+    qa_pairs: Optional[str] = Form(default=None),
     participants_info: Optional[str] = Form(default=None),
     meeting_datetime: Optional[str] = Form(default=None),
     bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
@@ -90,7 +90,7 @@ async def analyze_meeting_with_storage(
     result = await meeting_pipeline.run(
         file_id=file_id,
         bucket_name=bucket_name,
-        qa_data=qa_data,
+        qa_pairs=qa_pairs,
         participants_info=participants_info,
         meeting_datetime=meeting_datetime
     )

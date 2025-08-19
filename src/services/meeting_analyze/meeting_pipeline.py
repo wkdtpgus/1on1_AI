@@ -52,7 +52,7 @@ class MeetingPipeline:
         initial_state: MeetingPipelineState = {
             "file_id": file_id,
             "bucket_name": bucket_name,
-            "qa_data": kwargs.get("qa_data"),
+            "qa_pairs": kwargs.get("qa_pairs"),
             "participants_info": kwargs.get("participants_info"),
             "meeting_datetime": kwargs.get("meeting_datetime"),
             "file_url": None,

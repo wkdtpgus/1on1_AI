@@ -6,7 +6,7 @@ let recordingSeconds = 0;
 let audioBlob = null;
 let selectedMeetingType = '1on1';
 let qaCounter = 0;
-let qaData = [];
+let qaPairs = [];
 let currentAnalysisResults = null; // 현재 분석 결과 저장용
 
 // DOM Elements
@@ -254,7 +254,7 @@ function removeQAPair(qaId) {
 }
 
 function updateQAData() {
-    qaData = [];
+    qaPairs = [];
     const qaItems = document.querySelectorAll('.qa-item');
     
     qaItems.forEach(item => {
@@ -266,7 +266,7 @@ function updateQAData() {
             const answer = answerTextarea.value.trim();
             
             if (question || answer) {
-                qaData.push({
+                qaPairs.push({
                     question: question,
                     answer: answer
                 });
@@ -274,12 +274,12 @@ function updateQAData() {
         }
     });
     
-    console.log('🔍 Q&A 데이터 업데이트:', qaData);
+    console.log('🔍 Q&A 데이터 업데이트:', qaPairs);
 }
 
 function clearQAData() {
     qaContainer.innerHTML = '';
-    qaData = [];
+    qaPairs = [];
     qaCounter = 0;
 }
 
@@ -564,7 +564,7 @@ analyzeBtn.addEventListener('click', async () => {
                     progressText.textContent = text;
                 },
                 selectedMeetingType,  // 선택된 미팅 타입 전달
-                qaData,  // Q&A 데이터 전달
+                qaPairs,  // Q&A 데이터 전달
                 participantsInfo  // 참석자 정보 전달
             );
             showResults(results);
@@ -734,7 +734,7 @@ function displayActualResults(results) {
         }
         
         const qaHtml = results.qa_summary.map((item) => {
-            const questionText = qaData[item.question_index - 1]?.question || `질문 ${item.question_index}`;
+            const questionText = qaPairs[item.question_index - 1]?.question || `질문 ${item.question_index}`;
             return `
                 <div class="border-l-4 border-indigo-500 pl-6 py-4">
                     <p class="font-semibold text-gray-900 mb-2">Q${item.question_index}: ${questionText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
