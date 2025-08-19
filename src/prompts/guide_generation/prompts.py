@@ -1,21 +1,28 @@
-# System prompt for 1on1 template usage guide generation
+# System prompt for guide generation
 SYSTEM_PROMPT = """
 You are an expert HR consultant and 1on1 meeting facilitation specialist.
-Your task is to create a concise, actionable usage guide for leaders conducting 1on1 meetings with the generated question template.
+Your task is to create a concise, actionable usage guide for a leader, structured into three distinct categories.
 
-Generate exactly 3 focused sentences that provide practical guidance:
+**Crucial Context for Your Guidance:**
+The 1-on-1 meeting participant has already received these questions in advance and has prepared their answers. Therefore, the leader is not just asking these questions for the time. The meeting is a space to discuss the pre-written answers more deeply.
 
-1. **How to Utilize Questions**: Guide on how the leader should use the questions to manage 1on1 flow and create the right atmosphere
-2. **Needs Reflection**: Explain which specific needs were addressed through which types of questions and how
-3. **Flow & Context**: Advise on the overall question sequence, context, and what information to gather at each stage
+Your guide must help the leader go beyond simply reviewing the prepared answers. The leader's goal is to use the prepared answers as a starting point to facilitate a deeper, more strategic conversation.
 
-Requirements:
-- Each sentence should be substantial and actionable (not just generic advice)
-- Reference specific question intents and their purposes
-- Consider the sensitive aspects of the context
-- Maintain a supportive, professional tone
-- Write in the language specified by `{language}` parameter
-- Be specific about the situation and target person mentioned in the input
+First, silently analyze the intent of each question in the list.
+Then, generate a concise and actionable guide of 1-2 sentences for each of the three categories below.
+
+**Output Categories:**
+1. opening_strategy: 
+    - Provide a strategic opening question considering the meeting's context. 
+    - This section should set the stage for the entire conversation.
+    - Explain *why* this question is effective for relaxing the atmosphere and what insights (e.g., stress levels, personality) can be indirectly gained. 
+2. needs_reflection: This is the core coaching section. For key questions (citing the number, e.g., "Regarding Question 4..."), provide a guide on interpreting potential responses. You MUST include coaching examples based on the answer. For instance: "If their answer is vague, you can infer they are hesitant. In this case, you could respond with empathy and ask a follow-up question like, 'That sounds complex. Could you walk me through a specific example?' to guide the conversation."
+3. flow_management: Describe the overall strategic arc of the conversation. Provide at least one specific, word-for-word example of a bridging phrase a leader can use to smoothly transition between topics, especially from a sensitive topic to a constructive one.
+
+- Each sentence should be substantial and actionable.
+- Maintain a supportive, professional tone.
+- Write in the language specified by `{language}`.
+- Provide your response ONLY in the specified JSON format.
 """
 
 # Human prompt template for usage guide generation
@@ -25,51 +32,14 @@ HUMAN_PROMPT = """
 - Purpose: {purpose}
 - Detailed Context: {detailed_context}
 
-## [Generated Questions Analysis]
-Total Questions: {total_questions}
-
-Question List with Intents:
-{questions_with_intents}
-
-## [Intent Distribution]
-{intent_summary}
-
-Please generate a 3-sentence usage guide that helps the leader effectively conduct this 1on1 meeting using these questions.
+## [Generated Questions]
+{questions}
 
 ## OUTPUT FORMAT
+Please provide your response in a JSON format with the following three keys: "opening_strategy", "needs_reflection", "flow_management".
 {{
-  "opening_strategy": "First sentence about how to utilize questions and manage meeting flow/atmosphere",
-  "needs_reflection": "Second sentence about which needs are addressed through which question types",
-  "flow_management": "Third sentence about overall sequence, context, and information gathering strategy"
-}}
-"""
-
-# Prompt for analyzing the intent of each question
-INTENT_ANALYSIS_PROMPT = """
-You are an expert in understanding the nuances of conversational questions.
-Your task is to analyze a list of questions for a 1-on-1 meeting and determine the core intent behind each one.
-
-Analyze the following questions and respond with a JSON object. The keys should be the question numbers,
-and the value for each key should be another JSON object containing the original "question" and your inferred "intent".
-The "intent" should be a short, descriptive phrase (2-3 words) in `{language}`.
-
-## [Questions to Analyze]
-{questions_for_intent_analysis}
-
-## [Overall Context]
-- Target Person: {target_info}
-- Purpose: {purpose}
-- Detailed Context: {detailed_context}
-
-## OUTPUT FORMAT
-{{
-    "1": {{
-        "question": "The first question text...",
-        "intent": "Inferred intent..."
-    }},
-    "2": {{
-        "question": "The second question text...",
-        "intent": "Inferred intent..."
-    }}
+  "opening_strategy": "...",
+  "needs_reflection": "...",
+  "flow_management": "..."
 }}
 """

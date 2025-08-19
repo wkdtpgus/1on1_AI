@@ -8,7 +8,7 @@ from typing import AsyncGenerator, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from src.utils.template_schemas import TemplateGeneratorInput, EmailGeneratorOutput, UsageGuideInput
+from src.utils.template_schemas import TemplateGeneratorInput, EmailGeneratorOutput, UsageGuideInput, UsageGuideOutput
 from src.services.template_generator.generate_template import generate
 from src.services.template_generator.generate_email import generate_email
 from src.services.template_generator.generate_usage_guide import generate_usage_guide

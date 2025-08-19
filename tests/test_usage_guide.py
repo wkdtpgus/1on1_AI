@@ -55,14 +55,12 @@ async def test_usage_guide_generation():
         
         guide_stream = generate_usage_guide(guide_input)
         
-        # 스트리밍 청크를 하나의 긴 문자열로 합침
         full_response_content = ""
         async for chunk in guide_stream:
             if chunk.startswith('data: '):
                 content_str = chunk[len('data: '):].strip()
                 try:
                     unquoted_content = json.loads(content_str)
-                    # 실시간 출력을 위해 print 구문 추가
                     print(unquoted_content, end="", flush=True)
                     full_response_content += unquoted_content
                 except json.JSONDecodeError:
@@ -70,13 +68,14 @@ async def test_usage_guide_generation():
         
         print("\n-------------------------------------")
 
-        # process_streaming_response 유틸리티 함수를 사용하여 JSON 추출
         guide_result = process_streaming_response(full_response_content)
 
         if guide_result:
             print("\n✅ 활용 가이드 생성 완료!")
+            print(f"📋 시작 전략: {guide_result.get('opening_strategy', 'N/A')}")
+            print(f"🎯 니즈 반영 및 코칭: {guide_result.get('needs_reflection', 'N/A')}")
+            print(f"🔄 흐름 관리: {guide_result.get('flow_management', 'N/A')}")
             
-            # 테스트 검증
             assert guide_result is not None, "가이드 생성을 실패했습니다."
             assert "opening_strategy" in guide_result, "결과에 'opening_strategy' 필드가 없습니다."
             assert "needs_reflection" in guide_result, "결과에 'needs_reflection' 필드가 없습니다."
