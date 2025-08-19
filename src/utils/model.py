@@ -1,6 +1,3 @@
-# =============================================================================
-# Imports
-# =============================================================================
 import assemblyai as aai
 import os
 import logging
@@ -100,7 +97,7 @@ class SpeechTranscriber:
             
         aai.settings.api_key = self.api_key
         
-        # 1on1 미팅용 전사 설정 생성
+        # 1on1 미팅용 전사 설정 생성 (timeout 연장)
         self.config = aai.TranscriptionConfig(
             language_code=ASSEMBLYAI_LANGUAGE,
             punctuate=ASSEMBLYAI_PUNCTUATE,
@@ -108,7 +105,10 @@ class SpeechTranscriber:
             disfluencies=ASSEMBLYAI_DISFLUENCIES,
             speaker_labels=ASSEMBLYAI_SPEAKER_LABELS,
             language_detection=ASSEMBLYAI_LANGUAGE_DETECTION,
-            speakers_expected=ASSEMBLYAI_SPEAKERS_EXPECTED
+            speakers_expected=ASSEMBLYAI_SPEAKERS_EXPECTED,
+            # Timeout 설정 추가 (기본 5분 → 15분)
+            webhook_url=None,  # 폴링 방식 사용
+            webhook_auth_header_name=None
         )
         
         logger.debug(f"STT 모델 초기화 완료")

@@ -4,6 +4,7 @@ import assemblyai as aai
 from supabase import Client
 import json
 import logging
+import time
 from datetime import datetime
 
 from src.utils.model import MeetingAnalyzer, SpeechTranscriber
@@ -15,6 +16,14 @@ from langchain_core.prompts import ChatPromptTemplate
 # 로깅 설정
 logger = logging.getLogger("meeting_pipeline")
 
+# 성능 로깅 임포트
+from src.utils.performance_logging import (
+    time_node_execution, 
+    generate_performance_report,
+    SimpleTokenCallback
+)
+
+@time_node_execution("retrieve")
 def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
     """Supabase에서 파일 조회 및 URL 생성"""
     logger.info(f"🔍 Supabase 파일 조회 시작: {state['file_id']}")
@@ -78,6 +87,7 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
     return state
 
 
+@time_node_execution("transcribe")
 def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState:
     """AssemblyAI로 STT 처리"""
     logger.info("🎙️ STT 처리 시작")
@@ -88,10 +98,29 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         if not state.get("file_url"):
             raise ValueError("파일 URL이 없습니다")
         
-        # AssemblyAI 설정 및 STT 처리
+        # AssemblyAI 설정 및 STT 처리 (timeout 연장)
         speech_transcriber = SpeechTranscriber()
         transcriber = aai.Transcriber(config=speech_transcriber.config)
+        
+        logger.info(f"🎙️ STT 시작 - 파일 URL: {state['file_url']}")
+        
+        # 폴링 방식으로 전사 처리 (timeout 증가)
         transcript = transcriber.transcribe(state["file_url"])
+        
+        # 전사 상태 확인 및 대기
+        import time
+        max_wait_time = 900  # 15분 timeout
+        check_interval = 10   # 10초마다 확인
+        elapsed_time = 0
+        
+        while transcript.status in [aai.TranscriptStatus.processing, aai.TranscriptStatus.queued]:
+            if elapsed_time >= max_wait_time:
+                raise TimeoutError(f"STT 처리 시간 초과 ({max_wait_time}초)")
+            
+            logger.info(f"🔄 STT 처리 중... ({elapsed_time}초 경과)")
+            time.sleep(check_interval)
+            elapsed_time += check_interval
+            transcript = transcriber.get_transcript(transcript.id)
         
         if transcript.status == aai.TranscriptStatus.error:
             raise Exception(f"STT 처리 실패: {transcript.error}")
@@ -135,6 +164,7 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
     return state
 
 
+@time_node_execution("analyze")
 def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
     """LLM으로 회의 분석"""
     logger.info("🤖 LLM 분석 시작")
@@ -142,8 +172,8 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
     try:
         state["status"] = "analyzing"
         
-        if not state.get("transcript"):
-            raise ValueError("전사 결과가 없습니다")
+        if not state.get("transcript") or not state["transcript"].get("utterances"):
+            raise ValueError("전사 결과가 없거나 비어있습니다. STT 처리를 확인해주세요.")
         
         # analyzer에서 LLM 가져오기
         analyzer = analyze_with_llm._analyzer if hasattr(analyze_with_llm, '_analyzer') else None
@@ -196,7 +226,11 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             "qa_pairs": qa_pairs_json
         }
         
-        result = chain.invoke(input_data)
+        # 토큰 추적을 위한 콜백 설정
+        token_callback = SimpleTokenCallback(state)
+        
+        # LLM 호출 (with_structured_output 사용하면서 콜백으로 토큰 추적)
+        result = chain.invoke(input_data, config={"callbacks": [token_callback]})
         
         if result is None:
             raise ValueError("1:1 회의 분석 실패")
@@ -286,6 +320,10 @@ class MeetingPipeline:
         
         # LangGraph 워크플로우 실행
         result = await self.workflow.ainvoke(initial_state)
+        
+        # 성공적으로 완료된 경우 성능 리포트 생성 (비용 계산 포함)
+        if result.get("status") == "completed":
+            generate_performance_report(result)
         
         logger.info(f"✅ 파이프라인 실행 완료: {result['status']}")
         

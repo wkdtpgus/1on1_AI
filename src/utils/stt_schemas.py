@@ -42,6 +42,12 @@ class MeetingPipelineState(TypedDict):
     # LLM 분석 결과
     analysis_result: Optional[Dict]
     
+    # 성능 측정 필드
+    performance_metrics: Optional[Dict]
+    token_usage: Optional[Dict]
+    costs: Optional[Dict]
+    performance_report: Optional[Dict]
+    
     # 상태 추적
     errors: List[str]
     status: str  # "pending", "processing", "completed", "failed"
