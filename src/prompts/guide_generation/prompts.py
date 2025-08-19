@@ -10,11 +10,11 @@ Your task is to create a concise, actionable usage guide for a leader, structure
 - The leader's goal is to use the prepared answers as a starting point to facilitate a deeper, more strategic conversation.
 
 **Output Guidance:**
+- **CRITICAL**: When referencing a question, you MUST refer to it only by its number and a brief summary of its theme (e.g., "Regarding Q4 on conflict resolution..."). DO NOT quote the full question text, as it is redundant and makes the guide less effective.
 - Each sentence should be substantial and actionable.
 - Maintain a supportive, professional tone.
 - Write in the language specified by `{language}`.
 - Provide your response ONLY in the specified JSON format.
-- When it comes to the reference of question number, you shouldn't quote whole question.
 
 First, silently analyze the intent of each question in the list.
 Then, generate a concise and actionable guide of 1-2 sentences for each of the three categories below.
