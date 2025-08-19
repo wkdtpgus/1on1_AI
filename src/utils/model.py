@@ -33,9 +33,6 @@ from src.config.config import (
     LANGSMITH_ENDPOINT
 )
 
-# =============================================================================
-# 로깅 설정
-# =============================================================================
 logger = logging.getLogger("model")
 TRANSCRIPT_POLL_INTERVAL = 5  # 전사 상태 확인 간격(초)
 
@@ -52,10 +49,6 @@ if LANGSMITH_TRACING:
     logger.info(f"LangSmith 추적 활성화됨 - 프로젝트: {LANGSMITH_PROJECT}")
 else:
     logger.info("LangSmith 추적이 비활성화되어 있습니다")
-
-# =============================================================================
-# Gemini LLM 인스턴스 (템플릿 생성용)
-# =============================================================================
 
 # 기본 LLM (스트리밍 비활성화)
 llm = ChatVertexAI(
@@ -80,10 +73,6 @@ llm_streaming = ChatVertexAI(
     thinking_budget=GEMINI_THINKING_BUDGET, # Pass directly
     streaming=True,
 )
-
-# =============================================================================
-# AssemblyAI 모델 (음성-텍스트 변환)
-# =============================================================================
 
 class SpeechTranscriber:
     """AssemblyAI 기반 음성 전사기"""
