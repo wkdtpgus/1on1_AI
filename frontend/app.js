@@ -730,7 +730,12 @@ function displayActualResults(results) {
     // 긍정적 측면 업데이트
     if (results.positive_aspects && Array.isArray(results.positive_aspects)) {
         const positiveHtml = results.positive_aspects.map(aspect => 
-            `<li class="text-gray-700 flex items-start"><i class="ri-check-line text-green-600 mr-2 mt-1"></i>${aspect.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</li>`
+            `<div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                <h5 class="font-semibold text-green-900 mb-4">${aspect.title.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</h5>
+                <div class="text-gray-700 leading-relaxed">
+                    ${aspect.content.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>').replace(/\n/g, '<br>')}
+                </div>
+            </div>`
         ).join('');
         const positiveElement = document.getElementById('positiveAspects');
         if (positiveElement) {
@@ -807,7 +812,10 @@ function displayMockResults(results) {
     // 피드백 탭 (기존 구조)
     if (results.leader_feedback) {
         const positiveHtml = (results.leader_feedback.positive || []).map(p => 
-            `<li class="text-gray-700 flex items-start"><i class="ri-check-line text-green-600 mr-2 mt-1"></i>${p}</li>`
+            `<div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                <h5 class="font-semibold text-green-900 mb-4">${p.title || 'Positive Aspect'}</h5>
+                <div class="text-gray-700 leading-relaxed">${p.content || p}</div>
+            </div>`
         ).join('');
         document.getElementById('positiveAspects').innerHTML = positiveHtml;
         

@@ -6,6 +6,11 @@ class FeedbackItem(BaseModel):
     title: str = Field(description="개선이 필요한 주제")
     content: str = Field(description="상황, 개선 제안, 중요성, 구체적 실행 방법을 하나의 자연스러운 단락으로 통합한 피드백 내용")
 
+class PositiveAspectItem(BaseModel):
+    """매니저가 잘한 점 항목"""
+    title: str = Field(description="매니저가 잘 수행한 영역")
+    content: str = Field(description="구체적 상황과 그것이 1on1 효과성에 미친 긍정적 영향을 자연스러운 단락으로 작성")
+
 class QAItem(BaseModel):
     """Q&A 항목"""
     question_index: int = Field(description="질문 인덱스 (1부터 시작)")
@@ -27,7 +32,7 @@ class MeetingAnalysis(BaseModel):
     ai_summary: str = Field(description="계층적 구조를 따르는 상세한 회의 내용 (마크다운 형식)")
     ai_core_summary: AiCoreSummary = Field(description="핵심 요약 정보")
     leader_feedback: List[FeedbackItem] = Field(description="매니저 개선 피드백 리스트")
-    positive_aspects: List[str] = Field(description="매니저가 잘 수행한 측면들")
+    positive_aspects: List[PositiveAspectItem] = Field(description="매니저가 잘 수행한 측면들")
     qa_summary: List[QAItem] = Field(description="질문별 답변 리스트 - 모든 질문에 대해 완전한 답변 필수")
 
 # 랭그래프 스키마 

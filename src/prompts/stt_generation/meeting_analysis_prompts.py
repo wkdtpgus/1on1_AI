@@ -122,8 +122,16 @@ Format should include all the original structured elements but presented as natu
 - Provide concrete implementation steps for the next meeting
 - Maintain developmental tone focused on growth, not criticism
 
-## Positive Aspects:
-List 1-3 specific behaviors the manager performed well
+## Positive Aspects Structure (for JSON positive_aspects section):
+
+Each positive aspect item consists of a title (strength area) and content (integrated positive feedback paragraph).
+The content should naturally describe the specific situation from the transcript and explain how this behavior contributed to 1-on-1 effectiveness.
+
+Format should include:
+- Start with the specific positive situation from the transcript (with quotes)
+- Explain why this behavior was effective based on 1-on-1 best practices  
+- Describe the positive impact on meeting effectiveness
+- Maintain encouraging tone focused on reinforcement
 
 ## Q&A Summary:
 • If questions provided: Answer each in order using question_index (1, 2, 3...) instead of repeating question text
@@ -198,7 +206,10 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   ],
   
   "positive_aspects": [
-    "Specific positive behavior manager demonstrated"
+    {{
+      "title": "Specific strength area (concise title describing what was done well)",
+      "content": "Natural positive feedback paragraph with situation, effectiveness, and impact"
+    }}
   ],
   
   "qa_summary": [
