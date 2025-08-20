@@ -41,27 +41,20 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 # CRITICAL: Speaker Identification Requirements
 
 ## MANDATORY: Speaker Mapping Task
-
 **YOU MUST identify who is speaker A and who is speaker B in the transcript.**
-
 1. **Participants information format**: {{"leader": "actual_leader_name", "member": "actual_member_name"}}
-
 2. **Your task**: Analyze the conversation to determine:
    - Which speaker (A or B) is the leader
    - Which speaker (A or B) is the member
-
 3. **How to identify the leader**:
    - Leader behaviors: Asks questions, gives feedback, guides discussion, sets agenda
    - Member behaviors: Reports status, answers questions, receives feedback, seeks guidance
-
 4. **REQUIRED OUTPUT for speaker_mapping field**:
    - Return a list with exactly 2 names: ["A의 실제이름", "B의 실제이름"]
    - If A is leader: ["leader_name_from_participants", "member_name_from_participants"]
    - If B is leader: ["member_name_from_participants", "leader_name_from_participants"]
-
 5. **If participants is empty or missing**: 
    - Use ["리더", "팀원"] or ["팀원", "리더"] based on your analysis
-
 **IMPORTANT: speaker_mapping field CANNOT be empty. You MUST provide the mapping.**
 
 # Output Structure Requirements
@@ -117,23 +110,17 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
 
 ## Leader Feedback Structure (for JSON leader_feedback section):
 
-### 1. [Improvement Area]
-**Situation**: [Specific quote from transcript]
-**Suggestion**: [Alternative action based on best practices]
-**Why Important**: [Core 1-on-1 purpose perspective]
-**How to Implement**: [Concrete method for next meeting]
+Each feedback item consists of a title (improvement area) and content (integrated feedback paragraph).
+The content should naturally weave together the situation (specific transcript quotes), improvement suggestions, importance reasoning, and concrete implementation methods into a comprehensive, flowing narrative.
 
-### 2. [Improvement Area]
-**Situation**: [Specific quote from transcript]
-**Suggestion**: [Alternative action based on best practices]
-**Why Important**: [Core 1-on-1 purpose perspective]
-**How to Implement**: [Concrete method for next meeting]
+**Reference Guidelines for Feedback**: Base your feedback on the "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors listed above. Identify specific instances where the manager's behavior aligns with items to avoid or misses opportunities to implement recommended practices.
 
-### 3. [Improvement Area]
-**Situation**: [Specific quote from transcript]
-**Suggestion**: [Alternative action based on best practices]
-**Why Important**: [Core 1-on-1 purpose perspective]
-**How to Implement**: [Concrete method for next meeting]
+Format should include all the original structured elements but presented as natural prose:
+- Start with the specific situation from the transcript (with quotes)  
+- Explain what could be improved and why based on 1-on-1 best practices
+- Describe the importance for 1-on-1 effectiveness
+- Provide concrete implementation steps for the next meeting
+- Maintain developmental tone focused on growth, not criticism
 
 ## Positive Aspects:
 List 1-3 specific behaviors the manager performed well
@@ -205,11 +192,8 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   
   "leader_feedback": [
     {{
-      "title": "Specific manager behavior or approach that needs improvement (focus on what the manager did wrong or failed to do, not general joint issues)",
-      "situation": "Specific quote from transcript",
-      "suggestion": "Alternative action based on best practices",
-      "importance": "Why this matters for 1-on-1 effectiveness",
-      "implementation": "Concrete method for next meeting"
+      "title": "Specific improvement area (concise title describing what needs to be improved)",
+      "content": "Natural feedback paragraph with situation, suggestions, importance, and implementation"
     }}
   ],
   

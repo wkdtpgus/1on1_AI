@@ -4,10 +4,7 @@ from pydantic import BaseModel, Field
 class FeedbackItem(BaseModel):
     """매니저 개선 피드백 항목"""
     title: str = Field(description="개선이 필요한 주제")
-    situation: str = Field(description="대화록에서 인용한 구체적인 상황이나 발언")
-    suggestion: str = Field(description="개선된 행동 제안")
-    importance: str = Field(description="중요한 이유")
-    implementation: str = Field(description="다음 1on1에서 적용할 수 있는 구체적인 방법")
+    content: str = Field(description="상황, 개선 제안, 중요성, 구체적 실행 방법을 하나의 자연스러운 단락으로 통합한 피드백 내용")
 
 class QAItem(BaseModel):
     """Q&A 항목"""

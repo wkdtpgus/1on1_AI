@@ -713,24 +713,9 @@ function displayActualResults(results) {
     if (results.leader_feedback && Array.isArray(results.leader_feedback)) {
         const feedbackHtml = results.leader_feedback.map(item => `
             <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
-                <h5 class="font-semibold text-red-900 mb-3">${item.title.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</h5>
-                <div class="space-y-3">
-                    <div>
-                        <span class="font-medium text-red-800">상황:</span>
-                        <p class="text-gray-700 mt-1">${item.situation.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                    </div>
-                    <div>
-                        <span class="font-medium text-red-800">제안:</span>
-                        <p class="text-gray-700 mt-1">${item.suggestion.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                    </div>
-                    <div>
-                        <span class="font-medium text-red-800">중요성:</span>
-                        <p class="text-gray-700 mt-1">${item.importance.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                    </div>
-                    <div>
-                        <span class="font-medium text-red-800">실행 방안:</span>
-                        <p class="text-gray-700 mt-1">${item.implementation.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</p>
-                    </div>
+                <h5 class="font-semibold text-red-900 mb-4">${item.title.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')}</h5>
+                <div class="text-gray-700 leading-relaxed">
+                    ${item.content.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>').replace(/\n/g, '<br>')}
                 </div>
             </div>
         `).join('');
