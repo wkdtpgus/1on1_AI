@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from supabase import create_client, Client
 from src.utils.model import MeetingAnalyzer
-from src.services.meeting_analyze.meeting_pipeline import MeetingPipeline
+from src.services.meeting_analyze.workflow import MeetingPipeline
 from src.config.config import (
     ASSEMBLYAI_API_KEY,
     GOOGLE_CLOUD_PROJECT, 
