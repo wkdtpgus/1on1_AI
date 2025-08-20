@@ -6,6 +6,7 @@ from src.utils.model import SpeechTranscriber
 from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
+from src.config.config import SUPABASE_BUCKET_NAME
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -27,7 +28,7 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
             state["status"] = "failed"
             return state
         
-        bucket_name = state["bucket_name"]
+        bucket_name = SUPABASE_BUCKET_NAME
         file_id = state["file_id"]
         
         # 파일 경로 

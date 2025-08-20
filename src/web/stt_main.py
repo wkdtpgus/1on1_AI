@@ -80,13 +80,11 @@ async def analyze_meeting_with_storage(
     file_id: str = Form(...),
     qa_pairs: Optional[str] = Form(default=None),
     participants_info: Optional[str] = Form(default=None),
-    meeting_datetime: Optional[str] = Form(default=None),
-    bucket_name: Optional[str] = Form(default=SUPABASE_BUCKET_NAME)
+    meeting_datetime: Optional[str] = Form(default=None)
 ):
     # LangGraph 파이프라인 실행 
     result = await meeting_pipeline.run(
         file_id=file_id,
-        bucket_name=bucket_name,
         qa_pairs=qa_pairs,
         participants_info=participants_info,
         meeting_datetime=meeting_datetime

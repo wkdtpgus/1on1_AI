@@ -6,6 +6,7 @@ from supabase import Client
 from src.utils.model import MeetingAnalyzer
 from src.utils.stt_schemas import MeetingPipelineState
 from src.utils.performance_logging import generate_performance_report
+from src.config.config import SUPABASE_BUCKET_NAME
 from .meeting_nodes import (
     retrieve_from_supabase, 
     process_with_assemblyai, 
@@ -47,7 +48,7 @@ class MeetingPipeline:
         logger.info(f"파이프라인 실행 시작: {file_id}")
         
         # 초기 상태 설정
-        bucket_name = kwargs.get("bucket_name", "audio-recordings")
+        bucket_name = kwargs.get("bucket_name", SUPABASE_BUCKET_NAME)
         
         initial_state: MeetingPipelineState = {
             "file_id": file_id,
