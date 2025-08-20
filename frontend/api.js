@@ -66,7 +66,7 @@ class MeetingAPI {
                 title: data.title || '1on1 미팅 분석 결과',
                 leader_action_items: data.leader_action_items || [],
                 member_action_items: data.member_action_items || [],
-                detailed_discussion: data.detailed_discussion || '',
+                ai_summary: data.ai_summary || '',
                 leader_feedback: data.leader_feedback || [],
                 positive_aspects: data.positive_aspects || [],
                 qa_summary: data.qa_summary || [],

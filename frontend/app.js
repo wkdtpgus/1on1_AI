@@ -603,7 +603,7 @@ function showResults(results) {
     console.log('🔍 results.meeting_type:', results.meeting_type);
     console.log('🔍 results.leader_action_items 존재:', !!results.leader_action_items);
     console.log('🔍 results.member_action_items 존재:', !!results.member_action_items);
-    console.log('🔍 results.detailed_discussion 존재:', !!results.detailed_discussion);
+    console.log('🔍 results.ai_summary 존재:', !!results.ai_summary);
     
     // 분석 결과를 전역 변수에 저장 (복사 기능용)
     currentAnalysisResults = results;
@@ -629,7 +629,7 @@ function showResults(results) {
         console.log('✅ displayGeneralResults 호출');
         // 일반회의 결과 구조로 표시
         displayGeneralResults(results);
-    } else if (results.leader_action_items || results.member_action_items || results.detailed_discussion) {
+    } else if (results.leader_action_items || results.member_action_items || results.ai_summary) {
         console.log('✅ displayActualResults 호출');
         // 실제 분석 결과 구조로 표시
         displayActualResults(results);
@@ -664,16 +664,16 @@ function displayActualResults(results) {
     }
     
     // 세부 상세 요약 업데이트
-    if (results.detailed_discussion) {
+    if (results.ai_summary) {
         const detailedElement = document.getElementById('detailedDiscussion');
         if (detailedElement) {
             // 마크다운을 HTML로 변환하여 적용
-            detailedElement.innerHTML = convertMarkdownToHtml(results.detailed_discussion);
+            detailedElement.innerHTML = convertMarkdownToHtml(results.ai_summary);
         } else {
             console.log('❌ detailedDiscussion 요소를 찾을 수 없습니다');
         }
     } else {
-        console.log('❌ No detailed_discussion data found');
+        console.log('❌ No ai_summary data found');
     }
     
     // 피드백 탭 업데이트
@@ -962,10 +962,10 @@ function displayPlanningResults(results) {
     }
     
     // 세부 상세 요약 업데이트
-    if (results.detailed_discussion) {
+    if (results.ai_summary) {
         const detailedElement = document.getElementById('detailedDiscussion');
         if (detailedElement) {
-            detailedElement.innerHTML = convertMarkdownToHtml(results.detailed_discussion);
+            detailedElement.innerHTML = convertMarkdownToHtml(results.ai_summary);
         }
     }
     
@@ -1046,7 +1046,7 @@ function displayPlanningResults(results) {
 // 주간회의 결과 표시
 function displayWeeklyResults(results) {
     console.log('🔍 displayWeeklyResults 시작:', results);
-    console.log('🔍 results.detailed_discussion:', results.detailed_discussion);
+    console.log('🔍 results.ai_summary:', results.ai_summary);
     
     // Quick Review 섹션 숨기기 (주간회의는 세부 요약만 표시)
     const quickReviewSection = document.querySelector('.bg-blue-50.border-l-4.border-blue-500');
@@ -1055,10 +1055,10 @@ function displayWeeklyResults(results) {
     }
     
     // Detailed Discussion
-    if (results.detailed_discussion) {
+    if (results.ai_summary) {
         const detailedElement = document.getElementById('detailedDiscussion');
         if (detailedElement) {
-            detailedElement.innerHTML = convertMarkdownToHtml(results.detailed_discussion);
+            detailedElement.innerHTML = convertMarkdownToHtml(results.ai_summary);
         }
     }
     
@@ -1132,10 +1132,10 @@ function displayGeneralResults(results) {
     }
     
     // Detailed Discussion
-    if (results.detailed_discussion) {
+    if (results.ai_summary) {
         const detailedElement = document.getElementById('detailedDiscussion');
         if (detailedElement) {
-            detailedElement.innerHTML = convertMarkdownToHtml(results.detailed_discussion);
+            detailedElement.innerHTML = convertMarkdownToHtml(results.ai_summary);
         }
     }
     
@@ -1664,7 +1664,7 @@ copySummaryBtn.addEventListener('click', async () => {
                 summaryText += `### 멤버\n${currentAnalysisResults.member_action_items.map(item => `- ${item}`).join('\n')}\n\n`;
             }
         }
-        summaryText += `## 상세 요약\n${currentAnalysisResults.detailed_discussion || '상세 내용이 없습니다.'}`;
+        summaryText += `## 상세 요약\n${currentAnalysisResults.ai_summary || '상세 내용이 없습니다.'}`;
         
         await navigator.clipboard.writeText(summaryText);
         showCopySuccess(copySummaryBtn, '요약이 복사되었습니다!');
@@ -1684,8 +1684,8 @@ copyMarkdownBtn.addEventListener('click', async () => {
         let markdownText = `# ${currentAnalysisResults.title || '미팅 분석 결과'}\n\n`;
         
         // 전체 상세 내용을 마크다운 형태로 복사
-        if (currentAnalysisResults.detailed_discussion) {
-            markdownText += currentAnalysisResults.detailed_discussion;
+        if (currentAnalysisResults.ai_summary) {
+            markdownText += currentAnalysisResults.ai_summary;
         } else {
             markdownText += '상세 내용이 없습니다.';
         }
