@@ -216,7 +216,9 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         # Pydantic 객체를 Dict로 변환하고 추가 데이터 포함
         analysis_dict = result.model_dump()
         analysis_dict["speaker_stats_percent"] = state.get("speaker_stats_percent", {})
-        analysis_dict["transcript"] = state.get("transcript", {})
+        analysis_dict["transcript"] = {
+            "utterances": state.get("transcript", {}).get("utterances", [])
+        }
         
         state["analysis_result"] = analysis_dict
         state["status"] = "completed"
