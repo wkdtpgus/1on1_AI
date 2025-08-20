@@ -18,7 +18,7 @@ from src.utils.utils import save_questions_to_json
 load_dotenv()
 
 # FastAPI 서버의 v2 엔드포인트 URL
-url = "http://127.0.0.1:8000/generate_template"
+url = "http://127.0.0.1:8000/generate?generation_type=template"
 
 # 테스트할 사용자 ID
 USER_ID_TO_TEST = "user_001"
@@ -90,6 +90,7 @@ async def test_api_call():
     """API 테스트를 위한 비동기 함수"""
     async with httpx.AsyncClient() as client:
         try:
+            url = f"{base_url}?generation_type=template"
             response = await client.post(url, data=json.dumps(payload), headers=headers, timeout=300)
             
             if response.status_code == 200:
@@ -97,25 +98,15 @@ async def test_api_call():
                 response_data = response.json()
                 print(json.dumps(response_data, indent=2, ensure_ascii=False))
                 
-                generated_questions = response_data.get("generated_questions")
-                usage_guide_data = response_data.get("usage_guide")
-
-                assert generated_questions, "생성된 질문이 없습니다."
-                assert isinstance(generated_questions, dict), "질문이 딕셔너리 형태가 아닙니다."
-                
-                if payload["include_guide"]:
-                    assert usage_guide_data, "활용 가이드가 생성되지 않았습니다."
-                    assert isinstance(usage_guide_data, dict), "가이드가 딕셔너리 형태가 아닙니다."
-                    assert "usage_guide" in usage_guide_data, "가이드 데이터에 'usage_guide' 키가 없습니다."
-                    
-                    # 실제 가이드 텍스트 내용 검증
-                    usage_guide_text = usage_guide_data["usage_guide"]
-                    assert isinstance(usage_guide_text, str), "가이드 내용이 문자열이 아닙니다."
+                # 이제 API는 순수한 질문 딕셔너리를 반환합니다.
+                assert isinstance(response_data, dict), "응답이 딕셔너리 형태가 아닙니다."
+                assert all(isinstance(k, str) and k.isdigit() for k in response_data.keys()), "키가 숫자로 된 문자열이 아닙니다."
+                assert all(isinstance(v, str) for v in response_data.values()), "값이 문자열이 아닙니다."
 
                 # 파일 저장 로직은 필요시 유지
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_path = f"data/generated_templates/questions_{timestamp}.json"
-                save_questions_to_json(generated_questions, output_path)
+                save_questions_to_json(response_data, output_path)
                 print(f"\n--- 질문 저장 완료: {output_path} ---")
 
             else:

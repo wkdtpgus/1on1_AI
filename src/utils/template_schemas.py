@@ -25,6 +25,7 @@ class TemplateGeneratorInput(BaseModel):
     # 선택 필드
     use_previous_data: bool = Field(default=False, description="'반복' 선택 시 활성화. 이전 1on1 요약 데이터를 불러와 활용할지 여부.")
     previous_summary: Optional[str] = Field(default=None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보.")
+    generated_questions: Optional[Dict[str, str]] = Field(default=None, description="[가이드 생성용] 생성된 질문들 (key: 질문 번호, value: 질문 내용)")
 
     @field_validator('purpose')
     @classmethod
@@ -62,6 +63,18 @@ class TemplateGeneratorInput(BaseModel):
             raise ValueError(f"Invalid question_composition values: {invalid_values}. Allowed values are: {allowed_values}")
         
         return v
+
+class EmailGeneratorInput(BaseModel):
+    """
+    1on1 요약 이메일 생성을 위한 입력 데이터 모델
+    """
+    user_id: str
+    target_info: str
+    purpose: str
+    detailed_context: str
+    use_previous_data: bool
+    previous_summary: Optional[str] = None
+    language: str = "Korean"
 
 class EmailGeneratorOutput(BaseModel):
     """

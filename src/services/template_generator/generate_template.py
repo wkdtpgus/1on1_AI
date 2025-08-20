@@ -50,24 +50,10 @@ async def generate(input_data: TemplateGeneratorInput) -> dict:
         if not generated_questions:
             raise ValueError("Failed to generate questions.")
 
-        result = {"generated_questions": generated_questions}
-
-        # 2. 가이드 생성 옵션 확인 및 실행
-        if input_data.include_guide:
-            guide_input = UsageGuideInput(
-                user_id=input_data.user_id,
-                target_info=input_data.target_info,
-                purpose=input_data.purpose,
-                detailed_context=input_data.detailed_context,
-                generated_questions=generated_questions,
-                language=input_data.language,
-            )
-            usage_guide_object = await generate_usage_guide(guide_input)
-            # 객체 전체를 할당하여 프론트엔드에서 key-value로 받을 수 있도록 합니다.
-            result["usage_guide"] = usage_guide_object
-        
-        return result
+        # API 계약에 따라 순수한 질문 딕셔너리만 반환합니다.
+        # 가이드 생성은 'guide' generation_type으로 분리되어 처리됩니다.
+        return generated_questions
 
     except Exception as e:
-        logging.error(f"Error during generation: {e}")
+        logging.error(f"Error during template generation: {e}")
         raise

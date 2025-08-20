@@ -24,6 +24,6 @@ HUMAN_PROMPT = """
 
 ## OUTPUT FORMAT
 {{
-  "template_summary": "Generated summary about the 1-on-1 session. The summary should start with an appropriate greeting based on the language and must mention the target person's name.
+  "generated_email": "Generated summary about the 1-on-1 session. The summary should start with an appropriate greeting based on the language and must mention the target person's name.
 }}
 """

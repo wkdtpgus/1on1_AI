@@ -2,7 +2,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from src.utils.model import llm
 from src.prompts.template_generation.email_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from src.utils.template_schemas import EmailGeneratorOutput, TemplateGeneratorInput
+from src.utils.template_schemas import EmailGeneratorOutput, EmailGeneratorInput
 from src.utils.utils import get_user_data_by_id
 
 def get_email_generator_chain():
@@ -18,7 +18,7 @@ def get_email_generator_chain():
     chain = prompt | llm | parser
     return chain
 
-async def generate_email(input_data: TemplateGeneratorInput) -> dict:
+async def generate_email(input_data: EmailGeneratorInput) -> EmailGeneratorOutput:
     """
     입력 데이터를 기반으로 1on1 템플릿 요약을 비동기적으로 생성합니다.
     """
@@ -44,4 +44,4 @@ async def generate_email(input_data: TemplateGeneratorInput) -> dict:
     }
 
     response = await chain.ainvoke(prompt_variables)
-    return response
+    return EmailGeneratorOutput(**response)

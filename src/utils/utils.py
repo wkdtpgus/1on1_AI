@@ -32,3 +32,37 @@ def save_questions_to_json(questions_data: Dict[str, str], file_path: str) -> Di
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(questions_data, f, ensure_ascii=False, indent=4)
     return questions_data
+
+
+def save_guide_to_json(guide_data: Dict[str, Any], file_path: str) -> Dict[str, Any]:
+    """
+    생성된 활용 가이드를 JSON 파일에 저장합니다.
+
+    Args:
+        guide_data (Dict[str, Any]): 저장할 가이드 딕셔너리 (e.g., {"usage_guide": "..."})
+        file_path (str): 저장할 JSON 파일 경로
+    
+    Returns:
+        dict: 저장된 데이터 (입력과 동일)
+    """
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(guide_data, f, ensure_ascii=False, indent=4)
+    return guide_data
+
+
+def save_email_to_json(email_data: Dict[str, Any], file_path: str) -> Dict[str, Any]:
+    """
+    생성된 이메일을 JSON 파일에 저장합니다.
+
+    Args:
+        email_data (Dict[str, Any]): 저장할 이메일 딕셔너리 (e.g., {"generated_email": "..."})
+        file_path (str): 저장할 JSON 파일 경로
+    
+    Returns:
+        dict: 저장된 데이터 (입력과 동일)
+    """
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(email_data, f, ensure_ascii=False, indent=4)
+    return email_data
