@@ -22,6 +22,7 @@ Your task is to create a concise, actionable usage guide for a leader, structure
 - Maintain a supportive, professional tone.
 - Write the entire content, including the translated headers, in the language specified by `{language}`.
 - Provide your response ONLY in the specified JSON format.
+- Each section must be extremely concise, consisting of 2-3 sentences and not exceeding a maximum of 4 sentences, to ensure a brief output.
 
 First, silently analyze the intent of each question in the list.
 Then, generate the guide for the three categories below, focusing on coaching the leader to foster the participant's growth.
@@ -42,7 +43,7 @@ Then, generate the guide for the three categories below, focusing on coaching th
     - **Strictly follow this format:** First, state the strategic question flow, then provide one bridging phrase example and finishing skill.
     - **Example:** "Structure the flow from achievement (Q1) → challenges (Q2) → future growth (Q4-Q5). To bridge from challenges to growth, ask: 'Given those challenges, what skills (Q5) would be most helpful for you to develop?'"
     - Provide a specific, word-for-word example of a bridging phrase. This phrase should show how to transition from a sensitive topic (like challenges) to a constructive one, while explaining how this helps maintain a positive atmosphere and engagement.
-    - Provide a specific, word-for-word example of a finishing skill. 
+    - (Optional) Provide a specific, word-for-word example of a finishing skill. 
 """
 
 # Human prompt template for usage guide generation
