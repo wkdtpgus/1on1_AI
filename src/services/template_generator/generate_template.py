@@ -3,7 +3,7 @@ import logging
 from typing import AsyncIterable, AsyncGenerator
 from langchain_core.prompts import ChatPromptTemplate
 from src.utils.model import llm_streaming
-from src.prompts.template_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
+from src.prompts.template_generation.template_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id, process_streaming_response
 

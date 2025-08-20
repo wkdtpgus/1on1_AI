@@ -84,10 +84,8 @@ class UsageGuideInput(BaseModel):
 
 
 class UsageGuideOutput(BaseModel):
-    """활용 가이드 출력 스키마 - 3문장 구조"""
-    opening_strategy: str = Field(..., description="리더가 질문을 어떻게 활용할지, 1on1 흐름과 분위기 조성 방법")
-    needs_reflection: str = Field(..., description="어떤 니즈를 어떤 질문으로 반영했는지에 대한 안내")
-    flow_management: str = Field(..., description="전체 질문들의 흐름, 맥락, 정보 획득 전략")
+    """활용 가이드 출력 스키마 - 단일 필드"""
+    usage_guide: str = Field(..., description="이모지로 구분된 세 파트로 구성된 활용 가이드 텍스트")
 
 
 class GuideMetadata(BaseModel):

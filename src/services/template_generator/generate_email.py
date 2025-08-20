@@ -1,7 +1,7 @@
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from src.utils.model import llm
-from src.prompts.email_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
+from src.prompts.template_generation.email_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import EmailGeneratorOutput, TemplateGeneratorInput
 from src.utils.utils import get_user_data_by_id
 

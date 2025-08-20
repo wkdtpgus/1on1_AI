@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 import json
 from src.utils.model import llm_streaming
-from src.prompts.guide_generation.prompts import SYSTEM_PROMPT, HUMAN_PROMPT
+from src.prompts.template_generation.guide_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import UsageGuideInput
 from typing import AsyncGenerator
 

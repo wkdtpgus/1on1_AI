@@ -70,24 +70,23 @@ async def test_usage_guide_generation():
 
         guide_result = process_streaming_response(full_response_content)
 
-        if guide_result:
-            print("\n✅ 활용 가이드 생성 완료!")
-            print(f"📋 시작 전략: {guide_result.get('opening_strategy', 'N/A')}")
-            print(f"🎯 니즈 반영 및 코칭: {guide_result.get('needs_reflection', 'N/A')}")
-            print(f"🔄 흐름 관리: {guide_result.get('flow_management', 'N/A')}")
+        if guide_result and "usage_guide" in guide_result:
+            guide_text = guide_result["usage_guide"]
+            print("\n\n✅ 활용 가이드 생성 완료!")
+            print(guide_text)
             
-            assert guide_result is not None, "가이드 생성을 실패했습니다."
-            assert "opening_strategy" in guide_result, "결과에 'opening_strategy' 필드가 없습니다."
-            assert "needs_reflection" in guide_result, "결과에 'needs_reflection' 필드가 없습니다."
-            assert "flow_management" in guide_result, "결과에 'flow_management' 필드가 없습니다."
+            assert guide_text is not None, "가이드 텍스트가 비어있습니다."
+            assert "✅" in guide_text, "결과에 '시작 전략' 섹션(✅)이 없습니다."
+            assert "🎯" in guide_text, "결과에 '니즈 및 코칭' 섹션(🎯)이 없습니다."
+            assert "🔄" in guide_text, "결과에 '흐름 관리' 섹션(🔄)이 없습니다."
 
         else:
-            print("\n⚠️ 활용 가이드 생성에 실패했습니다.")
-            assert False, "활용 가이드 생성에 실패했습니다."
-
+            print("\n\n⚠️ 활용 가이드 생성에 실패했거나 형식이 올바르지 않습니다.")
+            assert False, "활용 가이드 생성에 실패했거나 형식이 올바르지 않습니다."
     except Exception as e:
-        print(f"\n❌ 활용 가이드 생성 중 오류 발생: {e}")
-        assert False, f"활용 가이드 생성 중 오류 발생: {e}"
+        print(f"\n\n🚨 테스트 중 예외 발생: {e}")
+        assert False, f"테스트 중 예외 발생: {e}"
+
 
 if __name__ == "__main__":
     import asyncio
