@@ -240,8 +240,21 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         }
         
         analysis_dict["speaker_stats_percent"] = mapped_stats
+        
+        # transcript의 utterances에서도 A, B를 실제 이름으로 변경
+        original_utterances = state.get("transcript", {}).get("utterances", [])
+        mapped_utterances = []
+        
+        for utterance in original_utterances:
+            mapped_utterance = utterance.copy()
+            if utterance.get("speaker") == "A":
+                mapped_utterance["speaker"] = speaker_mapping_list[0]
+            elif utterance.get("speaker") == "B":
+                mapped_utterance["speaker"] = speaker_mapping_list[1]
+            mapped_utterances.append(mapped_utterance)
+        
         analysis_dict["transcript"] = {
-            "utterances": state.get("transcript", {}).get("utterances", [])
+            "utterances": mapped_utterances
         }
         
         state["analysis_result"] = analysis_dict
