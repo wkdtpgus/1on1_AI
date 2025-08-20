@@ -2,9 +2,10 @@ import json
 import logging
 import time
 import assemblyai as aai
-from src.utils.model import SpeechTranscriber
+from src.utils.model import SpeechTranscriber, title_llm, meeting_llm
 from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
+from src.prompts.stt_generation.title_generation_prompts import TITLE_ONLY_SYSTEM_PROMPT, TITLE_ONLY_USER_PROMPT
 from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
 from src.config.config import SUPABASE_BUCKET_NAME, STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL, RECORDING_PATH_TEMPLATE
 from src.utils.utils import calculate_speaker_percentages, map_speaker_data
@@ -137,13 +138,6 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             state["status"] = "failed"
             return state
         
-        # analyzer에서 LLM 가져오기
-        analyzer = getattr(analyze_with_llm, '_analyzer', None)
-        if not analyzer:
-            logger.error("분석기가 초기화되지 않았습니다")
-            state["status"] = "failed"
-            return state
-        
         # 프롬프트 데이터 준비
         user_prompt_template = PromptTemplate(
             input_variables=["meeting_datetime", "transcript", "speaker_stats", "participants", "qa_pairs"],
@@ -176,8 +170,8 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
             "qa_pairs": qa_pairs
         }
         
-        # 체인 생성 및 실행
-        chain = prompt | analyzer.llm.with_structured_output(MeetingAnalysis)
+        # 체인 생성 및 실행 (Vertex AI Gemini 2.5 Pro 사용)
+        chain = prompt | meeting_llm.with_structured_output(MeetingAnalysis)
         
         # 토큰 추적을 위한 콜백 설정
         token_callback = SimpleTokenCallback(state)
@@ -223,16 +217,6 @@ def generate_title_only(state: MeetingPipelineState) -> MeetingPipelineState:
     try:
         state["status"] = "analyzing"
         
-        # analyzer에서 LLM 가져오기
-        analyzer = getattr(generate_title_only, '_analyzer', None)
-        if not analyzer:
-            logger.error("분석기가 초기화되지 않았습니다")
-            state["status"] = "failed"
-            return state
-        
-        # 제목 생성 프롬프트 import
-        from src.prompts.stt_generation.title_generation_prompts import TITLE_ONLY_SYSTEM_PROMPT, TITLE_ONLY_USER_PROMPT
-        
         # 제목 전용 프롬프트 준비
         title_user_prompt_template = PromptTemplate(
             input_variables=["participants", "qa_pairs"],
@@ -254,7 +238,7 @@ def generate_title_only(state: MeetingPipelineState) -> MeetingPipelineState:
         }
         
         # 제목 생성 체인 실행
-        title_chain = title_prompt | analyzer.llm
+        title_chain = title_prompt | title_llm
         
         # 토큰 추적을 위한 콜백 설정
         token_callback = SimpleTokenCallback(state)

@@ -68,6 +68,14 @@ GEMINI_TEMPERATURE = 0.7
 GEMINI_THINKING_BUDGET = 0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
 GEMINI_MAX_TOKENS = 10000  # 템플릿 생성용 토큰 제한
 
+# 제목 생성용 LLM 설정 (Gemini Flash)
+
+# Gemini 모델 설정 (제목 생성용)
+TITLE_GEMINI_MODEL = "gemini-2.5-flash"  # 제목 생성용 모델
+TITLE_GEMINI_TEMPERATURE = 0.7  # 제목 생성용 temperature
+TITLE_GEMINI_THINKING_BUDGET = 0  # 빠른 응답을 위해 0으로 설정
+TITLE_GEMINI_MAX_TOKENS = 1000  # 제목 생성용 토큰 제한 (적은 토큰으로 충분)
+
 # LangSmith 추적 설정 (선택적)
 
 LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "false").lower() == "true"

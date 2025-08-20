@@ -5,19 +5,19 @@ from typing import Optional
 from langchain_google_vertexai import ChatVertexAI
 
 from src.config.config import (
-    # Google Cloud / Vertex AI 설정
     GOOGLE_CLOUD_PROJECT,
     GOOGLE_CLOUD_LOCATION,
-    # Gemini 템플릿 생성용 설정
     GEMINI_MODEL,
     GEMINI_MAX_TOKENS,
     GEMINI_TEMPERATURE,
     GEMINI_THINKING_BUDGET,
-    # Vertex AI STT 분석용 설정
+    TITLE_GEMINI_MODEL,
+    TITLE_GEMINI_MAX_TOKENS,
+    TITLE_GEMINI_TEMPERATURE,
+    TITLE_GEMINI_THINKING_BUDGET,
     VERTEX_AI_MODEL,
     VERTEX_AI_TEMPERATURE,
     VERTEX_AI_MAX_TOKENS,
-    # AssemblyAI 설정
     ASSEMBLYAI_API_KEY,
     ASSEMBLYAI_LANGUAGE,
     ASSEMBLYAI_PUNCTUATE,
@@ -26,7 +26,6 @@ from src.config.config import (
     ASSEMBLYAI_SPEAKER_LABELS,
     ASSEMBLYAI_LANGUAGE_DETECTION,
     ASSEMBLYAI_SPEAKERS_EXPECTED,
-    # LangSmith 설정
     LANGSMITH_TRACING,
     LANGSMITH_PROJECT,
     LANGSMITH_API_KEY,
@@ -74,6 +73,25 @@ llm_streaming = ChatVertexAI(
     streaming=True,
 )
 
+# 제목 생성용 LLM (config에서 설정 가져오기)
+title_llm = ChatVertexAI(
+    project=GOOGLE_CLOUD_PROJECT,
+    location=GOOGLE_CLOUD_LOCATION,
+    model_name=TITLE_GEMINI_MODEL,
+    max_output_tokens=TITLE_GEMINI_MAX_TOKENS,
+    temperature=TITLE_GEMINI_TEMPERATURE,
+    thinking_budget=TITLE_GEMINI_THINKING_BUDGET,
+)
+
+# Vertex AI Gemini 분석 모델 (STT 분석용)
+meeting_llm = ChatVertexAI(
+    project=GOOGLE_CLOUD_PROJECT,
+    location=GOOGLE_CLOUD_LOCATION,
+    model_name=VERTEX_AI_MODEL,
+    temperature=VERTEX_AI_TEMPERATURE,
+    max_output_tokens=VERTEX_AI_MAX_TOKENS,
+)
+
 class SpeechTranscriber:
     """AssemblyAI 기반 음성 전사기"""
 
@@ -102,24 +120,3 @@ class SpeechTranscriber:
         
         logger.debug(f"STT 모델 초기화 완료")
 
-#
-# Vertex AI Gemini 분석 모델 (STT 분석용)
-class MeetingAnalyzer:    
-    """Google Vertex AI Gemini 모델을 사용한 회의 분석기"""
-    
-    def __init__(self, google_project: Optional[str] = None, google_location: Optional[str] = None):
-        self.google_project = google_project or GOOGLE_CLOUD_PROJECT
-        self.google_location = google_location or GOOGLE_CLOUD_LOCATION
-        
-        if not self.google_project:
-            raise ValueError("Google Cloud Project ID is required")
-        
-        # Vertex AI Gemini LLM 초기화
-        self.llm = ChatVertexAI(
-            project=self.google_project,
-            location=self.google_location,
-            model_name=VERTEX_AI_MODEL,
-            temperature=VERTEX_AI_TEMPERATURE,
-            max_output_tokens=VERTEX_AI_MAX_TOKENS,
-        )
-        logger.info(f"Vertex AI {VERTEX_AI_MODEL} 모델 초기화 완료")

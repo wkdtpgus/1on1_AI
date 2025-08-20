@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 from supabase import Client
 
-from src.utils.model import MeetingAnalyzer
+# MeetingAnalyzer 클래스 제거됨 - 전역 LLM 객체들을 직접 사용
 from src.utils.stt_schemas import MeetingPipelineState
 from src.utils.performance_logging import generate_performance_report
 from src.config.config import SUPABASE_BUCKET_NAME
@@ -19,9 +19,8 @@ logger = logging.getLogger("meeting_pipeline")
 
 class MeetingPipeline:
     
-    def __init__(self, supabase_client: Client, analyzer: MeetingAnalyzer):
+    def __init__(self, supabase_client: Client):
         self.supabase = supabase_client
-        self.analyzer = analyzer
         self.workflow = self._build_graph()
         logger.info("MeetingPipeline 초기화 완료")
     
@@ -30,8 +29,7 @@ class MeetingPipeline:
         
         # 노드 함수에 필요한 리소스 바인딩
         retrieve_from_supabase._supabase_client = self.supabase
-        analyze_with_llm._analyzer = self.analyzer
-        generate_title_only._analyzer = self.analyzer
+        # analyze_with_llm과 generate_title_only는 이제 전역 LLM 객체를 직접 사용
         
         # 노드 추가
         workflow.add_node("retrieve", retrieve_from_supabase)
