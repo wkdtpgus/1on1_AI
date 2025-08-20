@@ -1,14 +1,12 @@
 from langchain_core.prompts import ChatPromptTemplate
-import json
-from src.utils.model import llm_streaming
+from langchain_core.output_parsers import JsonOutputParser
+from src.utils.model import llm
 from src.prompts.template_generation.guide_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from src.utils.template_schemas import UsageGuideInput
-from typing import AsyncGenerator
+from src.utils.template_schemas import UsageGuideInput, UsageGuideOutput
 
 def get_usage_guide_chain():
     """
     1on1 템플릿 활용 가이드 생성을 위한 LangChain 체인을 생성합니다.
-    (스트리밍, 단일 체인)
     """
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -16,12 +14,12 @@ def get_usage_guide_chain():
             ("human", HUMAN_PROMPT),
         ]
     )
-    # JsonOutputParser를 사용하지 않고 순수한 텍스트 스트림을 받습니다.
-    return prompt | llm_streaming
+    # LLM의 JSON 응답을 딕셔너리로 파싱하도록 JsonOutputParser를 사용합니다.
+    return prompt | llm | JsonOutputParser()
 
-async def generate_usage_guide(guide_input: UsageGuideInput) -> AsyncGenerator[str, None]:
+async def generate_usage_guide(guide_input: UsageGuideInput) -> UsageGuideOutput:
     """
-    입력 데이터를 기반으로 활용 가이드를 스트리밍으로 생성합니다.
+    입력 데이터를 기반으로 활용 가이드를 생성합니다.
     """
     chain = get_usage_guide_chain()
     
@@ -36,10 +34,16 @@ async def generate_usage_guide(guide_input: UsageGuideInput) -> AsyncGenerator[s
     }
     
     try:
-        async for chunk in chain.astream(prompt_variables):
-            if chunk.content:
-                # SSE 형식으로 포장하여 스트리밍
-                yield f"data: {json.dumps(chunk.content, ensure_ascii=False)}\n\n"
+        # 체인이 반환하는 것은 이제 텍스트가 아닌 파싱된 딕셔너리입니다.
+        guide_data = await chain.ainvoke(prompt_variables)
+        
+        # 딕셔너리에서 실제 가이드 텍스트를 추출합니다.
+        # 만약 'usage_guide' 키가 없거나 파싱에 실패하면 빈 문자열을 사용합니다.
+        guide_text = guide_data.get("usage_guide", "") if isinstance(guide_data, dict) else str(guide_data)
+        
+        return UsageGuideOutput(usage_guide=guide_text)
     except Exception as e:
-        error_message = f"Error during usage guide generation: {e}"
-        yield f"data: {json.dumps({'error': error_message}, ensure_ascii=False)}\n\n"
+        # logging 추가
+        import logging
+        logging.error(f"Error during usage guide generation: {e}")
+        raise

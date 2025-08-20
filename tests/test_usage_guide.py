@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from src.utils.mock_db import MOCK_USER_DATA
 from src.utils.template_schemas import UsageGuideInput
 from src.services.template_generator.generate_usage_guide import generate_usage_guide
-from src.utils.utils import process_streaming_response
 
 # .env 파일 로드
 load_dotenv()
@@ -51,43 +50,22 @@ async def test_usage_guide_generation():
     )
 
     try:
-        print("활용 가이드 생성 중 (스트리밍)...")
+        print("활용 가이드 생성 중...")
         
-        guide_stream = generate_usage_guide(guide_input)
+        guide_text = await generate_usage_guide(guide_input)
         
-        full_response_content = ""
-        async for chunk in guide_stream:
-            if chunk.startswith('data: '):
-                content_str = chunk[len('data: '):].strip()
-                try:
-                    unquoted_content = json.loads(content_str)
-                    print(unquoted_content, end="", flush=True)
-                    full_response_content += unquoted_content
-                except json.JSONDecodeError:
-                    pass
+        print("\n\n✅ 활용 가이드 생성 완료!")
+        print(guide_text)
         
-        print("\n-------------------------------------")
+        assert guide_text, "가이드 텍스트가 비어있습니다."
+        assert "✅" in guide_text, "결과에 '시작 전략' 섹션(✅)이 없습니다."
+        assert "🎯" in guide_text, "결과에 '니즈 및 코칭' 섹션(🎯)이 없습니다."
+        assert "🔄" in guide_text, "결과에 '흐름 관리' 섹션(🔄)이 없습니다."
 
-        guide_result = process_streaming_response(full_response_content)
-
-        if guide_result and "usage_guide" in guide_result:
-            guide_text = guide_result["usage_guide"]
-            print("\n\n✅ 활용 가이드 생성 완료!")
-            print(guide_text)
-            
-            assert guide_text is not None, "가이드 텍스트가 비어있습니다."
-            assert "✅" in guide_text, "결과에 '시작 전략' 섹션(✅)이 없습니다."
-            assert "🎯" in guide_text, "결과에 '니즈 및 코칭' 섹션(🎯)이 없습니다."
-            assert "🔄" in guide_text, "결과에 '흐름 관리' 섹션(🔄)이 없습니다."
-
-        else:
-            print("\n\n⚠️ 활용 가이드 생성에 실패했거나 형식이 올바르지 않습니다.")
-            assert False, "활용 가이드 생성에 실패했거나 형식이 올바르지 않습니다."
     except Exception as e:
         print(f"\n\n🚨 테스트 중 예외 발생: {e}")
         assert False, f"테스트 중 예외 발생: {e}"
 
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(test_usage_guide_generation())
