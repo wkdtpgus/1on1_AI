@@ -36,6 +36,10 @@ AUDIO_FORMAT = "float32"  # 오디오 포맷
 TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
 
+# STT 처리 타이밍 설정
+STT_MAX_WAIT_TIME = 900  # STT 최대 대기 시간 (초)
+STT_CHECK_INTERVAL = 10  # STT 상태 확인 간격 (초)
+
 # LLM 공통 설정
 
 # LLM 프로바이더 설정
@@ -71,10 +75,10 @@ LANGSMITH_ENDPOINT = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchai
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "oblit-1on1_ai_ui")
 
-# =============================================================================
-# Supabase 설정 (오디오 파일 스토리지)
-# =============================================================================
-
+# Supabase 설정 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SUPABASE_BUCKET_NAME = os.getenv("SUPABASE_BUCKET_NAME", "audio-recordings")
+
+# Supabase 파일 경로 템플릿
+RECORDING_PATH_TEMPLATE = "recordings/{file_id}"  

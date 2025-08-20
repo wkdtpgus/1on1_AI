@@ -6,7 +6,7 @@ from src.utils.model import SpeechTranscriber
 from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
-from src.config.config import SUPABASE_BUCKET_NAME
+from src.config.config import SUPABASE_BUCKET_NAME, STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL, RECORDING_PATH_TEMPLATE
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -32,7 +32,7 @@ def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
         file_id = state["file_id"]
         
         # 파일 경로 
-        file_path = f"recordings/{file_id}"
+        file_path = RECORDING_PATH_TEMPLATE.format(file_id=file_id)
         file_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
         
         # state 업데이트
@@ -72,8 +72,8 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         
         # 전사 상태 확인 및 대기
         elapsed_time = 0
-        max_wait_time = 900
-        check_interval = 10
+        max_wait_time = STT_MAX_WAIT_TIME
+        check_interval = STT_CHECK_INTERVAL
         
         while transcript.status in [aai.TranscriptStatus.processing, aai.TranscriptStatus.queued]:
             if elapsed_time >= max_wait_time:
