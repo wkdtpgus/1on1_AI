@@ -138,3 +138,56 @@ def calculate_speaker_percentages(utterances) -> Dict[str, float]:
                 speaker_stats_percent[speaker_name] = 0.0
     
     return speaker_stats_percent
+
+
+def map_speaker_data(analysis_dict: Dict[str, Any], original_stats: Dict[str, float], 
+                    original_utterances: List[Dict], participants_info: Dict[str, str]) -> Dict[str, Any]:
+    """
+    화자 매핑을 사용해 A, B를 실제 이름으로 변환하고 통계를 매핑합니다.
+    
+    Args:
+        analysis_dict: LLM 분석 결과 딕셔너리
+        original_stats: 원본 화자별 통계 (A, B 키 사용)
+        original_utterances: 원본 발화 목록 (A, B 화자명 사용)
+        participants_info: 참가자 정보 (leader, member 키 포함)
+        
+    Returns:
+        Dict[str, Any]: 매핑된 분석 결과 딕셔너리
+    """
+    # speaker_mapping을 사용해 speaker_stats_percent를 실제 이름으로 변환
+    speaker_mapping_list = analysis_dict.pop("speaker_mapping", ["리더", "팀원"])
+    
+    # speaker_mapping_list와 participants를 비교해서 누가 리더인지 판단
+    leader_name = participants_info.get("leader", "리더")
+    
+    # A와 B 중 누가 리더인지 확인
+    if speaker_mapping_list[0] == leader_name:
+        # A가 리더인 경우
+        leader_ratio = original_stats.get("A", 0)
+        member_ratio = original_stats.get("B", 0)
+    else:
+        # B가 리더인 경우 (또는 기본값)
+        leader_ratio = original_stats.get("B", 0)
+        member_ratio = original_stats.get("A", 0)
+    
+    mapped_stats = {
+        "speaking_ratio_leader": leader_ratio,
+        "speaking_ratio_member": member_ratio
+    }
+    
+    analysis_dict["speaker_stats_percent"] = mapped_stats
+    
+    # transcript의 utterances에서도 A, B를 실제 이름으로 변경
+    mapped_utterances = []
+    
+    for utterance in original_utterances:
+        mapped_utterance = utterance.copy()
+        if utterance.get("speaker") == "A":
+            mapped_utterance["speaker"] = speaker_mapping_list[0]
+        elif utterance.get("speaker") == "B":
+            mapped_utterance["speaker"] = speaker_mapping_list[1]
+        mapped_utterances.append(mapped_utterance)
+    
+    analysis_dict["transcript"] = mapped_utterances
+    
+    return analysis_dict

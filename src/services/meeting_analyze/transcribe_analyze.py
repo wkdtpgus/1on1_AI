@@ -7,7 +7,7 @@ from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
 from src.config.config import SUPABASE_BUCKET_NAME, STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL, RECORDING_PATH_TEMPLATE
-from src.utils.utils import calculate_speaker_percentages
+from src.utils.utils import calculate_speaker_percentages, map_speaker_data
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -115,11 +115,6 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
         
         logger.info("✅ STT 처리 완료")
         
-    except TimeoutError as e:
-        error_msg = str(e)
-        logger.error(error_msg)
-        state["errors"].append(error_msg)
-        state["status"] = "failed"
     except Exception as e:
         error_msg = f"STT 처리 실패: {str(e)}"
         logger.error(error_msg)
@@ -200,44 +195,11 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         # Pydantic 객체를 Dict로 변환하고 추가 데이터 포함
         analysis_dict = result.model_dump()
         
-        # speaker_mapping을 사용해 speaker_stats_percent를 실제 이름으로 변환
+        # 화자 매핑 및 통계 변환
         original_stats = state.get("speaker_stats_percent", {})
-        speaker_mapping_list = analysis_dict.pop("speaker_mapping", ["리더", "팀원"])
-        
-        # speaker_mapping_list와 participants를 비교해서 누가 리더인지 판단
-        leader_name = participants_info.get("leader", "리더")
-        member_name = participants_info.get("member", "팀원")
-        
-        # A와 B 중 누가 리더인지 확인
-        if speaker_mapping_list[0] == leader_name:
-            # A가 리더인 경우
-            leader_ratio = original_stats.get("A", 0)
-            member_ratio = original_stats.get("B", 0)
-        else:
-            # B가 리더인 경우 (또는 기본값)
-            leader_ratio = original_stats.get("B", 0)
-            member_ratio = original_stats.get("A", 0)
-        
-        mapped_stats = {
-            "speaking_ratio_leader": leader_ratio,
-            "speaking_ratio_member": member_ratio
-        }
-        
-        analysis_dict["speaker_stats_percent"] = mapped_stats
-        
-        # transcript의 utterances에서도 A, B를 실제 이름으로 변경
         original_utterances = state.get("transcript", {}).get("utterances", [])
-        mapped_utterances = []
         
-        for utterance in original_utterances:
-            mapped_utterance = utterance.copy()
-            if utterance.get("speaker") == "A":
-                mapped_utterance["speaker"] = speaker_mapping_list[0]
-            elif utterance.get("speaker") == "B":
-                mapped_utterance["speaker"] = speaker_mapping_list[1]
-            mapped_utterances.append(mapped_utterance)
-        
-        analysis_dict["transcript"] = mapped_utterances
+        analysis_dict = map_speaker_data(analysis_dict, original_stats, original_utterances, participants_info)
         
         state["analysis_result"] = analysis_dict
         state["status"] = "completed"
