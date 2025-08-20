@@ -18,6 +18,7 @@ class QAItem(BaseModel):
 class MeetingAnalysis(BaseModel):
     """1-on-1 회의 분석 결과"""
     title: str = Field(description="회의를 한 줄로 요약한 제목 (예: '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')")
+    speaker_mapping: List[str] = Field(description="화자 매핑 정보 - ['A의 실제이름', 'B의 실제이름'] 순서")
     leader_action_items: List[str] = Field(description="리더(매니저)가 수행할 액션 아이템 리스트")
     member_action_items: List[str] = Field(description="멤버(팀원)가 수행할 액션 아이템 리스트")
     detailed_discussion: str = Field(description="계층적 구조를 따르는 상세한 회의 내용 (마크다운 형식)")

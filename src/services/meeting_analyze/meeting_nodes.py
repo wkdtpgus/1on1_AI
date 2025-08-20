@@ -215,7 +215,31 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         
         # Pydantic 객체를 Dict로 변환하고 추가 데이터 포함
         analysis_dict = result.model_dump()
-        analysis_dict["speaker_stats_percent"] = state.get("speaker_stats_percent", {})
+        
+        # speaker_mapping을 사용해 speaker_stats_percent를 실제 이름으로 변환
+        original_stats = state.get("speaker_stats_percent", {})
+        speaker_mapping_list = analysis_dict.pop("speaker_mapping", ["리더", "팀원"])
+        
+        # speaker_mapping_list와 participants를 비교해서 누가 리더인지 판단
+        leader_name = participants_info.get("leader", "리더")
+        member_name = participants_info.get("member", "팀원")
+        
+        # A와 B 중 누가 리더인지 확인
+        if speaker_mapping_list[0] == leader_name:
+            # A가 리더인 경우
+            leader_ratio = original_stats.get("A", 0)
+            member_ratio = original_stats.get("B", 0)
+        else:
+            # B가 리더인 경우 (또는 기본값)
+            leader_ratio = original_stats.get("B", 0)
+            member_ratio = original_stats.get("A", 0)
+        
+        mapped_stats = {
+            "speaking_ratio_leader": leader_ratio,
+            "speaking_ratio_member": member_ratio
+        }
+        
+        analysis_dict["speaker_stats_percent"] = mapped_stats
         analysis_dict["transcript"] = {
             "utterances": state.get("transcript", {}).get("utterances", [])
         }

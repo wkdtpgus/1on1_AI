@@ -38,6 +38,32 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
   - Reflect on meeting effectiveness
   - Confirm action items for next meeting
 
+# CRITICAL: Speaker Identification Requirements
+
+## MANDATORY: Speaker Mapping Task
+
+**YOU MUST identify who is speaker A and who is speaker B in the transcript.**
+
+1. **Participants information format**: {{"leader": "actual_leader_name", "member": "actual_member_name"}}
+
+2. **Your task**: Analyze the conversation to determine:
+   - Which speaker (A or B) is the leader
+   - Which speaker (A or B) is the member
+
+3. **How to identify the leader**:
+   - Leader behaviors: Asks questions, gives feedback, guides discussion, sets agenda
+   - Member behaviors: Reports status, answers questions, receives feedback, seeks guidance
+
+4. **REQUIRED OUTPUT for speaker_mapping field**:
+   - Return a list with exactly 2 names: ["A의 실제이름", "B의 실제이름"]
+   - If A is leader: ["leader_name_from_participants", "member_name_from_participants"]
+   - If B is leader: ["member_name_from_participants", "leader_name_from_participants"]
+
+5. **If participants is empty or missing**: 
+   - Use ["리더", "팀원"] or ["팀원", "리더"] based on your analysis
+
+**IMPORTANT: speaker_mapping field CANNOT be empty. You MUST provide the mapping.**
+
 # Output Structure Requirements
 
 ## Title (for JSON title field):
@@ -131,7 +157,8 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 # Q&A Pairs:
 {qa_pairs}
 
-# Important:
+# CRITICAL INSTRUCTIONS:
+• **MANDATORY: Speaker Mapping**: You MUST analyze the transcript to identify which speaker (A or B) is the leader and map them to actual names from participants data. The speaker_mapping field CANNOT be empty.
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
@@ -149,6 +176,8 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 # Required JSON Output Format:
 {{
   "title": "One-line summary of the entire meeting (in Korean, e.g., '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')",
+  
+  "speaker_mapping": ["A의 실제이름", "B의 실제이름"],
   
   "leader_action_items": ["Action items for the leader extracted from the transcript", "Another leader action item if discussed"],
   
