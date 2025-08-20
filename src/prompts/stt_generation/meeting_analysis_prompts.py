@@ -69,7 +69,7 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 ## Title (for JSON title field):
 One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검")
 
-## Detailed Discussion Structure (for JSON detailed_discussion field):
+## AI Summary Structure (for JSON ai_summary field):
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
 ### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)
 
@@ -162,7 +162,7 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
-• **Meeting Date & Time**: Use the provided meeting_datetime in the detailed_discussion header format "### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)" - convert ISO format to Korean date format if provided
+• **Meeting Date & Time**: Use the provided meeting_datetime in the ai_summary header format "### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)" - convert ISO format to Korean date format if provided
 • **Speaker Statistics Analysis**: Use the speaker_stats data to evaluate conversation balance. The ideal 1-on-1 should have the employee speaking 70% and manager 30%. Include this in your feedback if there's significant imbalance
 • **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
@@ -170,7 +170,7 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
 • For leader_feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
 • Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing leader_feedback and positive_aspects
-• Follow the "Detailed Discussion Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
+• Follow the "AI Summary Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
 
 
 # Required JSON Output Format:
@@ -183,7 +183,7 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   
   "member_action_items": ["Action items for the member/employee extracted from the transcript", "Another member action item if discussed"],
   
-  "detailed_discussion": "Detailed Discussion Summary following the hierarchical structure specified in system prompt (in Korean)",
+  "ai_summary": "AI Summary following the hierarchical structure specified in system prompt (in Korean)",
   
   "leader_feedback": [
     {{
@@ -207,3 +207,4 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   ]
 }}
 """
+

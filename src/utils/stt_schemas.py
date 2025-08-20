@@ -21,7 +21,7 @@ class MeetingAnalysis(BaseModel):
     speaker_mapping: List[str] = Field(description="화자 매핑 정보 - ['A의 실제이름', 'B의 실제이름'] 순서")
     leader_action_items: List[str] = Field(description="리더(매니저)가 수행할 액션 아이템 리스트")
     member_action_items: List[str] = Field(description="멤버(팀원)가 수행할 액션 아이템 리스트")
-    detailed_discussion: str = Field(description="계층적 구조를 따르는 상세한 회의 내용 (마크다운 형식)")
+    ai_summary: str = Field(description="계층적 구조를 따르는 상세한 회의 내용 (마크다운 형식)")
     leader_feedback: List[FeedbackItem] = Field(description="매니저 개선 피드백 리스트")
     positive_aspects: List[str] = Field(description="매니저가 잘 수행한 측면들")
     qa_summary: List[QAItem] = Field(description="질문별 답변 리스트 - 모든 질문에 대해 완전한 답변 필수")
