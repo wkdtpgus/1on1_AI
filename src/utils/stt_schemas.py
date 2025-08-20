@@ -39,11 +39,12 @@ class MeetingAnalysis(BaseModel):
 class MeetingPipelineState(TypedDict):
     """LangGraph 파이프라인 상태 스키마"""
     # 입력 데이터
-    file_id: str
+    file_id: Optional[str]
     bucket_name: str
     qa_pairs: Optional[List[Dict]]
     participants_info: Optional[Dict]
     meeting_datetime: Optional[str]  # "2024-12-08T14:30:00" 형식
+    only_title: Optional[bool]  # 제목만 생성할지 여부
     
     # Supabase 조회 결과
     file_url: Optional[str]

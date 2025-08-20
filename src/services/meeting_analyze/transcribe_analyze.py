@@ -291,3 +291,70 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         state["status"] = "failed"
     
     return state
+
+
+@time_node_execution("generate_title")
+def generate_title_only(state: MeetingPipelineState) -> MeetingPipelineState:
+    """제목만 생성하는 노드"""
+    logger.info("제목 전용 생성 시작")
+    
+    try:
+        state["status"] = "analyzing"
+        
+        # analyzer에서 LLM 가져오기
+        analyzer = getattr(generate_title_only, '_analyzer', None)
+        if not analyzer:
+            logger.error("분석기가 초기화되지 않았습니다")
+            state["status"] = "failed"
+            return state
+        
+        # 제목 생성 프롬프트 import
+        from src.prompts.stt_generation.title_generation_prompts import TITLE_ONLY_SYSTEM_PROMPT, TITLE_ONLY_USER_PROMPT
+        
+        # 제목 전용 프롬프트 준비
+        title_user_prompt_template = PromptTemplate(
+            input_variables=["participants", "qa_pairs"],
+            template=TITLE_ONLY_USER_PROMPT
+        )
+        
+        title_prompt = ChatPromptTemplate.from_messages([
+            ("system", TITLE_ONLY_SYSTEM_PROMPT),
+            ("human", title_user_prompt_template.template)
+        ])
+        
+        # 입력 데이터 준비 (제목 생성용)
+        qa_pairs = json.loads(state.get("qa_pairs")) if state.get("qa_pairs") else []
+        participants_info = json.loads(state.get("participants_info")) if state.get("participants_info") else {}
+        
+        title_input_data = {
+            "participants": participants_info,
+            "qa_pairs": qa_pairs
+        }
+        
+        # 제목 생성 체인 실행
+        title_chain = title_prompt | analyzer.llm
+        
+        # 토큰 추적을 위한 콜백 설정
+        token_callback = SimpleTokenCallback(state)
+        
+        # 제목만 생성
+        title_result = title_chain.invoke(title_input_data, config={"callbacks": [token_callback]})
+        
+        if title_result is None:
+            logger.error("제목 생성 실패")
+            state["status"] = "failed"
+            return state
+        
+        # 제목만 반환
+        state["analysis_result"] = {"title": title_result.content.strip()}
+        state["status"] = "completed"
+        
+        logger.info("✅ 제목 생성 완료")
+        
+    except Exception as e:
+        error_msg = f"제목 생성 실패: {str(e)}"
+        logger.error(error_msg)
+        state["errors"].append(error_msg)
+        state["status"] = "failed"
+    
+    return state

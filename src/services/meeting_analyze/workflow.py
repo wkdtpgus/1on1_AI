@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 from supabase import Client
 
@@ -10,7 +10,8 @@ from src.config.config import SUPABASE_BUCKET_NAME
 from .transcribe_analyze import (
     retrieve_from_supabase, 
     process_with_assemblyai, 
-    analyze_with_llm
+    analyze_with_llm,
+    generate_title_only
 )
 
 logger = logging.getLogger("meeting_pipeline")
@@ -30,21 +31,24 @@ class MeetingPipeline:
         # 노드 함수에 필요한 리소스 바인딩
         retrieve_from_supabase._supabase_client = self.supabase
         analyze_with_llm._analyzer = self.analyzer
+        generate_title_only._analyzer = self.analyzer
         
         # 노드 추가
         workflow.add_node("retrieve", retrieve_from_supabase)
         workflow.add_node("transcribe", process_with_assemblyai)
         workflow.add_node("analyze", analyze_with_llm)
+        workflow.add_node("generate_title", generate_title_only)
         
-        # 엣지 연결 (파이프라인 흐름 정의)
-        workflow.set_entry_point("retrieve")
+        # 엣지 연결 (조건부 파이프라인 흐름 정의)
+        workflow.set_conditional_entry_point(lambda state: "generate_title" if state.get("only_title", False) else "retrieve")
         workflow.add_edge("retrieve", "transcribe")
         workflow.add_edge("transcribe", "analyze")
         workflow.add_edge("analyze", END)
+        workflow.add_edge("generate_title", END)
         
         return workflow.compile()
     
-    async def run(self, file_id: str, **kwargs) -> Dict:
+    async def run(self, file_id: Optional[str] = None, **kwargs) -> Dict:
         logger.info(f"파이프라인 실행 시작: {file_id}")
         
         # 초기 상태 설정
@@ -56,6 +60,7 @@ class MeetingPipeline:
             "qa_pairs": kwargs.get("qa_pairs"),
             "participants_info": kwargs.get("participants_info"),
             "meeting_datetime": kwargs.get("meeting_datetime"),
+            "only_title": kwargs.get("only_title", False),
             "file_url": None,
             "file_path": None,
             "transcript": None,
