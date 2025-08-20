@@ -663,6 +663,39 @@ function displayActualResults(results) {
         actionsElement.innerHTML = actionsHTML || '액션 아이템이 없습니다.';
     }
     
+    // 핵심 리뷰 업데이트
+    if (results.ai_core_summary) {
+        const coreSummaryElement = document.getElementById('coreSummary');
+        if (coreSummaryElement) {
+            let coreSummaryHTML = '';
+            
+            if (results.ai_core_summary.core_content) {
+                coreSummaryHTML += '<div class="core-summary-section" style="margin-bottom: 16px;">';
+                coreSummaryHTML += '<h4 style="color: #059669; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>💡</span>주요내용</h4>';
+                coreSummaryHTML += `<div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">${results.ai_core_summary.core_content}</div>`;
+                coreSummaryHTML += '</div>';
+            }
+            
+            if (results.ai_core_summary.decisions_made) {
+                coreSummaryHTML += '<div class="core-summary-section" style="margin-bottom: 16px;">';
+                coreSummaryHTML += '<h4 style="color: #7c3aed; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>✅</span>결정사항</h4>';
+                coreSummaryHTML += `<div style="background: #faf5ff; padding: 12px; border-radius: 8px; border-left: 4px solid #8b5cf6;">${results.ai_core_summary.decisions_made}</div>`;
+                coreSummaryHTML += '</div>';
+            }
+            
+            if (results.ai_core_summary.support_needs_blockers) {
+                coreSummaryHTML += '<div class="core-summary-section" style="margin-bottom: 16px;">';
+                coreSummaryHTML += '<h4 style="color: #ea580c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>🚧</span>문제 및 도움 필요사항</h4>';
+                coreSummaryHTML += `<div style="background: #fff7ed; padding: 12px; border-radius: 8px; border-left: 4px solid #f97316;">${results.ai_core_summary.support_needs_blockers}</div>`;
+                coreSummaryHTML += '</div>';
+            }
+            
+            coreSummaryElement.innerHTML = coreSummaryHTML || '핵심 리뷰 내용이 없습니다.';
+        } else {
+            console.log('❌ coreSummary 요소를 찾을 수 없습니다');
+        }
+    }
+    
     // 세부 상세 요약 업데이트
     if (results.ai_summary) {
         const detailedElement = document.getElementById('detailedDiscussion');
@@ -961,6 +994,12 @@ function displayPlanningResults(results) {
         quickReviewSection.style.display = 'none';
     }
     
+    // 핵심 리뷰도 숨기기 (기획회의용)
+    const coreSummarySection = document.querySelector('.bg-green-50.border-l-4.border-green-500');
+    if (coreSummarySection) {
+        coreSummarySection.style.display = 'none';
+    }
+    
     // 세부 상세 요약 업데이트
     if (results.ai_summary) {
         const detailedElement = document.getElementById('detailedDiscussion');
@@ -1052,6 +1091,12 @@ function displayWeeklyResults(results) {
     const quickReviewSection = document.querySelector('.bg-blue-50.border-l-4.border-blue-500');
     if (quickReviewSection) {
         quickReviewSection.style.display = 'none';
+    }
+    
+    // 핵심 리뷰도 숨기기 (주간회의용)
+    const coreSummarySection = document.querySelector('.bg-green-50.border-l-4.border-green-500');
+    if (coreSummarySection) {
+        coreSummarySection.style.display = 'none';
     }
     
     // Detailed Discussion
