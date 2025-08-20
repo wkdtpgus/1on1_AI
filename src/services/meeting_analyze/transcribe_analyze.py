@@ -7,6 +7,7 @@ from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
 from src.config.config import SUPABASE_BUCKET_NAME, STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL, RECORDING_PATH_TEMPLATE
+from src.utils.utils import calculate_speaker_percentages
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -103,48 +104,7 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
             ]
         
         # 화자별 발화 시간 비율 계산
-        speaker_stats_percent = {}
-        if transcript.utterances:
-            speaker_stats = {}
-            total_duration_ms = 0
-            
-            # 화자별 발화 시간 계산
-            for utterance in transcript.utterances:
-                speaker = utterance.speaker or 'Unknown'
-                if speaker not in speaker_stats:
-                    speaker_stats[speaker] = {'duration': 0}
-                duration_ms = (utterance.end or 0) - (utterance.start or 0)
-                speaker_stats[speaker]['duration'] += duration_ms
-                total_duration_ms += duration_ms
-            
-            # (합이 100이 되도록 보장)
-            if total_duration_ms > 0:
-                speakers = list(speaker_stats.keys())
-                percentages = []
-                
-                # 먼저 모든 비율을 계산
-                for speaker_name, stats in speaker_stats.items():
-                    duration_ms = stats.get('duration', 0)
-                    percentage = (duration_ms / total_duration_ms) * 100
-                    percentages.append(percentage)
-                
-                # 반올림하되 합이 100이 되도록 조정
-                rounded_percentages = [round(p, 1) for p in percentages]
-                current_sum = sum(rounded_percentages)
-                
-                # 합이 100이 아니면 가장 큰 값을 조정
-                if current_sum != 100.0:
-                    diff = round(100.0 - current_sum, 1)
-                    max_index = percentages.index(max(percentages))
-                    rounded_percentages[max_index] = round(rounded_percentages[max_index] + diff, 1)
-                
-                # 결과 저장
-                for i, speaker_name in enumerate(speakers):
-                    speaker_stats_percent[speaker_name] = rounded_percentages[i]
-            else:
-                # total_duration_ms가 0이면 모든 화자에게 0 할당
-                for speaker_name in speaker_stats.keys():
-                    speaker_stats_percent[speaker_name] = 0.0
+        speaker_stats_percent = calculate_speaker_percentages(transcript.utterances)
         
         # state 업데이트
         state["transcript"] = {
