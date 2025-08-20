@@ -277,9 +277,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
                 mapped_utterance["speaker"] = speaker_mapping_list[1]
             mapped_utterances.append(mapped_utterance)
         
-        analysis_dict["transcript"] = {
-            "utterances": mapped_utterances
-        }
+        analysis_dict["transcript"] = mapped_utterances
         
         state["analysis_result"] = analysis_dict
         state["status"] = "completed"

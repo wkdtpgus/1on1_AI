@@ -66,13 +66,14 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
 **Core content**
 • core content of the meeting
 
-**Decisions Made**
-• Joint decisions from the meeting
-• Example: Agreed on Option B for Project A
+**Decisions Made** (List format)
+• Each decision as a separate list item
+• Example: "AI 프로젝트 일정 2주 연장 결정", "신규 팀원 1명 충원 합의"
 
-**Support Needs & Blockers**
-• [Support Request] Description → Action plan
-• [Blocker] Description → Resolution approach
+**Support Needs & Blockers** (List format)
+• Each support request or blocker as a separate list item
+• Format: "[Support Request] 개발 리소스 추가 요청 → HR팀과 협의 예정"
+• Format: "[Blocker] 외부 API 연동 지연 → 대안 솔루션 검토 중"
 
 ## AI Summary Structure (for JSON ai_summary field):
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
@@ -194,8 +195,8 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   
   "ai_core_summary": {{
     "core_content": "core content of the meeting",
-    "decisions_made": "Joint decisions from the meeting",
-    "support_needs_blockers": "Support requests and blockers with action plans"
+    "decisions_made": ["결정사항1", "결정사항2"],
+    "support_needs_blockers": ["[Support Request] 지원요청 → 해결방안", "[Blocker] 블로커 → 해결방안"]
   }},
   
   "leader_feedback": [

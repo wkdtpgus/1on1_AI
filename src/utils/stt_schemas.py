@@ -20,8 +20,8 @@ class QAItem(BaseModel):
 class AiCoreSummary(BaseModel):
     """핵심 요약 정보"""
     core_content: str = Field(description="회의의 핵심 내용")
-    decisions_made: str = Field(description="회의에서 내려진 공동 결정사항")
-    support_needs_blockers: str = Field(description="지원 요청 및 블로커와 해결 방안")
+    decisions_made: List[str] = Field(description="회의에서 내려진 공동 결정사항들")
+    support_needs_blockers: List[str] = Field(description="지원 요청 및 블로커와 해결 방안들")
 
 class MeetingAnalysis(BaseModel):
     """1-on-1 회의 분석 결과"""

@@ -676,18 +676,20 @@ function displayActualResults(results) {
                 coreSummaryHTML += '</div>';
             }
             
-            if (results.ai_core_summary.decisions_made) {
+            if (results.ai_core_summary.decisions_made && results.ai_core_summary.decisions_made.length > 0) {
                 coreSummaryHTML += '<div class="core-summary-section" style="margin-bottom: 16px;">';
-                coreSummaryHTML += '<h4 style="color: #7c3aed; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>✅</span>결정사항</h4>';
-                coreSummaryHTML += `<div style="background: #faf5ff; padding: 12px; border-radius: 8px; border-left: 4px solid #8b5cf6;">${results.ai_core_summary.decisions_made}</div>`;
-                coreSummaryHTML += '</div>';
+                coreSummaryHTML += '<h4 style="color: #7c3aed; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>🤝</span>공동결정사항</h4>';
+                coreSummaryHTML += '<div style="background: #faf5ff; padding: 12px; border-radius: 8px; border-left: 4px solid #8b5cf6;">';
+                coreSummaryHTML += '<ul style="margin: 0; padding-left: 20px;">' + results.ai_core_summary.decisions_made.map(decision => `<li style="margin-bottom: 4px;">${decision}</li>`).join('') + '</ul>';
+                coreSummaryHTML += '</div></div>';
             }
             
-            if (results.ai_core_summary.support_needs_blockers) {
+            if (results.ai_core_summary.support_needs_blockers && results.ai_core_summary.support_needs_blockers.length > 0) {
                 coreSummaryHTML += '<div class="core-summary-section" style="margin-bottom: 16px;">';
-                coreSummaryHTML += '<h4 style="color: #ea580c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>🚧</span>문제 및 도움 필요사항</h4>';
-                coreSummaryHTML += `<div style="background: #fff7ed; padding: 12px; border-radius: 8px; border-left: 4px solid #f97316;">${results.ai_core_summary.support_needs_blockers}</div>`;
-                coreSummaryHTML += '</div>';
+                coreSummaryHTML += '<h4 style="color: #ea580c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span>🆘</span>지원요청 및 블로커</h4>';
+                coreSummaryHTML += '<div style="background: #fff7ed; padding: 12px; border-radius: 8px; border-left: 4px solid #f97316;">';
+                coreSummaryHTML += '<ul style="margin: 0; padding-left: 20px;">' + results.ai_core_summary.support_needs_blockers.map(item => `<li style="margin-bottom: 4px;">${item}</li>`).join('') + '</ul>';
+                coreSummaryHTML += '</div></div>';
             }
             
             coreSummaryElement.innerHTML = coreSummaryHTML || '핵심 리뷰 내용이 없습니다.';
