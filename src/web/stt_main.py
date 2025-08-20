@@ -7,7 +7,8 @@ from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from supabase import create_client, Client
-
+from src.utils.model import MeetingAnalyzer
+from src.services.meeting_analyze.meeting_pipeline import MeetingPipeline
 from src.config.config import (
     ASSEMBLYAI_API_KEY,
     GOOGLE_CLOUD_PROJECT, 
@@ -39,8 +40,7 @@ async def lifespan(app: FastAPI):
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     aai.settings.api_key = ASSEMBLYAI_API_KEY
     
-    from src.utils.model import MeetingAnalyzer
-    from src.services.meeting_analyze.meeting_pipeline import MeetingPipeline
+
     
     meeting_analyzer = MeetingAnalyzer(GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION)
     meeting_pipeline = MeetingPipeline(supabase, meeting_analyzer)
