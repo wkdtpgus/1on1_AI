@@ -10,8 +10,6 @@ from supabase import create_client, Client
 from src.services.meeting_analyze.workflow import MeetingPipeline
 from src.config.config import (
     ASSEMBLYAI_API_KEY,
-    GOOGLE_CLOUD_PROJECT, 
-    GOOGLE_CLOUD_LOCATION,
     GOOGLE_APPLICATION_CREDENTIALS_JSON,
     SUPABASE_URL,
     SUPABASE_KEY,
@@ -21,7 +19,6 @@ from src.config.config import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("stt_main")
 
-meeting_analyzer = None
 meeting_pipeline = None
 supabase: Client = None
 
@@ -134,7 +131,6 @@ async def analyze_meeting_with_storage(
     meeting_datetime: Optional[str] = Form(default=None, description="(필수)회의 일시 (ISO 8601 형식, 예: 2024-12-08T14:30:00)"),
     only_title: Optional[bool] = Form(default=False, description="(선택)제목만 생성할지 여부 (기본값: False)")
 ):
-    """1대1 미팅 오디오 파일을 분석하여 종합적인 리포트를 생성합니다."""
     # LangGraph 파이프라인 실행 
     result = await meeting_pipeline.run(
         file_id=file_id,
