@@ -116,11 +116,34 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
                 speaker_stats[speaker]['duration'] += duration_ms
                 total_duration_ms += duration_ms
             
-            # 퍼센트 계산
-            for speaker_name, stats in speaker_stats.items():
-                duration_ms = stats.get('duration', 0)
-                percentage = round((duration_ms / total_duration_ms) * 100, 1) if total_duration_ms > 0 else 0
-                speaker_stats_percent[speaker_name] = percentage
+            # (합이 100이 되도록 보장)
+            if total_duration_ms > 0:
+                speakers = list(speaker_stats.keys())
+                percentages = []
+                
+                # 먼저 모든 비율을 계산
+                for speaker_name, stats in speaker_stats.items():
+                    duration_ms = stats.get('duration', 0)
+                    percentage = (duration_ms / total_duration_ms) * 100
+                    percentages.append(percentage)
+                
+                # 반올림하되 합이 100이 되도록 조정
+                rounded_percentages = [round(p, 1) for p in percentages]
+                current_sum = sum(rounded_percentages)
+                
+                # 합이 100이 아니면 가장 큰 값을 조정
+                if current_sum != 100.0:
+                    diff = round(100.0 - current_sum, 1)
+                    max_index = percentages.index(max(percentages))
+                    rounded_percentages[max_index] = round(rounded_percentages[max_index] + diff, 1)
+                
+                # 결과 저장
+                for i, speaker_name in enumerate(speakers):
+                    speaker_stats_percent[speaker_name] = rounded_percentages[i]
+            else:
+                # total_duration_ms가 0이면 모든 화자에게 0 할당
+                for speaker_name in speaker_stats.keys():
+                    speaker_stats_percent[speaker_name] = 0.0
         
         # state 업데이트
         state["transcript"] = {
