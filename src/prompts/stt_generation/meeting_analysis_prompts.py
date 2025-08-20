@@ -69,6 +69,18 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
 ## Title (for JSON title field):
 One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검")
 
+## AI Core Summary Structure (for JSON ai_core_summary field):
+**Core content**
+• core content of the meeting
+
+**Decisions Made**
+• Joint decisions from the meeting
+• Example: Agreed on Option B for Project A
+
+**Support Needs & Blockers**
+• [Support Request] Description → Action plan
+• [Blocker] Description → Resolution approach
+
 ## AI Summary Structure (for JSON ai_summary field):
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
 ### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)
@@ -184,6 +196,12 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
   "member_action_items": ["Action items for the member/employee extracted from the transcript", "Another member action item if discussed"],
   
   "ai_summary": "AI Summary following the hierarchical structure specified in system prompt (in Korean)",
+  
+  "ai_core_summary": {{
+    "core_content": "core content of the meeting",
+    "decisions_made": "Joint decisions from the meeting",
+    "support_needs_blockers": "Support requests and blockers with action plans"
+  }},
   
   "leader_feedback": [
     {{

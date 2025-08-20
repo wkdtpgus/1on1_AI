@@ -67,6 +67,7 @@ class MeetingAPI {
                 leader_action_items: data.leader_action_items || [],
                 member_action_items: data.member_action_items || [],
                 ai_summary: data.ai_summary || '',
+                ai_core_summary: data.ai_core_summary || {},
                 leader_feedback: data.leader_feedback || [],
                 positive_aspects: data.positive_aspects || [],
                 qa_summary: data.qa_summary || [],

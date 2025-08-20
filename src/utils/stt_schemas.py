@@ -15,6 +15,12 @@ class QAItem(BaseModel):
     answer: str = Field(description="대화록에서 추출한 답변")
 
 # LLM 출력 스키마
+class AiCoreSummary(BaseModel):
+    """핵심 요약 정보"""
+    core_content: str = Field(description="회의의 핵심 내용")
+    decisions_made: str = Field(description="회의에서 내려진 공동 결정사항")
+    support_needs_blockers: str = Field(description="지원 요청 및 블로커와 해결 방안")
+
 class MeetingAnalysis(BaseModel):
     """1-on-1 회의 분석 결과"""
     title: str = Field(description="회의를 한 줄로 요약한 제목 (예: '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')")
@@ -22,6 +28,7 @@ class MeetingAnalysis(BaseModel):
     leader_action_items: List[str] = Field(description="리더(매니저)가 수행할 액션 아이템 리스트")
     member_action_items: List[str] = Field(description="멤버(팀원)가 수행할 액션 아이템 리스트")
     ai_summary: str = Field(description="계층적 구조를 따르는 상세한 회의 내용 (마크다운 형식)")
+    ai_core_summary: AiCoreSummary = Field(description="핵심 요약 정보")
     leader_feedback: List[FeedbackItem] = Field(description="매니저 개선 피드백 리스트")
     positive_aspects: List[str] = Field(description="매니저가 잘 수행한 측면들")
     qa_summary: List[QAItem] = Field(description="질문별 답변 리스트 - 모든 질문에 대해 완전한 답변 필수")
