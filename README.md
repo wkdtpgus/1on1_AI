@@ -91,13 +91,6 @@ LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=oblit-1on1_ai_ui
 ```
 
-3) 실행 방법
-
-통합 API 서버를 실행하여 모든 기능을 사용할 수 있습니다:
-```bash
-PYTHONPATH=. uvicorn src.web.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
 ## API
 
 통합 서버(`src.web.main:app`)는 다음 엔드포인트를 제공합니다:
