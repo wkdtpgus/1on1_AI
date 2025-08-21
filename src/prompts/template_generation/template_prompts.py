@@ -1,4 +1,3 @@
-# System prompt for 1on1 template generation
 SYSTEM_PROMPT = """
 You are an expert HR consultant specializing in helping organizational leaders conduct effective 1on1 meetings.
 
@@ -31,7 +30,6 @@ You are an expert HR consultant specializing in helping organizational leaders c
   - Strive to create questions that uniquely combine a topic from `purpose` with a style from `question_composition` to avoid redundancy.
 """
 
-# Human prompt template for user input
 HUMAN_PROMPT = """
 ## [Basic Information]
 - Target: {target_info}

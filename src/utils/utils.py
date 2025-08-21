@@ -1,10 +1,9 @@
 import json
 import os
-import re
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from src.utils.mock_db import MOCK_USER_DATA
 
-# Pre-process the mock data into a dictionary for faster lookups
+# 빠른 확인이 가능하도록 딕셔너리형태로 가상데이터 전처리
 _MOCK_USER_DATA_BY_ID = {user['user_id']: user for user in MOCK_USER_DATA}
 
 def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:

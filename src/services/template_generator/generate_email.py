@@ -1,8 +1,9 @@
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+
+from src.prompts.template_generation.email_prompts import HUMAN_PROMPT, SYSTEM_PROMPT
 from src.utils.model import llm
-from src.prompts.template_generation.email_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from src.utils.template_schemas import EmailGeneratorOutput, EmailGeneratorInput
+from src.utils.template_schemas import EmailGeneratorInput, EmailGeneratorOutput
 from src.utils.utils import get_user_data_by_id
 
 def get_email_generator_chain():

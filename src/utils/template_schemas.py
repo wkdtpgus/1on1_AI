@@ -1,6 +1,7 @@
+from typing import Optional, Literal, Dict
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Union, Literal, Dict
 
+# 템플릿(질문) 생성
 class TemplateGeneratorInput(BaseModel):
     """
     1on1 템플릿 생성을 위한 입력 데이터 모델
@@ -64,6 +65,13 @@ class TemplateGeneratorInput(BaseModel):
         
         return v
 
+class TemplateGeneratorOutput(BaseModel):
+    """
+    템플릿 생성 결과 모델.
+    """
+    generated_questions: Dict[str, str]
+
+# 이메일 생성
 class EmailGeneratorInput(BaseModel):
     """
     1on1 요약 이메일 생성을 위한 입력 데이터 모델
@@ -82,6 +90,7 @@ class EmailGeneratorOutput(BaseModel):
     """
     generated_email: str = Field(..., description="사용자 입력을 바탕으로 생성된 이메일 본문")
 
+# 활용 가이드 생성
 class UsageGuideInput(BaseModel):
     """활용 가이드 생성 요청 스키마"""
     # 원본 입력 데이터
@@ -111,15 +120,6 @@ class UsageGuideInput(BaseModel):
         
         return v
 
-
 class UsageGuideOutput(BaseModel):
     """활용 가이드 출력 스키마 - 단일 필드"""
     usage_guide: str = Field(..., description="이모지로 구분된 세 파트로 구성된 활용 가이드 텍스트")
-
-
-class GuideMetadata(BaseModel):
-    """가이드 생성을 위한 분석 메타데이터"""
-    total_questions: int
-    intent_distribution: Dict[str, int]
-    sensitive_topics: List[str]
-    question_flow_pattern: str

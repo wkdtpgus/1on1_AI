@@ -1,7 +1,10 @@
-from langchain_core.prompts import ChatPromptTemplate
+import logging
+
 from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+from src.prompts.template_generation.guide_prompts import HUMAN_PROMPT, SYSTEM_PROMPT
 from src.utils.model import llm
-from src.prompts.template_generation.guide_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
 from src.utils.template_schemas import UsageGuideInput, UsageGuideOutput
 
 def get_usage_guide_chain():
@@ -44,6 +47,5 @@ async def generate_usage_guide(guide_input: UsageGuideInput) -> UsageGuideOutput
         return UsageGuideOutput(usage_guide=guide_text)
     except Exception as e:
         # logging 추가
-        import logging
         logging.error(f"Error during usage guide generation: {e}")
         raise

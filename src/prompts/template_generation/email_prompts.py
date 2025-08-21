@@ -1,4 +1,3 @@
-# System prompt for 1on1 template summary generation
 SYSTEM_PROMPT = """
 You are an expert HR consultant. 
 Your task is to create a concise summary of the upcoming 1-on-1 meeting's purpose and direction based on the provided information.
@@ -10,16 +9,15 @@ Brief it with 3 sentences, using recipient friendly language.
 IMPORTANT: Refering sensitive problem or issue in very subtle and indirect way by paraphrasing.
 """
 
-# Human prompt template for user input
 HUMAN_PROMPT = """
-## [Basic Information]
+## Basic Information
 - Target: {target_info}
 
-## [Purpose and Situation]
+## Purpose and Situation
 - Purpose/Background: {purpose}
 - Specific Context & Key Issues: {detailed_context}
 
-## [Previous Meeting Context (Optional)]
+## Previous Meeting Context (Optional)
 {previous_summary_section}
 
 ## OUTPUT FORMAT

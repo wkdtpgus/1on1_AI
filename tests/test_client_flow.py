@@ -1,6 +1,6 @@
 import json
-import asyncio
 from datetime import datetime
+
 import httpx
 import pytest
 from dotenv import load_dotenv
@@ -65,15 +65,14 @@ async def test_client_generation_flow():
             response = await client.post(url, data=json.dumps(client_state["user_input"]), headers=headers, timeout=300)
             assert response.status_code == 200, "템플릿 생성 API 호출 실패"
             
-            # 이제 응답 자체가 질문 딕셔너리입니다.
-            generated_questions = response.json()
-            client_state["generated_questions"] = generated_questions
+            response_data = response.json()
+            client_state["generated_questions"] = response_data.get("generated_questions")
             assert client_state["generated_questions"], "생성된 질문이 없습니다."
             
             # 파일 저장 로직 추가
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = f"data/generated_templates/questions_{timestamp}.json"
-            save_questions_to_json(generated_questions, output_path)
+            save_questions_to_json(client_state["generated_questions"], output_path)
             print(f"✅ 템플릿 생성 성공, 결과를 {output_path}에 저장 완료")
 
         except Exception as e:

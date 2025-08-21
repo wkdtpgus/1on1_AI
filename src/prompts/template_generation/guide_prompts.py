@@ -1,4 +1,3 @@
-# System prompt for guide generation
 SYSTEM_PROMPT = """
 You are an expert HR consultant and 1on1 meeting facilitation specialist.
 Your task is to create a concise, actionable usage guide for a leader, structured into three distinct categories.
@@ -46,7 +45,6 @@ Then, generate the guide for the three categories below, focusing on coaching th
     - (Optional) Provide a specific, word-for-word example of a finishing skill. 
 """
 
-# Human prompt template for usage guide generation
 HUMAN_PROMPT = """
 ## [Meeting Context]
 - Target Person: {target_info}

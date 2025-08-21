@@ -2,15 +2,21 @@
 FastAPI server for testing streaming template generation.
 Run with: uvicorn test_streaming_api:app --reload --port 8000
 """
-
-import json
-from typing import Dict, Any, Union, Literal
+from typing import Union, Literal
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from src.utils.template_schemas import TemplateGeneratorInput, EmailGeneratorOutput, UsageGuideOutput, UsageGuideInput, EmailGeneratorInput
-from src.services.template_generator.generate_template import generate
+
 from src.services.template_generator.generate_email import generate_email
+from src.services.template_generator.generate_template import generate_template
 from src.services.template_generator.generate_usage_guide import generate_usage_guide
+from src.utils.template_schemas import (
+    EmailGeneratorInput,
+    EmailGeneratorOutput,
+    TemplateGeneratorInput,
+    TemplateGeneratorOutput,
+    UsageGuideInput,
+    UsageGuideOutput,
+)
 
 
 app = FastAPI(title="1on1 Template Generator API")
@@ -25,18 +31,23 @@ app.add_middleware(
 )
 
 
-@app.post("/generate", response_model=Union[Dict[str, Any], EmailGeneratorOutput, UsageGuideOutput])
+@app.post(
+    "/generate",
+    response_model=Union[TemplateGeneratorOutput, EmailGeneratorOutput, UsageGuideOutput],
+)
 async def generate_endpoint(
     input_data: TemplateGeneratorInput,
-    generation_type: Literal['template', 'email', 'guide'] = Query("template", description="Generation type")
+    generation_type: Literal["template", "email", "guide"] = Query(
+        "template", description="Generation type"
+    ),
 ):
     """
     Generate a 1-on-1 template, a summary email, or a usage guide based on the input.
     """
     try:
-        if generation_type == 'template':
-            result = await generate(input_data)
-        elif generation_type == 'email':
+        if generation_type == "template":
+            result = await generate_template(input_data)
+        elif generation_type == "email":
             email_input = EmailGeneratorInput(
                 user_id=input_data.user_id,
                 target_info=input_data.target_info,

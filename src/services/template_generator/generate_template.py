@@ -1,12 +1,12 @@
-import json
 import logging
-from langchain_core.prompts import ChatPromptTemplate
-from src.utils.model import llm
-from src.prompts.template_generation.template_prompts import SYSTEM_PROMPT, HUMAN_PROMPT
-from src.utils.template_schemas import TemplateGeneratorInput, UsageGuideInput
-from src.utils.utils import get_user_data_by_id
-from src.services.template_generator.generate_usage_guide import generate_usage_guide
+
 from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+from src.prompts.template_generation.template_prompts import HUMAN_PROMPT, SYSTEM_PROMPT
+from src.utils.model import llm
+from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
+from src.utils.utils import get_user_data_by_id
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,7 +20,7 @@ def get_chain():
 
 chain = get_chain()
 
-async def generate(input_data: TemplateGeneratorInput) -> dict:
+async def generate_template(input_data: TemplateGeneratorInput) -> TemplateGeneratorOutput:
     """
     사용자 입력을 기반으로 1on1 템플릿 질문을 생성합니다.
     옵션에 따라 활용 가이드도 이어서 생성합니다.
@@ -52,7 +52,7 @@ async def generate(input_data: TemplateGeneratorInput) -> dict:
 
         # API 계약에 따라 순수한 질문 딕셔너리만 반환합니다.
         # 가이드 생성은 'guide' generation_type으로 분리되어 처리됩니다.
-        return generated_questions
+        return TemplateGeneratorOutput(generated_questions=generated_questions)
 
     except Exception as e:
         logging.error(f"Error during template generation: {e}")
