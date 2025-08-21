@@ -18,8 +18,6 @@ ASSEMBLYAI_FORMAT_TEXT = True  # 텍스트 포맷팅 (대문자, 숫자 등)
 ASSEMBLYAI_DISFLUENCIES = False  # 말더듬, 음성간투사 필터링 (회의에서는 제거)
 ASSEMBLYAI_SPEAKER_LABELS = True  # 화자 분리 (2명 회의에 필수)
 ASSEMBLYAI_LANGUAGE_DETECTION = False  # 언어 자동 감지 (한국어로 고정)
-ASSEMBLYAI_WORD_BOOST = []  # 특정 단어 인식 강화 (회사명, 전문용어 등)
-ASSEMBLYAI_BOOST_PARAM = "default"  # 부스트 강도 (low, default, high)
 
 # 화자 분리 강화 설정
 ASSEMBLYAI_SPEAKERS_EXPECTED = 2  # 예상 화자 수 (1on1이므로 2명)
@@ -37,6 +35,10 @@ AUDIO_FORMAT = "float32"  # 오디오 포맷
 # 파일 저장 경로
 TEMP_AUDIO_DIR = "data/raw_audio"  # 임시 오디오 파일 저장 디렉토리
 OUTPUT_DIR = "data/stt_transcripts"  # 출력 파일 저장 디렉토리
+
+# STT 처리 타이밍 설정
+STT_MAX_WAIT_TIME = 900  # STT 최대 대기 시간 (초)
+STT_CHECK_INTERVAL = 10  # STT 상태 확인 간격 (초)
 
 # LLM 공통 설정
 
@@ -66,9 +68,25 @@ GEMINI_TEMPERATURE = 0.7
 GEMINI_THINKING_BUDGET = 0  # 모델의 창의성 제어 (0.0: 일관성, 1.0: 다양성)
 GEMINI_MAX_TOKENS = 10000  # 템플릿 생성용 토큰 제한
 
+# 제목 생성용 LLM 설정 (Gemini Flash)
+
+# Gemini 모델 설정 (제목 생성용)
+TITLE_GEMINI_MODEL = "gemini-2.5-flash"  # 제목 생성용 모델
+TITLE_GEMINI_TEMPERATURE = 0.7  # 제목 생성용 temperature
+TITLE_GEMINI_THINKING_BUDGET = 0  # 빠른 응답을 위해 0으로 설정
+TITLE_GEMINI_MAX_TOKENS = 1000  # 제목 생성용 토큰 제한 (적은 토큰으로 충분)
+
 # LangSmith 추적 설정 (선택적)
 
 LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
 LANGSMITH_ENDPOINT = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "oblit-1on1_ai_ui")
+
+# Supabase 설정 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_BUCKET_NAME = os.getenv("SUPABASE_BUCKET_NAME", "audio-recordings")
+
+# Supabase 파일 경로 템플릿
+RECORDING_PATH_TEMPLATE = "recordings/{file_id}"  

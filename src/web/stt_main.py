@@ -1,61 +1,48 @@
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
-from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
 import logging
-
-# 프로젝트 모듈 임포트
+import os
+from contextlib import asynccontextmanager
+from typing import Optional
+import assemblyai as aai
+from fastapi import FastAPI, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from supabase import create_client, Client
+from src.services.meeting_generator.workflow import MeetingPipeline
 from src.config.config import (
     ASSEMBLYAI_API_KEY,
-    GOOGLE_CLOUD_PROJECT, 
-    GOOGLE_CLOUD_LOCATION,
-    GOOGLE_APPLICATION_CREDENTIALS_JSON
+    GOOGLE_APPLICATION_CREDENTIALS_JSON,
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    SUPABASE_BUCKET_NAME
 )
-import os
-import json
-import tempfile
-from datetime import datetime
-from pathlib import Path
-from fastapi.responses import JSONResponse
 
-# 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("stt_main")
 
-# 서비스 인스턴스
-audio_processor = None
-meeting_analyzer = None
+meeting_pipeline = None
+supabase: Client = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """애플리케이션 생명주기 관리"""
-    global audio_processor, meeting_analyzer
+    global meeting_pipeline, supabase
     
-    # Google 자격증명 설정
     if GOOGLE_APPLICATION_CREDENTIALS_JSON:
         creds_path = "/tmp/gcp_creds.json"
         with open(creds_path, "w", encoding="utf-8") as f:
             f.write(GOOGLE_APPLICATION_CREDENTIALS_JSON)
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
     
-    # 서비스 초기화 (각 클래스가 자체 검증 수행)
-    from src.utils.formatter import STTProcessor
-    from src.utils.model import GeminiMeetingAnalyzer
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    aai.settings.api_key = ASSEMBLYAI_API_KEY
+        
+    meeting_pipeline = MeetingPipeline(supabase)
     
-    audio_processor = STTProcessor(api_key=ASSEMBLYAI_API_KEY)
-    meeting_analyzer = GeminiMeetingAnalyzer(
-        google_project=GOOGLE_CLOUD_PROJECT, 
-        google_location=GOOGLE_CLOUD_LOCATION
-    )
-    logger.info("모든 서비스 초기화 완료")
-    
+    logger.info("서비스 초기화 완료")
     yield
-    # 종료시 정리 (필요시)
-    pass
 
-# FastAPI 앱 생성
 app = FastAPI(
-    title="1on1 Meeting AI Analysis", 
+    title="1on1 Meeting AI Analysis API",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -69,104 +56,81 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    """메인 페이지"""
-    from fastapi.responses import FileResponse
-    return FileResponse("frontend/index.html")
+# 머지 할 땐 제거 
+@app.get("/api/config")
+async def get_config():
+    return {
+        "supabase_url": SUPABASE_URL, 
+        "supabase_key": SUPABASE_KEY, 
+        "bucket_name": SUPABASE_BUCKET_NAME
+    }
 
-@app.get("/api.js")
-async def api_js():
-    """API JavaScript 파일"""
-    from fastapi.responses import FileResponse
-    return FileResponse("frontend/api.js", media_type="application/javascript")
-
-@app.get("/app.js")
-async def app_js():
-    """앱 JavaScript 파일"""
-    from fastapi.responses import FileResponse
-    return FileResponse("frontend/app.js", media_type="application/javascript")
-
-@app.get("/favicon.ico")
-async def favicon():
-    """파비콘"""
-    from fastapi.responses import FileResponse
-    return FileResponse("frontend/favicon.ico", media_type="image/x-icon")
-
-@app.post("/api/analyze")
-async def analyze_meeting(
-    audio_file: UploadFile = File(...),
-    qa_data: Optional[str] = Form(default=None),
-    participants_info: Optional[str] = Form(default=None)
+@app.post("/api/analyze",
+         summary="1on1 미팅 오디오를 STT로 전사하고 LLM으로 분석 결과를 반환하는 엔드포인트",
+         description="""
+         업로드된 오디오 파일을 분석하여 종합적인 1대1 미팅 리포트를 생성.
+         
+         입력 데이터 :
+          file_id: Supabase에 업로드된 오디오 파일 ID 
+          qa_pairs: 질문-답변 JSON 문자열 
+          participants_info: 참가자 정보 JSON 
+          meeting_datetime: 회의 일시 ISO 문자열 
+          only_title : True 면 제목만 생성, False 면 전체 분석 (기본값: False)
+        
+         반환 데이터 구조:
+         ```json
+         {
+           "title": "회의 제목 한 줄 요약",
+           "speaker_stats_percent": {
+             "speaking_ratio_leader": 45.2,
+             "speaking_ratio_member": 54.8
+           },
+           "leader_action_items": ["액션아이템1", "액션아이템2"],
+           "member_action_items": ["액션아이템1", "액션아이템2"],
+           "ai_core_summary": {
+             "core_content": "핵심내용",
+             "decisions_made": ["결정사항1", "결정사항2"],
+             "support_needs_blockers": ["지원요청/블로커1", "지원요청/블로커2"]
+           },
+           "ai_summary": "마크다운 형식의 상세 회의 내용",
+           "leader_feedback": [
+             {
+               "title": "피드백 개선내용 제목",
+               "content": "피드백 내용"
+             }
+           ],
+           "positive_aspects": [
+             {
+               "title": "잘한점 제목",
+               "content": "긍정적 피드백 내용"
+             }
+           ],
+           "qa_summary": [
+             {
+               "question_index": 1,
+               "answer": "질문에 대한 답변"
+             }
+           ],
+           "transcript": [
+             {"speaker": "실제이름", "text": "발화내용"}
+           ]
+         }
+         ```
+         """)
+  
+async def analyze_meeting_with_storage(
+    file_id: Optional[str] = Form(default=None, description="Supabase 스토리지에 업로드된 오디오 파일 ID - only_title=true일 때는 불필요"),
+    qa_pairs: Optional[str] = Form(default=None, description="미리 준비된 질문-답변 쌍 (JSON 문자열)"),
+    participants_info: Optional[str] = Form(default=None, description="참가자 정보 (JSON 문자열, 예: {\"leader\": \"김지현\", \"member\": \"김준희\"})"),
+    meeting_datetime: Optional[str] = Form(default=None, description="회의 일시 (ISO 8601 형식, 예: 2024-12-08T14:30:00)"),
+    only_title: Optional[bool] = Form(default=False, description="제목만 생성할지 여부 (기본값: False)")
 ):
-    """1on1 미팅 분석 API"""
-    if not audio_processor or not meeting_analyzer:
-        raise HTTPException(status_code=503, detail="서비스가 초기화되지 않았습니다")
-    
-    try:
-        # 파일 검증 및 처리
-        content = await audio_file.read()
-        
-        # 오디오 파일 형식 검증
-        allowed_extensions = {'.wav', '.mp3', '.m4a', '.flac', '.ogg'}
-        file_ext = Path(audio_file.filename).suffix.lower()
-        if file_ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail="지원하지 않는 파일 형식입니다")
-        
-        # 임시 파일 생성
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
-            temp_file.write(content)
-            temp_audio_path = temp_file.name
-        
-        # 음성 전사 처리
-        transcript_result = audio_processor.transcribe_audio(temp_audio_path, expected_speakers=2)
-        if not transcript_result or 'transcript' not in transcript_result:
-            raise HTTPException(status_code=500, detail="STT 처리에 실패했습니다")
-        
-        transcript = transcript_result['transcript']
-        speaker_stats = transcript_result.get('speaker_stats', {})
-        
-        # JSON 입력 파싱
-        qa_list = json.loads(qa_data) if qa_data else None
-        participants = json.loads(participants_info) if participants_info else None
-        
-        # LLM 분석 수행
-        analysis_result = meeting_analyzer.analyze_1on1_meeting(
-            transcript=transcript,
-            speaker_stats=speaker_stats,
-            qa_pairs=qa_list,
-            participants=participants
-        )
-        
-        try:
-            analysis_data = json.loads(analysis_result)
-        except json.JSONDecodeError:
-            analysis_data = {"error": "분석 결과 파싱 실패", "raw_result": analysis_result}
-        
-        # transcript 추가
-        if isinstance(analysis_data, dict):
-            analysis_data["transcript"] = transcript
-        
-        # 성공 응답 생성
-        response = {
-            "status": "success",
-            "timestamp": datetime.now().isoformat(),
-            **analysis_data,
-            "file_info": {
-                "filename": audio_file.filename,
-                "size": len(content),
-                "format": file_ext
-            }
-        }
-        return JSONResponse(content=response)
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"분석 처리 오류: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"분석 처리 중 오류가 발생했습니다: {str(e)}")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    # LangGraph 파이프라인 실행 
+    result = await meeting_pipeline.run(
+        file_id=file_id,
+        qa_pairs=qa_pairs,
+        participants_info=participants_info,
+        meeting_datetime=meeting_datetime,
+        only_title=only_title
+    )
+    return JSONResponse(content=result.get("analysis_result", {}))

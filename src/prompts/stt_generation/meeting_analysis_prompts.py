@@ -38,29 +38,44 @@ Analyze the provided 1-on-1 meeting transcript to generate a comprehensive repor
   - Reflect on meeting effectiveness
   - Confirm action items for next meeting
 
+# CRITICAL: Speaker Identification Requirements
+
+## MANDATORY: Speaker Mapping Task
+**YOU MUST identify who is speaker A and who is speaker B in the transcript.**
+1. **Participants information format**: {{"leader": "actual_leader_name", "member": "actual_member_name"}}
+2. **Your task**: Analyze the conversation to determine:
+   - Which speaker (A or B) is the leader
+   - Which speaker (A or B) is the member
+3. **How to identify the leader**:
+   - Leader behaviors: Asks questions, gives feedback, guides discussion, sets agenda
+   - Member behaviors: Reports status, answers questions, receives feedback, seeks guidance
+4. **REQUIRED OUTPUT for speaker_mapping field**:
+   - Return a list with exactly 2 names: ["A의 실제이름", "B의 실제이름"]
+   - If A is leader: ["leader_name_from_participants", "member_name_from_participants"]
+   - If B is leader: ["member_name_from_participants", "leader_name_from_participants"]
+5. **If participants is empty or missing**: 
+   - Use ["리더", "팀원"] or ["팀원", "리더"] based on your analysis
+**IMPORTANT: speaker_mapping field CANNOT be empty. You MUST provide the mapping.**
+
 # Output Structure Requirements
 
 ## Title (for JSON title field):
 One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검")
 
-## Quick Review Structure (for JSON quick_review field):
-**Key Takeaways**
+## AI Core Summary Structure (for JSON ai_core_summary field):
+**Core content**
 • core content of the meeting
 
-**Decisions Made**
-• Joint decisions from the meeting
-• Example: Agreed on Option B for Project A
+**Decisions Made** (List format)
+• Each decision as a separate list item
+• Example: "AI 프로젝트 일정 2주 연장 결정", "신규 팀원 1명 충원 합의"
 
-**Action Items**
-• [Leader] Specific action by date
-• [Employee] Specific action by date
-• [Joint] Shared responsibility items
+**Support Needs & Blockers** (List format)
+• Each support request or blocker as a separate list item
+• Format: "[Support Request] 개발 리소스 추가 요청 → HR팀과 협의 예정"
+• Format: "[Blocker] 외부 API 연동 지연 → 대안 솔루션 검토 중"
 
-**Support Needs & Blockers**
-• [Support Request] Description → Action plan
-• [Blocker] Description → Resolution approach
-
-## Detailed Discussion Structure (for JSON detailed_discussion field):
+## AI Summary Structure (for JSON ai_summary field):
 **MANDATORY STRUCTURE RULES** (Follow EXACTLY):
 ### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)
 
@@ -87,32 +102,40 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
    - Specific facts/details → Use single • bullet points (no indentation)
 
 
+## Action Items Extraction Rules:
+• **ONLY extract action items explicitly discussed in the transcript**
+• **Return empty list [] if no action items were discussed**
+• **Separate by responsibility**: leader_action_items for manager tasks, member_action_items for employee tasks
+• **Include deadlines if mentioned** (e.g., "다음 주까지 리포트 작성", "월말까지 검토 완료")
+• **Do NOT invent or suggest action items not present in the conversation**
 
-## Feedback Structure (for JSON feedback section):
+## Leader Feedback Structure (for JSON leader_feedback section):
 
-### 1. [Improvement Area]
-**Situation**: [Specific quote from transcript]
-**Suggestion**: [Alternative action based on best practices]
-**Why Important**: [Core 1-on-1 purpose perspective]
-**How to Implement**: [Concrete method for next meeting]
+Each feedback item consists of a title (improvement area) and content (integrated feedback paragraph).
+The content should naturally weave together the situation (specific transcript quotes), improvement suggestions, importance reasoning, and concrete implementation methods into a comprehensive, flowing narrative.
 
-### 2. [Improvement Area]
-**Situation**: [Specific quote from transcript]
-**Suggestion**: [Alternative action based on best practices]
-**Why Important**: [Core 1-on-1 purpose perspective]
-**How to Implement**: [Concrete method for next meeting]
+**Reference Guidelines for Feedback**: Base your feedback on the "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors listed above. Identify specific instances where the manager's behavior aligns with items to avoid or misses opportunities to implement recommended practices.
 
-### 3. [Improvement Area]
-**Situation**: [Specific quote from transcript]
-**Suggestion**: [Alternative action based on best practices]
-**Why Important**: [Core 1-on-1 purpose perspective]
-**How to Implement**: [Concrete method for next meeting]
+Format should include all the original structured elements but presented as natural prose:
+- Start with the specific situation from the transcript (with quotes)  
+- Explain what could be improved and why based on 1-on-1 best practices
+- Describe the importance for 1-on-1 effectiveness
+- Provide concrete implementation steps for the next meeting
+- Maintain developmental tone focused on growth, not criticism
 
-## Positive Aspects:
-List 1-3 specific behaviors the manager performed well
+## Positive Aspects Structure (for JSON positive_aspects section):
+
+Each positive aspect item consists of a title (strength area) and content (integrated positive feedback paragraph).
+The content should naturally describe the specific situation from the transcript and explain how this behavior contributed to 1-on-1 effectiveness.
+
+Format should include:
+- Start with the specific positive situation from the transcript (with quotes)
+- Explain why this behavior was effective based on 1-on-1 best practices  
+- Describe the positive impact on meeting effectiveness
+- Maintain encouraging tone focused on reinforcement
 
 ## Q&A Summary:
-• If questions provided: Answer each in order
+• If questions provided: Answer each in order using question_index (1, 2, 3...) instead of repeating question text
 • If no questions but transcript contains structured Q&A pairs: Extract all Q&A pairs from the provided content
 • If transcript is general discussion: Extract 3-5 key discussion topics as Q&A pairs
 • For Q&A format transcripts: Combine pre-written answers with any additional context, elaborations, or follow-up discussions that occurred during the actual conversation
@@ -120,12 +143,18 @@ List 1-3 specific behaviors the manager performed well
 • Enhance brief answers with relevant context and details found elsewhere in the transcript
 • If topic not discussed, state: "이 주제는 회의에서 논의되지 않았습니다"
 • Include speaker attribution when possible
+• **IMPORTANT**: Use question_index (1, 2, 3...) to reference questions for exact matching with input
 """
 
 USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide results in the specified JSON format.
 
-# Meeting Transcript:
+# Meeting Date & Time:
+{meeting_datetime}
+
+# Meeting Transcript (화자별 발화 리스트):
 {transcript}
+
+Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "A", "text": "발화 내용"}}, ...]. Analyze the conversation flow and content based on this speaker-separated format.
 
 # Speaker Statistics (발화 비율 %):
 {speaker_stats}
@@ -136,44 +165,52 @@ USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide res
 # Q&A Pairs:
 {qa_pairs}
 
-# Important:
+# CRITICAL INSTRUCTIONS:
+• **MANDATORY: Speaker Mapping**: You MUST analyze the transcript to identify which speaker (A or B) is the leader and map them to actual names from participants data. The speaker_mapping field CANNOT be empty.
 • Summary depth must be proportional to conversation length
 • Extensive discussions require detailed analysis
 • Brief mentions need only concise summaries
+• **Meeting Date & Time**: Use the provided meeting_datetime in the ai_summary header format "### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)" - convert ISO format to Korean date format if provided
 • **Speaker Statistics Analysis**: Use the speaker_stats data to evaluate conversation balance. The ideal 1-on-1 should have the employee speaking 70% and manager 30%. Include this in your feedback if there's significant imbalance
-• **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
+• **Participant Names**: ALWAYS use EXACT names from participants data, NOT names from transcript (STT may have errors). Use participants.leader and participants.member names throughout ALL content.
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
+• **Q&A Output Format**: Return question_index (1, 2, 3...) instead of question text for precise frontend matching
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
-• For feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
-• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing feedback and positive_aspects
-• Follow the "Detailed Discussion Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
+• For leader_feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
+• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing leader_feedback and positive_aspects
+• Follow the "AI Summary Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
 
 
 # Required JSON Output Format:
 {{
   "title": "One-line summary of the entire meeting (in Korean, e.g., '3분기 성과 리뷰 및 AI 프로젝트 진행 상황 점검')",
   
-  "quick_review": {{
-    "key_takeaways": "core content of the meeting (in Korean)",
-    "decisions_made": "Joint decisions from the meeting (in Korean)",
-    "action_items": "Action items with owner and deadline (in Korean)",
-    "support_needs_blockers": "Support requests and blockers with action plans (in Korean)"
+  "speaker_mapping": ["A의 실제이름", "B의 실제이름"],
+  
+  "leader_action_items": ["Action items for the leader extracted from the transcript", "Another leader action item if discussed"],
+  
+  "member_action_items": ["Action items for the member/employee extracted from the transcript", "Another member action item if discussed"],
+  
+  "ai_summary": "AI Summary following the hierarchical structure specified in system prompt (in Korean)",
+  
+  "ai_core_summary": {{
+    "core_content": "core content of the meeting",
+    "decisions_made": ["결정사항1", "결정사항2"],
+    "support_needs_blockers": ["[Support Request] 지원요청 → 해결방안", "[Blocker] 블로커 → 해결방안"]
   }},
   
-  "detailed_discussion": "Detailed Discussion Summary following the hierarchical structure specified in system prompt (in Korean)",
-  
-  "feedback": [
+  "leader_feedback": [
     {{
-      "title": "Specific manager behavior or approach that needs improvement (focus on what the manager did wrong or failed to do, not general joint issues)",
-      "situation": "Specific quote from transcript",
-      "suggestion": "Alternative action based on best practices",
-      "importance": "Why this matters for 1-on-1 effectiveness",
-      "implementation": "Concrete method for next meeting"
+      "title": "Specific improvement area (concise title describing what needs to be improved)",
+      "content": "Natural feedback paragraph with situation, suggestions, importance, and implementation"
     }}
   ],
   
   "positive_aspects": [
-    "Specific positive behavior manager demonstrated"
+    {{
+      "title": "Specific strength area (concise title describing what was done well)",
+      "content": "Natural positive feedback paragraph with situation, effectiveness, and impact"
+    }}
   ],
   
   "qa_summary": [
@@ -184,3 +221,4 @@ USER_PROMPT = """Analyze the following 1-on-1 meeting transcript and provide res
   ]
 }}
 """
+
