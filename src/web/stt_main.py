@@ -16,12 +16,8 @@ from src.config.config import (
     SUPABASE_BUCKET_NAME
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("stt_main")
-
 meeting_pipeline = None
 supabase: Client = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,7 +34,6 @@ async def lifespan(app: FastAPI):
         
     meeting_pipeline = MeetingPipeline(supabase)
     
-    logger.info("서비스 초기화 완료")
     yield
 
 app = FastAPI(
@@ -56,7 +51,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 머지 할 땐 제거 
 @app.get("/api/config")
 async def get_config():
     return {

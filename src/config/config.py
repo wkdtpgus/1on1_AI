@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 # .env 파일 로드
 load_dotenv()
 
-
 # AssemblyAI STT 설정
 
 # AssemblyAI 모델 설정

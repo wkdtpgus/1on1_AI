@@ -105,11 +105,14 @@ def test_full_analysis():
             print(f"제목: {result.get('title', 'N/A')}")
             print(f"분석 결과 키들: {list(result.keys())}")
             
-            # 결과를 data 폴더에 저장
-            os.makedirs("data", exist_ok=True)
-            with open("data/test_result_full.json", "w", encoding="utf-8") as f:
+            # 결과를 프로젝트 root/data 폴더에 저장
+            project_root = os.path.dirname(os.path.dirname(__file__))
+            data_dir = os.path.join(project_root, "data")
+            os.makedirs(data_dir, exist_ok=True)
+            file_path = os.path.join(data_dir, "test_result_full.json")
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
-            print("📝 결과가 data/test_result_full.json에 저장되었습니다.")
+            print(f"📝 결과가 {file_path}에 저장되었습니다.")
             
         else:
             print(f"❌ 요청 실패: {response.status_code}")
@@ -146,11 +149,14 @@ def test_title_only():
             print(f"제목: {result.get('title', 'N/A')}")
             print(f"응답 키들: {list(result.keys())}")
             
-            # 결과를 data 폴더에 저장
-            os.makedirs("data", exist_ok=True)
-            with open("data/test_result_title_only.json", "w", encoding="utf-8") as f:
+            # 결과를 프로젝트 root/data 폴더에 저장
+            project_root = os.path.dirname(os.path.dirname(__file__))
+            data_dir = os.path.join(project_root, "data")
+            os.makedirs(data_dir, exist_ok=True)
+            file_path = os.path.join(data_dir, "test_result_title_only.json")
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
-            print("📝 결과가 data/test_result_title_only.json에 저장되었습니다.")
+            print(f"📝 결과가 {file_path}에 저장되었습니다.")
             
         else:
             print(f"❌ 요청 실패: {response.status_code}")
