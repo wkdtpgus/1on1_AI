@@ -5,19 +5,18 @@
 ## 목차
 
 1.  [일반 규칙](#1-일반-규칙)
-2.  [프로젝트 구조](#2-프로젝트-구조)
-3.  [네이밍 컨벤션](#3-네이밍-컨벤션)
-4.  [코딩 스타일 및 포맷팅](#4-코딩-스타일-및-포맷팅)
-5.  [FastAPI 개발 가이드](#5-fastapi-개발-가이드)
-6.  [설정(Configuration) 관리](#6-설정-관리)
-7.  [프롬프트 관리](#7-프롬프트-관리)
-8.  [로깅(Logging)](#8-로깅)
-9.  [예외 처리](#9-예외-처리)
-10. [테스트](#10-테스트)
+2.  [네이밍 컨벤션](#3-네이밍-컨벤션)
+3.  [코딩 스타일 및 포맷팅](#4-코딩-스타일-및-포맷팅)
+4.  [FastAPI 개발 가이드](#5-fastapi-개발-가이드)
+5.  [설정(Configuration) 관리](#6-설정-관리)
+6.  [프롬프트 관리](#7-프롬프트-관리)
+7.  [로깅(Logging)](#8-로깅)
+8.  [예외 처리](#9-예외-처리)
+9. [테스트](#10-테스트)
 
 ---
 
-## 일반 규칙
+## 1. 일반 규칙
 
 -   **단일 책임 원칙 (SRP):** 모든 클래스와 함수는 하나의 명확한 책임을 가져야 합니다.
 -   **관심사의 분리 (SoC):** 설정, 프롬프트, 비즈니스 로직, 유틸리티, 테스트는 명확히 분리합니다.
@@ -27,78 +26,6 @@
 -   **유틸리티 분리:** 여러 모듈에서 공통으로 사용될 수 있는 함수는 `src/utils/` 아래의 적절한 파일로 분리하여 재사용성을 높입니다.
 
 ---
-
-### 2. 프로젝트 구조
-
-프로젝트는 기능적 역할에 따라 명확하게 분리된 디렉토리 구조를 따릅니다.
-
-```
-Orblit_1on1_AI/
-│
-├── data/                                  # 데이터 저장 디렉토리
-│   ├── raw_audio/                         # 원본 음성 파일
-│   ├── stt_transcripts/                   # STT 변환 결과
-│   ├── generated_templates/               # 생성된 템플릿
-│   └── generated_1on1_feedback/           # 생성된 피드백
-
-├── docs/                                  # 프로젝트 관련 문서
-│   ├── CODE_CONVENTION.md
-│   ├── CONTRIBUTING.md
-│   ├── project_definition.md
-│   ├── requirements_specification.md
-│   └── architecture_design.md
-
-├── src/                                   # 주요 소스 코드
-│   ├── config/                            # 전역 설정 관리
-│   │   └── config.py
-│   │
-│   ├── services/                          # 핵심 비즈니스 로직
-│   │   ├── stt_processor/                 # STT 처리 서비스
-│   │   │   ├── processor.py               # STT 처리 메인 로직
-│   │   │   ├── speaker_diarization.py     # 화자 구분 로직
-│   │   │   └── audio_handler.py           # 오디오 파일 처리
-│   │   │
-│   │   ├── template_generator/            # 템플릿 생성 서비스
-│   │   │   ├── generator.py               # 템플릿 생성 메인 로직
-│   │   │   └── template_types.py          # 템플릿 타입 정의
-│   │   │
-│   │   └── 1on1_feedback/                 # 1:1 피드백 생성 서비스
-│   │       ├── analyzer.py                # 대화 분석 로직
-│   │       ├── feedback_generator.py      # 피드백 생성 로직
-│   │       └── metrics_calculator.py      # 대화 메트릭 계산
-│   │
-│   ├── prompts/                           # LLM 프롬프트 템플릿
-│   │   ├── template_generation/           # 템플릿 생성용 프롬프트
-│   │   │   ├── onboarding.py
-│   │   │   ├── performance_review.py
-│   │   │   └── general_checkin.py
-│   │   │
-│   │   └── 1on1_feedback/                 # 피드백 생성용 프롬프트
-│   │       ├── listening_skills.py
-│   │       ├── question_quality.py
-│   │       └── conversation_balance.py
-│   │
-│   ├── utils/                             # 공통 유틸리티
-│   │   ├── file_utils.py
-│   │   ├── openai_client.py
-│   │   └── validators.py
-│   │
-│   └── web/                               # FastAPI 웹 애플리케이션
-│       ├── app.py                         # 메인 애플리케이션
-│       └── routers/                       # API 라우터
-│           ├── stt_router.py
-│           ├── template_router.py
-│           └── feedback_router.py
-
-├── tests/                                 # 테스트 코드
-│   ├── archive/                           # 사용하지 않는 과거 테스트
-│   ├── data/                              # 테스트용 데이터
-│   └── test_*.py                          # 테스트 파일들
-
-├── poetry.lock                            # 의존성 버전 고정
-├── pyproject.toml                         # 프로젝트 메타데이터 및 의존성 관리
-└── README.md
-```
 
 #### Archive 디렉토리 정책
 
@@ -110,7 +37,7 @@ Orblit_1on1_AI/
 
 ---
 
-### 3. 네이밍 컨벤션
+### 2. 네이밍 컨벤션
 
 | 종류 | 규칙 | 예시 |
 | :--- | :--- | :--- |
@@ -126,7 +53,7 @@ Orblit_1on1_AI/
 
 ---
 
-### 4. 코딩 스타일 및 포맷팅
+### 3. 코딩 스타일 및 포맷팅
 
 -   **기본:** **PEP 8** 스타일 가이드를 준수합니다.
 -   **포매터:** **`black`** (코드 포맷팅), **`isort`** (import 정렬)를 사용하여 코드 스타일을 일관되게 유지합니다. 커밋 전에 항상 포매터를 실행하는 것을 권장합니다.
@@ -150,7 +77,7 @@ Orblit_1on1_AI/
 
 ---
 
-### 5. FastAPI 개발 가이드
+### 4. FastAPI 개발 가이드
 
 `FastAPI`를 사용한 웹 애플리케이션 개발 시 다음 원칙을 따릅니다.
 
@@ -169,7 +96,7 @@ Orblit_1on1_AI/
 
 ---
 
-### 6. 설정(Configuration) 관리
+### 5. 설정(Configuration) 관리
 
 -   모든 전역 설정 (모델 이름, API 키, 파일 경로 등)은 `src/config/config.py`에서 관리합니다.
 -   설정 변수는 `UPPER_SNAKE_CASE`를 따릅니다.
@@ -178,7 +105,7 @@ Orblit_1on1_AI/
 
 ---
 
-### 7. 프롬프트 관리
+### 6. 프롬프트 관리
 
 -   모든 LLM 프롬프트는 `src/prompts/` 디렉토리 내의 별도 Python 파일에서 관리합니다.
 -   프롬프트는 기능별로 파일을 분리합니다 (예: `listening_skills.py`, `question_quality.py`).
@@ -188,7 +115,7 @@ Orblit_1on1_AI/
 
 ---
 
-### 8. 로깅(Logging)
+### 7. 로깅(Logging)
 
 -   Python의 내장 `logging` 모듈을 사용합니다.
 -   파일 상단에서 모듈 레벨 로거를 설정합니다. 로거 이름은 모듈의 역할을 나타내는 문자열을 사용합니다.
@@ -204,14 +131,14 @@ Orblit_1on1_AI/
 
 ---
 
-### 9. 예외 처리
+### 8. 예외 처리
 
 -   LLM API 호출, 파일 I/O 등 외부 시스템과의 연동 지점에는 반드시 `try...except` 블록을 사용하여 예외를 처리합니다.
 -   발생한 예외는 로그로 기록하고, 함수의 반환 타입을 `Optional[T]`로 설정하거나 명확한 에러 메시지를 담은 객체를 반환하여 상위 호출자에게 실패를 알립니다.
 
 ---
 
-### 10. 테스트
+### 9. 테스트
 
 -   주요 비즈니스 로직과 기능은 반드시 `tests/` 디렉토리 아래에 테스트 코드를 작성합니다.
 -   테스트 파일명은 `test_` 접두사로 시작합니다. (예: `test_stt_processor.py`)
