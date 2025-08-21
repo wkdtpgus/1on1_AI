@@ -8,7 +8,7 @@ from src.utils.model import llm
 from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
 from src.utils.utils import get_user_data_by_id
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("template_generator")
 
 def get_chain():
     """1on1 템플릿 생성을 위한 LangChain 체인을 생성합니다."""
@@ -55,5 +55,5 @@ async def generate_template(input_data: TemplateGeneratorInput) -> TemplateGener
         return TemplateGeneratorOutput(generated_questions=generated_questions)
 
     except Exception as e:
-        logging.error(f"Error during template generation: {e}")
+        logger.error(f"Error during template generation: {e}")
         raise
