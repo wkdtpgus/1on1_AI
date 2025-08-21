@@ -5,7 +5,7 @@ from supabase import Client
 from src.utils.stt_schemas import MeetingPipelineState
 from src.utils.performance_logging import generate_performance_report
 from src.config.config import SUPABASE_BUCKET_NAME
-from .transcribe_analyze import (
+from .generate_meeting import (
     retrieve_from_supabase, 
     process_with_assemblyai, 
     analyze_with_llm,
