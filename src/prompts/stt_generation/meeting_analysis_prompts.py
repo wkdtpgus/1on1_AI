@@ -172,7 +172,7 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 • Brief mentions need only concise summaries
 • **Meeting Date & Time**: Use the provided meeting_datetime in the ai_summary header format "### 1:1 Meeting Summary with [Team Member Name] (YYYY.MM.DD)" - convert ISO format to Korean date format if provided
 • **Speaker Statistics Analysis**: Use the speaker_stats data to evaluate conversation balance. The ideal 1-on-1 should have the employee speaking 70% and manager 30%. Include this in your feedback if there's significant imbalance
-• **Participant Names**: If participant information is included in the transcript, use specific names throughout the analysis instead of generic terms like "리더" or "팀원" (e.g., "김팀장이 이대리에게 제안했습니다" instead of "매니저가 팀원에게 제안했습니다")
+• **Participant Names**: ALWAYS use EXACT names from participants data, NOT names from transcript (STT may have errors). Use participants.leader and participants.member names throughout ALL content.
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
 • **Q&A Output Format**: Return question_index (1, 2, 3...) instead of question text for precise frontend matching
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
