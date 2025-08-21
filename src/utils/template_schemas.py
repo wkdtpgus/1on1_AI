@@ -28,43 +28,6 @@ class TemplateGeneratorInput(BaseModel):
     previous_summary: Optional[str] = Field(default=None, description="'지난 기록 활용하기' 선택 시 자동으로 삽입될 이전 1on1 요약 및 액션아이템 정보.")
     generated_questions: Optional[Dict[str, str]] = Field(default=None, description="[가이드 생성용] 생성된 질문들 (key: 질문 번호, value: 질문 내용)")
 
-    @field_validator('purpose')
-    @classmethod
-    def validate_purpose(cls, v):
-        if not v:
-            return v
-        
-        allowed_values = {'Growth', 'Satisfaction', 'Relationships', 'Junior Development', 'Work'}
-        input_values = {val.strip() for val in v.split(',')}
-        
-        invalid_values = input_values - allowed_values
-        if invalid_values:
-            raise ValueError(f"Invalid purpose values: {invalid_values}. Allowed values are: {allowed_values}")
-        
-        return v
-    
-    @field_validator('question_composition')
-    @classmethod
-    def validate_question_composition(cls, v):
-        if not v:
-            return v
-        
-        allowed_values = {
-            'Experience/Story-based', 
-            'Reflection/Thought-provoking', 
-            'Action/Implementation-focused', 
-            'Relationship/Collaboration', 
-            'Growth/Goal-oriented', 
-            'Multiple choice'
-        }
-        input_values = {val.strip() for val in v.split(',')}
-        
-        invalid_values = input_values - allowed_values
-        if invalid_values:
-            raise ValueError(f"Invalid question_composition values: {invalid_values}. Allowed values are: {allowed_values}")
-        
-        return v
-
 class TemplateGeneratorOutput(BaseModel):
     """
     템플릿 생성 결과 모델.
@@ -104,21 +67,6 @@ class UsageGuideInput(BaseModel):
     
     # 추가 메타데이터
     language: str = Field(default="Korean", description="출력 언어")
-
-    @field_validator('purpose')
-    @classmethod
-    def validate_purpose(cls, v):
-        if not v:
-            return v
-        
-        allowed_values = {'Growth', 'Satisfaction', 'Relationships', 'Junior Development', 'Work'}
-        input_values = {val.strip() for val in v.split(',')}
-        
-        invalid_values = input_values - allowed_values
-        if invalid_values:
-            raise ValueError(f"Invalid purpose values: {invalid_values}. Allowed values are: {allowed_values}")
-        
-        return v
 
 class UsageGuideOutput(BaseModel):
     """활용 가이드 출력 스키마 - 단일 필드"""

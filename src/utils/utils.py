@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from src.utils.mock_db import MOCK_USER_DATA
 
 # 빠른 확인이 가능하도록 딕셔너리형태로 가상데이터 전처리
