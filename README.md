@@ -115,24 +115,6 @@ PYTHONPATH=. uvicorn src.web.stt_main:app --port 8000 --reload
 
 - 요청: POST `/generate?generation_type=template|guide|email`
 - 본문(JSON): `src.utils.template_schemas`에 정의된 입력 스키마 참고
-
-예시 요청 (템플릿):
-```bash
-curl -X POST "http://localhost:8000/generate?generation_type=template" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user_001",
-    "target_info": "홍길동",
-    "purpose": "Growth, Work",
-    "detailed_context": "팀 내 갈등 진단 및 해결책 논의",
-    "use_previous_data": false,
-    "previous_summary": null,
-    "num_questions": "Standard",
-    "question_composition": "Growth/Goal-oriented, Reflection/Thought-provoking, Action/Implementation-focused",
-    "tone_and_manner": "Casual",
-    "language": "Korean",
-    "include_guide": true
-  }'
 ```
 
 ### 미팅 분석 API (`/api/analyze`)
@@ -144,16 +126,6 @@ curl -X POST "http://localhost:8000/generate?generation_type=template" \
   - `participants_info`(optional, string): 참가자 정보 JSON 문자열
   - `meeting_datetime`(optional, string): ISO8601
   - `only_title`(optional, bool): 제목만 생성
-
-예시 요청:
-```bash
-curl -X POST "http://localhost:8000/api/analyze" \
-  -F "file_id=recordings/sample.m4a" \
-  -F "qa_pairs=$(jq -c . < tests/sample_qa.json)" \
-  -F "participants_info={\"leader\":\"김지현\",\"member\":\"김준희\"}" \
-  -F "meeting_datetime=2024-12-08T14:30:00" \
-  -F "only_title=false"
-```
 
 설정 확인: `GET /api/config`
 

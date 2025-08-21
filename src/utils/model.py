@@ -56,9 +56,7 @@ llm = ChatVertexAI(
     model_name=GEMINI_MODEL,
     max_output_tokens=GEMINI_MAX_TOKENS,
     temperature=GEMINI_TEMPERATURE,
-    # model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET}, # Deprecated
-    thinking_budget=GEMINI_THINKING_BUDGET, # Pass directly
-    streaming=True,
+    thinking_budget=GEMINI_THINKING_BUDGET,
 )
 
 # 제목 생성용 LLM (config에서 설정 가져오기)
