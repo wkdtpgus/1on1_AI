@@ -1,10 +1,9 @@
 import json
 import os
-import re
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from src.utils.mock_db import MOCK_USER_DATA
 
-# Pre-process the mock data into a dictionary for faster lookups
+# 빠른 확인이 가능하도록 딕셔너리형태로 가상데이터 전처리
 _MOCK_USER_DATA_BY_ID = {user['user_id']: user for user in MOCK_USER_DATA}
 
 def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:
@@ -17,58 +16,55 @@ def get_user_data_by_id(user_id: str) -> Optional[Dict[str, Any]]:
     return _MOCK_USER_DATA_BY_ID.get(user_id)
 
 
-def save_questions_to_json(questions: List[str], file_path: str):
+def save_questions_to_json(questions_data: Dict[str, str], file_path: str) -> Dict[str, str]:
     """
-    질문 리스트를 번호가 키인 딕셔너리 형태로 JSON 파일에 저장합니다.
+    번호가 매겨진 질문 딕셔너리를 JSON 파일에 그대로 저장합니다.
 
     Args:
-        questions (List[str]): 저장할 질문 리스트
+        questions_data (Dict[str, str]): 저장할 질문 딕셔너리 (e.g., {"1": "...", "2": "..."})
         file_path (str): 저장할 JSON 파일 경로
     
     Returns:
-        dict: 저장된 데이터를 딕셔너리 형태로 반환 (즉시 사용 가능)
+        dict: 저장된 데이터 (입력과 동일)
     """
-    output_data = {str(i + 1): question for i, question in enumerate(questions)}
-
-    # 디렉토리 생성
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
     with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(output_data, f, ensure_ascii=False, indent=4)
+        json.dump(questions_data, f, ensure_ascii=False, indent=4)
+    return questions_data
+
+
+def save_guide_to_json(guide_data: Dict[str, Any], file_path: str) -> Dict[str, Any]:
+    """
+    생성된 활용 가이드를 JSON 파일에 저장합니다.
+
+    Args:
+        guide_data (Dict[str, Any]): 저장할 가이드 딕셔너리 (e.g., {"usage_guide": "..."})
+        file_path (str): 저장할 JSON 파일 경로
     
-    return output_data
-
-def process_streaming_response(response_text: str) -> Optional[List[str]]:
+    Returns:
+        dict: 저장된 데이터 (입력과 동일)
     """
-    스트리밍 응답에서 JSON을 추출하고 generated_questions를 반환합니다.
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(guide_data, f, ensure_ascii=False, indent=4)
+    return guide_data
+
+
+def save_email_to_json(email_data: Dict[str, Any], file_path: str) -> Dict[str, Any]:
+    """
+    생성된 이메일을 JSON 파일에 저장합니다.
 
     Args:
-        response_text (str): 스트리밍 응답 텍스트
-
+        email_data (Dict[str, Any]): 저장할 이메일 딕셔너리 (e.g., {"generated_email": "..."})
+        file_path (str): 저장할 JSON 파일 경로
+    
     Returns:
-        Optional[List[str]]: 추출된 질문 리스트 또는 None
+        dict: 저장된 데이터 (입력과 동일)
     """
-    try:
-        json_match = re.search(r'```json\s*(\{.*?\})\s*```', response_text, re.DOTALL)
-        if json_match:
-            json_str = json_match.group(1)
-            full_response = json.loads(json_str)
-            return full_response.get('generated_questions', [])
-        return None
-    except Exception as e:
-        print(f"JSON 파싱 오류: {e}")
-        return None
-
-def collect_streaming_response(response) -> str:
-    """
-    SSE 스트리밍 응답을 수집하여 전체 텍스트를 반환합니다.
-
-    Args:
-        response: requests.Response 객체 (stream=True)
-
-    Returns:
-        str: 수집된 전체 응답 텍스트
-    """
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(email_data, f, ensure_ascii=False, indent=4)
+    return email_data
     full_response_str = ""
     
     for line in response.iter_lines(decode_unicode=True):
@@ -179,3 +175,4 @@ def map_speaker_data(analysis_dict: Dict[str, Any], original_stats: Dict[str, fl
     analysis_dict["transcript"] = mapped_utterances
     
     return analysis_dict
+

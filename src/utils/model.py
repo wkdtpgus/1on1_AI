@@ -49,20 +49,8 @@ if LANGSMITH_TRACING:
 else:
     logger.info("LangSmith 추적이 비활성화되어 있습니다")
 
-# 기본 LLM (스트리밍 비활성화)
+# Gemini LLM 인스턴스 (템플릿 생성용)
 llm = ChatVertexAI(
-    project=GOOGLE_CLOUD_PROJECT,
-    location=GOOGLE_CLOUD_LOCATION,
-    model_name=GEMINI_MODEL,
-    max_output_tokens=GEMINI_MAX_TOKENS,
-    temperature=GEMINI_TEMPERATURE,
-    # model_kwargs={"thinking_budget": GEMINI_THINKING_BUDGET}, # Deprecated
-    thinking_budget=GEMINI_THINKING_BUDGET, # Pass directly
-    streaming=False,
-)
-
-# 스트리밍 LLM
-llm_streaming = ChatVertexAI(
     project=GOOGLE_CLOUD_PROJECT,
     location=GOOGLE_CLOUD_LOCATION,
     model_name=GEMINI_MODEL,
