@@ -56,6 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 머지 할 땐 제거 
 @app.get("/api/config")
 async def get_config():
     return {

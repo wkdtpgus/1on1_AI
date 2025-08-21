@@ -38,7 +38,6 @@ class MeetingAnalysis(BaseModel):
 # 랭그래프 스키마 
 class MeetingPipelineState(TypedDict):
     """LangGraph 파이프라인 상태 스키마"""
-    # 입력 데이터
     file_id: Optional[str]
     bucket_name: str
     qa_pairs: Optional[List[Dict]]
@@ -50,11 +49,9 @@ class MeetingPipelineState(TypedDict):
     file_url: Optional[str]
     file_path: Optional[str]
     
-    # STT 결과
     transcript: Optional[Dict]
     speaker_stats_percent: Optional[Dict]
     
-    # LLM 분석 결과
     analysis_result: Optional[Dict]
     
     # 성능 측정 필드
@@ -63,7 +60,6 @@ class MeetingPipelineState(TypedDict):
     costs: Optional[Dict]
     performance_report: Optional[Dict]
     
-    # 상태 추적
     errors: List[str]
     status: str  # "pending", "processing", "completed", "failed"
 

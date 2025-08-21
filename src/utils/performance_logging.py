@@ -6,7 +6,6 @@ from datetime import datetime
 
 logger = logging.getLogger("performance_logging")
 
-# 비용 계산 상수 (USD)
 PRICING = {
     "assemblyai": 0.27 / 3600,  # $0.27/hour = $0.000075/sec
     "vertex_ai": {
@@ -17,7 +16,6 @@ PRICING = {
     }
 }
 
-# 환율 (USD to KRW)
 USD_TO_KRW = 1380
 
 def time_node_execution(node_name: str):
@@ -29,11 +27,9 @@ def time_node_execution(node_name: str):
             if "performance_metrics" not in state or state["performance_metrics"] is None:
                 state["performance_metrics"] = {}
                 
-            # 시작 시간 기록
             start_time = time.time()
             
             try:
-                # 원본 함수 실행
                 result = func(state, *args, **kwargs)
                 
                 # 실행 시간 계산 및 기록
@@ -111,7 +107,6 @@ class SimpleTokenCallback:
 def generate_performance_report(state: Dict) -> Dict[str, Any]:
     """성능 리포트 생성 (비용 계산 포함) 및 state에 저장"""
     
-    # 1. 비용 계산
     costs = {}
     
     # STT 비용 계산
@@ -152,7 +147,6 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
     # 2. 노드별 상세 정보 수집
     performance_metrics = state.get("performance_metrics", {})
     
-    # 모든 노드 정보 수집
     node_info = {}
     total_duration = 0
     
@@ -165,20 +159,17 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
         status = performance_metrics.get(f"{node_name}_status", "unknown")
         error = performance_metrics.get(f"{node_name}_error", None)
         
-        # 노드별 상세 정보 구성
         node_detail = {
             "실행시간": f"{duration:.2f}초",
             "상태": status
         }
         
-        # 에러가 있는 경우 추가
         if error:
             node_detail["에러"] = str(error)
         
         node_info[node_name] = node_detail
         total_duration += duration
     
-    # 총 실행 시간 추가
     if node_info:
         node_info["전체"] = {
             "총_실행시간": f"{total_duration:.2f}초",
@@ -187,14 +178,12 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
             "실패한_노드수": len([k for k in duration_keys if performance_metrics.get(k.replace("_duration", "_status")) == "failed"])
         }
     
-    # 3. 통합 리포트 구성
     report = {
         "timestamp": datetime.now().isoformat(),
         "파이프라인_상태": state.get("status", "unknown"),
         "노드별_상세정보": node_info
     }
     
-    # 토큰 사용량 추가
     if token_usage:
         report["토큰_사용량"] = {
             "input": f"{token_usage.get('input_tokens', 0):,}",
@@ -202,7 +191,6 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
             "total": f"{token_usage.get('total_tokens', 0):,}"
         }
     
-    # 비용 정보 추가
     if costs:
         cost_report = {}
         if "stt_usd" in costs:
@@ -216,12 +204,10 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
         if cost_report:
             report["비용_분석"] = cost_report
     
-    # state에 리포트 저장
     state["performance_report"] = report
     
     logger.info(f"총 비용: ${total_usd:.4f} (₩{costs.get('total_krw', 0):.0f})")
     
-    # 노드별 상세 정보 로그 출력
     logger.info(f"파이프라인 상태: {report.get('파이프라인_상태', 'unknown')}")
     
     node_details = report.get('노드별_상세정보', {})
@@ -232,7 +218,6 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
             status_emoji = "✅" if details.get('상태') == 'success' else "❌" if details.get('상태') == 'failed' else "⚠️"
             error_info = f", 에러: {details.get('에러', '')}" if details.get('에러') else ""
             
-            # 노드별 비용 정보 추가
             cost_info = ""
             if node_name == "transcribe" and costs.get("stt_usd"):
                 cost_info = f", 비용: ${costs['stt_usd']:.4f}"
@@ -241,7 +226,6 @@ def generate_performance_report(state: Dict) -> Dict[str, Any]:
             
             logger.info(f"{status_emoji} [{node_name}] {details.get('실행시간', 'N/A')}, 상태: {details.get('상태', 'unknown')}{cost_info}{error_info}")
     
-    # 전체 비용 요약 출력
     if costs:
         logger.info(f"비용 요약:")
         if costs.get("stt_usd"):
