@@ -21,7 +21,9 @@ Orblit_1on1_AI/
 │  ├─ prompts/
 │  │  ├─ stt_generation/
 │  │  │  ├─ meeting_analysis_prompts.py
+│  │  │  └─ title_generation_prompts.py
 │  │  └─ template_generation/
+│  │     ├─ email_prompts.py
 │  │     ├─ guide_prompts.py
 │  │     └─ template_prompts.py
 │  ├─ services/
@@ -40,8 +42,7 @@ Orblit_1on1_AI/
 │  │  ├─ template_schemas.py
 │  │  └─ utils.py
 │  └─ web/
-│     ├─ stt_main.py               # 미팅 분석 API 서버
-│     └─ template_main.py          # 템플릿/가이드/이메일 생성 API 서버
+│     └─ main.py                   # 통합 API 서버
 ├─ tests/
 │  ├─ test_client_flow.py          # 템플릿 생성 플로우 통합 테스트
 │  └─ test_meeting_api.py          # STT 분석 API 테스트
@@ -90,32 +91,22 @@ LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=oblit-1on1_ai_ui
 ```
 
-3) 실행 방법 (둘 중 하나씩 실행)
+3) 실행 방법
 
-- 템플릿 생성 API 서버 (tests/test_client_flow.py는 8000 포트를 사용)
+통합 API 서버를 실행하여 모든 기능을 사용할 수 있습니다:
 ```bash
-PYTHONPATH=. uvicorn src.web.template_main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-- 미팅 분석(STT) API 서버 (tests/test_meeting_api.py는 8000 포트를 사용)
-```bash
-PYTHONPATH=. uvicorn src.web.stt_main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-동시에 실행하려면 포트를 다르게 지정하세요. 예) 템플릿:8001, STT:8000
-
-```bash
-PYTHONPATH=. uvicorn src.web.template_main:app --port 8001 --reload
-PYTHONPATH=. uvicorn src.web.stt_main:app --port 8000 --reload
+PYTHONPATH=. uvicorn src.web.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ## API
+
+통합 서버(`src.web.main:app`)는 다음 엔드포인트를 제공합니다:
 
 ### 템플릿 생성 API (`/generate`)
 
 - 요청: POST `/generate?generation_type=template|guide|email`
 - 본문(JSON): `src.utils.template_schemas`에 정의된 입력 스키마 참고
-```
+- 스트리밍 지원: 가이드 생성 시 실시간 스트리밍 응답
 
 ### 미팅 분석 API (`/api/analyze`)
 
@@ -133,22 +124,28 @@ PYTHONPATH=. uvicorn src.web.stt_main:app --port 8000 --reload
 
 통합 서버를 실행한 뒤, 별도의 터미널에서 테스트를 실행하세요.
 
-서버 실행:
+### 서버 실행:
 ```bash
 poetry run uvicorn src.web.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-테스트 실행:
+### 테스트 실행:
 ```bash
-# 템플릿 생성 흐름 테스트
+# 템플릿 생성 흐름 테스트 (통합 서버의 /generate 엔드포인트 테스트)
 poetry run pytest tests/test_client_flow.py -v -s
 
-# STT 및 미팅 분석 테스트
-poetry run pytest tests/test_meeting_api.py -v -s
+# STT 및 미팅 분석 테스트 (통합 서버의 /api/analyze 엔드포인트 테스트)
+poetry run pytest tests/test_meeting_api.py
 ```
 
 
-생성 결과는 `data/` 하위에 저장됩니다.
+### 결과 저장
+
+생성 결과는 `data/` 하위에 카테고리별로 저장됩니다:
+- `data/generated_templates/`: 템플릿, 가이드, 이메일 생성 결과
+- `data/stt_transcripts/`: STT 전사 및 미팅 분석 결과
+- `data/integrated_results/`: 통합 분석 결과
+- `data/raw_audio/`: 원본 오디오 파일
 
 ## 설정 가이드
 
@@ -162,4 +159,5 @@ poetry run pytest tests/test_meeting_api.py -v -s
 
 ### AssemblyAI
 1. 계정 생성 및 API Key 발급 → `ASSEMBLYAI_API_KEY`
+
 
