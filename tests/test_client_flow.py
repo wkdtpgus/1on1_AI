@@ -79,25 +79,50 @@ async def test_client_generation_flow():
             assert False, f"1단계 (템플릿 생성) 중 오류 발생: {e}"
 
         # --- 2단계: 활용 가이드 생성 ---
-        print("\\n[2단계] 활용 가이드 생성 요청")
+        print("\\n[2단계] 활용 가이드 생성 요청 (스트리밍)")
         try:
-            # 상태에 저장된 generated_questions를 페이로드에 추가
+            url = f"{base_url}?generation_type=guide"
+            
+            # 가이드 생성에는 생성된 질문이 필요
             guide_payload = client_state["user_input"].copy()
             guide_payload["generated_questions"] = client_state["generated_questions"]
             
-            url = f"{base_url}?generation_type=guide"
-            response = await client.post(url, data=json.dumps(guide_payload), headers=headers, timeout=300)
-            assert response.status_code == 200, "가이드 생성 API 호출 실패"
+            raw_response_content = ""
+            print("--- 스트리밍 시작 ---")
+            async with client.stream("POST", url, data=json.dumps(guide_payload), headers=headers, timeout=300) as response:
+                assert response.status_code == 200, "가이드 생성 API 호출 실패"
+                
+                async for chunk in response.aiter_text():
+                    print(chunk, end="")  # 터미널에 스트리밍 출력
+                    if chunk.startswith("data: "):
+                        # "data: "와 개행문자 제거
+                        data_part = chunk[6:].strip()
+                        if data_part:
+                            try:
+                                # 각 청크는 JSON 문자열 조각이므로, 파싱하여 내부 문자열을 추출
+                                content = json.loads(data_part)
+                                raw_response_content += content
+                            except json.JSONDecodeError:
+                                print(f"\\nJSON 파싱 오류: {data_part}")
 
-            response_data = response.json()
-            usage_guide = response_data.get("usage_guide")
-            assert usage_guide, "생성된 가이드가 없습니다."
+            print("\\n--- 스트리밍 종료 ---")
+            assert raw_response_content, "스트리밍된 내용이 없습니다."
+            
+            # 전체 응답 문자열에서 마크다운 코드 블록 제거
+            if raw_response_content.startswith("```json"):
+                cleaned_json_str = raw_response_content[7:-3].strip()
+            else:
+                cleaned_json_str = raw_response_content
+
+            guide_data = json.loads(cleaned_json_str)
+            usage_guide = guide_data.get("usage_guide")
+            assert usage_guide, "응답에 'usage_guide'가 없습니다."
 
             # 파일 저장 로직 추가
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = f"data/generated_templates/guide_{timestamp}.json"
-            save_guide_to_json(response_data, output_path)
-            print(f"✅ 활용 가이드 생성 성공, 결과를 {output_path}에 저장 완료")
+            save_guide_to_json(guide_data, output_path)
+            print(f"\\n✅ 활용 가이드 생성 성공, 결과를 {output_path}에 저장 완료")
 
         except Exception as e:
             assert False, f"2단계 (가이드 생성) 중 오류 발생: {e}"

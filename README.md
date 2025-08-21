@@ -131,13 +131,21 @@ PYTHONPATH=. uvicorn src.web.stt_main:app --port 8000 --reload
 
 ## 테스트
 
-다음 중 하나를 먼저 실행한 뒤 테스트를 실행하세요.
-- 템플릿 서버: `uvicorn src.web.template_main:app --port 8000`
-- STT AI 서버: `uvicorn src.web.stt_main:app --port 8000`
+통합 서버를 실행한 뒤, 별도의 터미널에서 테스트를 실행하세요.
+
+서버 실행:
+```bash
+poetry run uvicorn src.web.main:app --reload --host 127.0.0.1 --port 8000
+```
 
 테스트 실행:
-- 템플릿 테스트 : `poetry run pytest tests/test_client_flow.py -v -s`
-- STT AI 테스트 : `poetry run pytest tests/test_meeting_api.py`
+```bash
+# 템플릿 생성 흐름 테스트
+poetry run pytest tests/test_client_flow.py -v -s
+
+# STT 및 미팅 분석 테스트
+poetry run pytest tests/test_meeting_api.py -v -s
+```
 
 
 생성 결과는 `data/` 하위에 저장됩니다.

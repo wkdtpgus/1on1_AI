@@ -67,7 +67,3 @@ class UsageGuideInput(BaseModel):
     
     # 추가 메타데이터
     language: str = Field(default="Korean", description="출력 언어")
-
-class UsageGuideOutput(BaseModel):
-    """활용 가이드 출력 스키마 - 단일 필드"""
-    usage_guide: str = Field(..., description="이모지로 구분된 세 파트로 구성된 활용 가이드 텍스트")

@@ -4,7 +4,7 @@ from typing import Optional, Union, Literal
 import assemblyai as aai
 from fastapi import FastAPI, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from supabase import create_client, Client
 
 
@@ -19,7 +19,6 @@ from src.utils.template_schemas import (
     TemplateGeneratorInput,
     TemplateGeneratorOutput,
     UsageGuideInput,
-    UsageGuideOutput,
 )
 
 from src.config.config import (
@@ -108,7 +107,7 @@ async def analyze_meeting_with_storage(
 
 @app.post(
     "/generate",
-    response_model=Union[TemplateGeneratorOutput, EmailGeneratorOutput, UsageGuideOutput],
+    response_model=Union[TemplateGeneratorOutput, EmailGeneratorOutput],
     summary="1on1 미팅 템플릿, 이메일, 가이드 생성",
     description="""
     1on1 미팅을 위한 다양한 콘텐츠를 생성합니다:
@@ -150,7 +149,7 @@ async def generate_endpoint(
                 generated_questions=input_data.generated_questions,
                 language=input_data.language
             )
-            result = await generate_usage_guide(guide_input)
+            return StreamingResponse(generate_usage_guide(guide_input), media_type="text/event-stream")
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
