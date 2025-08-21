@@ -32,6 +32,8 @@ from src.config.config import (
     LANGSMITH_ENDPOINT
 )
 
+logger = logging.getLogger("model")
+
 # LangSmith 환경변수 설정
 if LANGSMITH_TRACING:
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
