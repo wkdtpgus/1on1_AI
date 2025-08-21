@@ -66,7 +66,7 @@ feat: STT 처리기 화자 구분 기능 추가
 
 - 기본 경로: `src/services/`
 - 현재 사용 중인 서비스는 `processor.py`, `generator.py`, `analyzer.py` 등 명확한 이름 사용
-- 더 이상 사용하지 않는 서비스는 `old/` 폴더에 이동하고 버전명을 붙임
+- 더 이상 사용하지 않는 서비스는 `archive/` 폴더에 이동하고 버전명을 붙임
 - 예시:
   - 사용 중: `stt_processor/processor.py`
   - 이전 버전: `stt_processor/old/processor_v1.py`
