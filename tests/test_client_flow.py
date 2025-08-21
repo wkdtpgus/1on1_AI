@@ -12,7 +12,7 @@ from src.utils.utils import save_questions_to_json, save_guide_to_json, save_ema
 # .env 파일 로드
 load_dotenv()
 
-# FastAPI 서버의 기본 URL
+# FastAPI 서버의 기본 URL (통합된 main.py 서버)
 base_url = "http://127.0.0.1:8000/generate"
 
 # 테스트할 사용자 ID
