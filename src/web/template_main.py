@@ -1,7 +1,3 @@
-"""
-FastAPI server for testing streaming template generation.
-Run with: uvicorn test_streaming_api:app --reload --port 8000
-"""
 from typing import Union, Literal
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +14,6 @@ from src.utils.template_schemas import (
     UsageGuideOutput,
 )
 
-
 app = FastAPI(title="1on1 Template Generator API")
 
 # Add CORS middleware for testing
@@ -30,7 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.post(
     "/generate",
     response_model=Union[TemplateGeneratorOutput, EmailGeneratorOutput, UsageGuideOutput],
@@ -41,9 +35,7 @@ async def generate_endpoint(
         "template", description="Generation type"
     ),
 ):
-    """
-    Generate a 1-on-1 template, a summary email, or a usage guide based on the input.
-    """
+
     try:
         if generation_type == "template":
             result = await generate_template(input_data)
@@ -71,17 +63,6 @@ async def generate_endpoint(
                 language=input_data.language
             )
             result = await generate_usage_guide(guide_input)
-        else:
-            # This case might be redundant due to Literal validation, but good for safety
-            raise HTTPException(status_code=400, detail="Invalid generation type specified.")
         return result
     except Exception as e:
-        # Log the exception for debugging purposes
-        print(f"Error during generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-if __name__ == "__main__":
-    import uvicorn
-    # reload=True 옵션을 사용하려면 애플리케이션을 "파일명:객체명" 형태의 문자열로 전달해야 합니다.
-    uvicorn.run("src.web.template_main:app", host="0.0.0.0", port=8000, reload=True)
