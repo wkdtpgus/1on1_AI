@@ -1,5 +1,5 @@
 from typing import Optional, Literal, Dict
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 # 템플릿(질문) 생성
 class TemplateGeneratorInput(BaseModel):

@@ -1,5 +1,4 @@
 import assemblyai as aai
-import os
 import logging
 from typing import Optional
 from langchain_google_vertexai import ChatVertexAI
@@ -25,28 +24,10 @@ from src.config.config import (
     ASSEMBLYAI_DISFLUENCIES,
     ASSEMBLYAI_SPEAKER_LABELS,
     ASSEMBLYAI_LANGUAGE_DETECTION,
-    ASSEMBLYAI_SPEAKERS_EXPECTED,
-    LANGSMITH_TRACING,
-    LANGSMITH_PROJECT,
-    LANGSMITH_API_KEY,
-    LANGSMITH_ENDPOINT
+    ASSEMBLYAI_SPEAKERS_EXPECTED
 )
 
 logger = logging.getLogger("model")
-
-# LangSmith 환경변수 설정
-if LANGSMITH_TRACING:
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_PROJECT"] = LANGSMITH_PROJECT
-    if LANGSMITH_API_KEY:
-        os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY
-    os.environ["LANGCHAIN_ENDPOINT"] = LANGSMITH_ENDPOINT
-
-# LangSmith 추적 상태 로깅
-if LANGSMITH_TRACING:
-    logger.info(f"LangSmith 추적 활성화됨 - 프로젝트: {LANGSMITH_PROJECT}")
-else:
-    logger.info("LangSmith 추적이 비활성화되어 있습니다")
 
 # Gemini LLM 인스턴스 (템플릿 생성용)
 llm = ChatVertexAI(
@@ -82,7 +63,7 @@ class SpeechTranscriber:
 
     def __init__(self, api_key: Optional[str] = None) -> None:
         """API 키 검증과 함께 SpeechTranscriber 초기화"""
-        self.api_key = api_key or ASSEMBLYAI_API_KEY or os.getenv("ASSEMBLYAI_API_KEY")
+        self.api_key = api_key or ASSEMBLYAI_API_KEY 
         
         if not self.api_key:
             raise ValueError("AssemblyAI API 키가 필요합니다")
