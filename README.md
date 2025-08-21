@@ -136,8 +136,8 @@ PYTHONPATH=. uvicorn src.web.stt_main:app --port 8000 --reload
 - STT AI 서버: `uvicorn src.web.stt_main:app --port 8000`
 
 테스트 실행:
-- 템플릿 테스트 : poetry run pytest tests/test_client_flow.py -v -s
-- STT AI 테스트 : poetry run pytest tests/test_meeting_api.py -v -s
+- 템플릿 테스트 : `poetry run pytest tests/test_client_flow.py -v -s`
+- STT AI 테스트 : `poetry run pytest tests/test_meeting_api.py`
 
 
 생성 결과는 `data/` 하위에 저장됩니다.
