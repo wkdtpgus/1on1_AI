@@ -32,9 +32,6 @@ from src.config.config import (
     LANGSMITH_ENDPOINT
 )
 
-logger = logging.getLogger("model")
-TRANSCRIPT_POLL_INTERVAL = 5  # 전사 상태 확인 간격(초)
-
 # LangSmith 환경변수 설정
 if LANGSMITH_TRACING:
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
