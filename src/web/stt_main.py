@@ -5,7 +5,7 @@ from typing import Optional
 import assemblyai as aai
 from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse
 from supabase import create_client, Client
 from src.services.meeting_analyze.workflow import MeetingPipeline
 from src.config.config import (
@@ -56,21 +56,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return FileResponse("frontend/index.html")
-
-@app.get("/api.js")
-async def api_js():
-    return FileResponse("frontend/api.js", media_type="application/javascript")
-
-@app.get("/app.js")
-async def app_js():
-    return FileResponse("frontend/app.js", media_type="application/javascript")
-
 @app.get("/api/config")
 async def get_config():
-    return {"supabase_url": SUPABASE_URL, "supabase_key": SUPABASE_KEY, "bucket_name": SUPABASE_BUCKET_NAME}
+    return {
+        "supabase_url": SUPABASE_URL, 
+        "supabase_key": SUPABASE_KEY, 
+        "bucket_name": SUPABASE_BUCKET_NAME
+    }
 
 @app.post("/api/analyze",
          summary="1on1 미팅 오디오를 STT로 전사하고 LLM으로 분석 결과를 반환하는 엔드포인트",
