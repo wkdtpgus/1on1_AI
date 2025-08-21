@@ -142,18 +142,6 @@ def calculate_speaker_percentages(utterances) -> Dict[str, float]:
 
 def map_speaker_data(analysis_dict: Dict[str, Any], original_stats: Dict[str, float], 
                     original_utterances: List[Dict], participants_info: Dict[str, str]) -> Dict[str, Any]:
-    """
-    화자 매핑을 사용해 A, B를 실제 이름으로 변환하고 통계를 매핑합니다.
-    
-    Args:
-        analysis_dict: LLM 분석 결과 딕셔너리
-        original_stats: 원본 화자별 통계 (A, B 키 사용)
-        original_utterances: 원본 발화 목록 (A, B 화자명 사용)
-        participants_info: 참가자 정보 (leader, member 키 포함)
-        
-    Returns:
-        Dict[str, Any]: 매핑된 분석 결과 딕셔너리
-    """
     # speaker_mapping을 사용해 speaker_stats_percent를 실제 이름으로 변환
     speaker_mapping_list = analysis_dict.pop("speaker_mapping", ["리더", "팀원"])
     

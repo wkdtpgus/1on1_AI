@@ -25,7 +25,7 @@ supabase: Client = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global meeting_analyzer, meeting_pipeline, supabase
+    global meeting_pipeline, supabase
     
     if GOOGLE_APPLICATION_CREDENTIALS_JSON:
         creds_path = "/tmp/gcp_creds.json"
@@ -78,10 +78,11 @@ async def get_config():
          업로드된 오디오 파일을 분석하여 종합적인 1대1 미팅 리포트를 생성.
          
          입력 데이터 :
-          file_id: Supabase에 업로드된 오디오 파일 ID (필수)
-          qa_pairs: 질문-답변 JSON 문자열 (선택)
-          participants_info: 참가자 정보 JSON (필수)
-          meeting_datetime: 회의 일시 ISO 문자열 (필수)
+          file_id: Supabase에 업로드된 오디오 파일 ID 
+          qa_pairs: 질문-답변 JSON 문자열 
+          participants_info: 참가자 정보 JSON 
+          meeting_datetime: 회의 일시 ISO 문자열 
+          only_title : True 면 제목만 생성, False 면 전체 분석 (기본값: False)
         
          반환 데이터 구조:
          ```json
@@ -125,11 +126,11 @@ async def get_config():
          """)
   
 async def analyze_meeting_with_storage(
-    file_id: Optional[str] = Form(default=None, description="(선택)Supabase 스토리지에 업로드된 오디오 파일 ID - only_title=true일 때는 불필요"),
-    qa_pairs: Optional[str] = Form(default=None, description="(선택)미리 준비된 질문-답변 쌍 (JSON 문자열)"),
-    participants_info: Optional[str] = Form(default=None, description="(필수)참가자 정보 (JSON 문자열, 예: {\"leader\": \"김지현\", \"member\": \"김준희\"})"),
-    meeting_datetime: Optional[str] = Form(default=None, description="(필수)회의 일시 (ISO 8601 형식, 예: 2024-12-08T14:30:00)"),
-    only_title: Optional[bool] = Form(default=False, description="(선택)제목만 생성할지 여부 (기본값: False)")
+    file_id: Optional[str] = Form(default=None, description="Supabase 스토리지에 업로드된 오디오 파일 ID - only_title=true일 때는 불필요"),
+    qa_pairs: Optional[str] = Form(default=None, description="미리 준비된 질문-답변 쌍 (JSON 문자열)"),
+    participants_info: Optional[str] = Form(default=None, description="참가자 정보 (JSON 문자열, 예: {\"leader\": \"김지현\", \"member\": \"김준희\"})"),
+    meeting_datetime: Optional[str] = Form(default=None, description="회의 일시 (ISO 8601 형식, 예: 2024-12-08T14:30:00)"),
+    only_title: Optional[bool] = Form(default=False, description="제목만 생성할지 여부 (기본값: False)")
 ):
     # LangGraph 파이프라인 실행 
     result = await meeting_pipeline.run(
