@@ -2,9 +2,8 @@ import logging
 from typing import Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 from supabase import Client
-from src.utils.stt_schemas import MeetingPipelineState
+from src.utils.schemas import MeetingPipelineState
 from src.utils.performance_logging import generate_performance_report
-from src.config.config import SUPABASE_BUCKET_NAME
 from .generate_meeting import (
     retrieve_from_supabase, 
     process_with_assemblyai, 
@@ -40,14 +39,11 @@ class MeetingPipeline:
         
         return workflow.compile()
     
-    async def run(self, file_id: Optional[str] = None, **kwargs) -> Dict:
-        logger.info(f"파이프라인 실행 시작: {file_id}")
-        
-        bucket_name = kwargs.get("bucket_name", SUPABASE_BUCKET_NAME)
+    async def run(self, recording_url: Optional[str] = None, **kwargs) -> Dict:
+        logger.info(f"파이프라인 실행 시작: {recording_url}")
         
         initial_state: MeetingPipelineState = {
-            "file_id": file_id,
-            "bucket_name": bucket_name,
+            "recording_url": recording_url,
             "qa_pairs": kwargs.get("qa_pairs"),
             "participants_info": kwargs.get("participants_info"),
             "meeting_datetime": kwargs.get("meeting_datetime"),

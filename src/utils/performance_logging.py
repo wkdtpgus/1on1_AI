@@ -4,6 +4,8 @@ from typing import Dict, Any, Callable
 from functools import wraps
 from datetime import datetime
 
+from src.config.config import USD_TO_KRW
+
 logger = logging.getLogger("performance_logging")
 
 PRICING = {
@@ -15,8 +17,6 @@ PRICING = {
         "output_large": 15.00 / 1000000,  # $15.00 per 1M tokens (> 20만 토큰)
     }
 }
-
-USD_TO_KRW = 1380
 
 def time_node_execution(node_name: str):
     """노드 실행 시간 측정 데코레이터"""
@@ -86,7 +86,7 @@ class SimpleTokenCallback:
                                 logger.info(f"📊 입력: {input_tokens:,}, 출력: {output_tokens:,}, 총: {total_tokens:,}")
                                 
                                 # state에 토큰 정보 저장
-                                if "token_usage" not in self.state:
+                                if "token_usage" not in self.state or self.state["token_usage"] is None:
                                     self.state["token_usage"] = {}
                                 
                                 self.state["token_usage"].update({
@@ -101,6 +101,14 @@ class SimpleTokenCallback:
     
     def on_chat_model_start(self, serialized, messages, **kwargs):
         """Chat 모델 시작 시 호출 (필수 메서드)"""
+        pass
+    
+    def on_chain_start(self, serialized, inputs, **kwargs):
+        """체인 시작 시 호출 (필수 메서드)"""
+        pass
+    
+    def on_chain_end(self, outputs, **kwargs):
+        """체인 종료 시 호출 (필수 메서드)"""
         pass
 
 

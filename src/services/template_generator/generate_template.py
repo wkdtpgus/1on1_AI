@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from src.prompts.template_generation.template_prompts import HUMAN_PROMPT, SYSTEM_PROMPT
 from src.utils.model import llm
-from src.utils.template_schemas import TemplateGeneratorInput, TemplateGeneratorOutput
+from src.utils.schemas import TemplateGeneratorInput, TemplateGeneratorOutput
 from src.utils.utils import get_user_data_by_id
 
 logger = logging.getLogger("template_generator")

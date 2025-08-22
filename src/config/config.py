@@ -26,7 +26,7 @@ STT_CHECK_INTERVAL = 10  # STT 상태 확인 간격 (초)
 
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 # Vertex AI 모델 설정 (STT 분석용)
 VERTEX_AI_MODEL = "gemini-2.5-pro"  # Vertex AI 모델명
@@ -65,4 +65,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SUPABASE_BUCKET_NAME = os.getenv("SUPABASE_BUCKET_NAME", "audio-recordings")
 
 # Supabase 파일 경로 템플릿
-RECORDING_PATH_TEMPLATE = "recordings/{file_id}"  
+RECORDING_PATH_TEMPLATE = "recordings/{user_id}/{file_id}"
+
+# 비용 계산 설정
+USD_TO_KRW = 1380  # USD -> KRW 환율 (주기적 업데이트 필요)

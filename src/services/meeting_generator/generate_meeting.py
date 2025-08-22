@@ -3,11 +3,11 @@ import logging
 import time
 import assemblyai as aai
 from src.utils.model import SpeechTranscriber, title_llm, meeting_llm
-from src.utils.stt_schemas import MeetingPipelineState, MeetingAnalysis
+from src.utils.schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.prompts.stt_generation.title_generation_prompts import TITLE_ONLY_SYSTEM_PROMPT, TITLE_ONLY_USER_PROMPT
 from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
-from src.config.config import SUPABASE_BUCKET_NAME, STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL, RECORDING_PATH_TEMPLATE
+from src.config.config import STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL
 from src.utils.utils import calculate_speaker_percentages, map_speaker_data
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
@@ -17,32 +17,25 @@ logger = logging.getLogger("meeting_nodes")
 
 @time_node_execution("retrieve")
 def retrieve_from_supabase(state: MeetingPipelineState) -> MeetingPipelineState:
-    """Supabase에서 파일 조회 및 URL 생성"""
-    logger.info(f"Supabase 파일 조회 시작: {state['file_id']}")
+    """프론트에서 전달받은 URL 처리"""
+    logger.info(f"Recording URL 처리 시작: {state.get('recording_url', 'No URL provided')}")
     
     try:
         state["status"] = "retrieving_file"
         
-        # supabase_client 가져오기 (함수 속성으로 전달됨)
-        supabase = getattr(retrieve_from_supabase, '_supabase_client', None)
-        if not supabase:
-            logger.error("Supabase 클라이언트가 초기화되지 않았습니다")
+        # recording_url이 있는지 확인
+        if not state.get("recording_url"):
+            logger.error("Recording URL이 제공되지 않았습니다")
             state["status"] = "failed"
             return state
         
-        bucket_name = SUPABASE_BUCKET_NAME
-        file_id = state["file_id"]
+        # 프론트에서 전달받은 URL을 그대로 사용
+        state["file_url"] = state["recording_url"]
         
-        file_path = RECORDING_PATH_TEMPLATE.format(file_id=file_id)
-        file_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
-        
-        state["file_url"] = file_url
-        state["file_path"] = file_path
-        
-        logger.info(f"✅ 파일 조회 완료: {file_path}")
+        logger.info(f"✅ URL 설정 완료: {state['file_url']}")
         
     except Exception as e:
-        error_msg = f"Supabase 파일 조회 실패: {str(e)}"
+        error_msg = f"Recording URL 처리 실패: {str(e)}"
         logger.error(error_msg)
         state["errors"].append(error_msg)
         state["status"] = "failed"
@@ -99,9 +92,33 @@ def process_with_assemblyai(state: MeetingPipelineState) -> MeetingPipelineState
                 }
                 for utterance in transcript.utterances
             ]
+            
+            # STT 결과 로그 출력
+            logger.info(f"📝 STT 전사 결과 - 총 {len(formatted_transcript)}개 발화")
+            
+            # 화자별 발화 수 계산
+            speaker_counts = {}
+            for utterance in formatted_transcript:
+                speaker = utterance.get("speaker", "Unknown")
+                speaker_counts[speaker] = speaker_counts.get(speaker, 0) + 1
+            
+            logger.info(f"🎭 화자별 발화 수: {speaker_counts}")
+            
+            # 처음 5개 발화 샘플 출력
+            logger.info("📋 처음 5개 발화 샘플:")
+            for i, utterance in enumerate(formatted_transcript[:5]):
+                speaker = utterance.get("speaker", "Unknown")
+                text = utterance.get("text", "")
+                # 텍스트가 너무 길면 잘라서 표시
+                if len(text) > 100:
+                    text = text[:100] + "..."
+                logger.info(f"  [{i+1}] {speaker}: {text}")
         
         # 화자별 발화 시간 비율 계산
         speaker_stats_percent = calculate_speaker_percentages(transcript.utterances)
+        
+        # 화자별 발화 비율 로그 출력
+        logger.info(f"📊 화자별 발화 시간 비율: {speaker_stats_percent}")
         
         state["transcript"] = {
             "utterances": formatted_transcript,

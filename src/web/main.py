@@ -1,8 +1,8 @@
 import os
 from contextlib import asynccontextmanager
-from typing import Optional, Union, Literal
+from typing import Union, Literal
 import assemblyai as aai
-from fastapi import FastAPI, Form, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from supabase import create_client, Client
@@ -13,7 +13,8 @@ from src.services.meeting_generator.workflow import MeetingPipeline
 from src.services.template_generator.generate_email import generate_email
 from src.services.template_generator.generate_template import generate_template
 from src.services.template_generator.generate_usage_guide import generate_usage_guide
-from src.utils.template_schemas import (
+from src.utils.schemas import (
+    AnalyzeMeetingInput,
     EmailGeneratorInput,
     EmailGeneratorOutput,
     TemplateGeneratorInput,
@@ -23,7 +24,7 @@ from src.utils.template_schemas import (
 
 from src.config.config import (
     ASSEMBLYAI_API_KEY,
-    GOOGLE_APPLICATION_CREDENTIALS_JSON,
+    GOOGLE_APPLICATION_CREDENTIALS,
     SUPABASE_URL,
     SUPABASE_KEY,
     SUPABASE_BUCKET_NAME
@@ -38,11 +39,8 @@ async def lifespan(app: FastAPI):
     global meeting_pipeline, supabase
     
     # Google Cloud 인증 설정
-    if GOOGLE_APPLICATION_CREDENTIALS_JSON:
-        creds_path = "/tmp/gcp_creds.json"
-        with open(creds_path, "w", encoding="utf-8") as f:
-            f.write(GOOGLE_APPLICATION_CREDENTIALS_JSON)
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+    if GOOGLE_APPLICATION_CREDENTIALS:
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
     
     # Supabase 클라이언트 초기화
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -85,21 +83,15 @@ async def get_config():
 
 @app.post("/api/analyze",
          summary="1on1 미팅 오디오를 STT로 전사하고 LLM으로 분석 결과를 반환하는 엔드포인트")
-async def analyze_meeting_with_storage(
-    file_id: Optional[str] = Form(default=None, description="Supabase 스토리지에 업로드된 오디오 파일 ID - only_title=true일 때는 불필요"),
-    qa_pairs: Optional[str] = Form(default=None, description="미리 준비된 질문-답변 쌍 (JSON 문자열)"),
-    participants_info: Optional[str] = Form(default=None, description="참가자 정보 (JSON 문자열, 예: {\"leader\": \"김지현\", \"member\": \"김준희\"})"),
-    meeting_datetime: Optional[str] = Form(default=None, description="회의 일시 (ISO 8601 형식, 예: 2024-12-08T14:30:00)"),
-    only_title: Optional[bool] = Form(default=False, description="제목만 생성할지 여부 (기본값: False)")
-):
+async def analyze_meeting_with_storage(input_data: AnalyzeMeetingInput):
     """1on1 미팅 분석 API"""
     # LangGraph 파이프라인 실행 
     result = await meeting_pipeline.run(
-        file_id=file_id,
-        qa_pairs=qa_pairs,
-        participants_info=participants_info,
-        meeting_datetime=meeting_datetime,
-        only_title=only_title
+        recording_url=input_data.recording_url,
+        qa_pairs=input_data.qa_pairs,
+        participants_info=input_data.participants_info,
+        meeting_datetime=input_data.meeting_datetime,
+        only_title=input_data.only_title
     )
     return JSONResponse(content=result.get("analysis_result", {}))
 

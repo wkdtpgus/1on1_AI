@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from src.prompts.template_generation.guide_prompts import HUMAN_PROMPT, SYSTEM_PROMPT
 from src.utils.model import llm
-from src.utils.template_schemas import UsageGuideInput
+from src.utils.schemas import UsageGuideInput
 
 
 def get_usage_guide_chain():

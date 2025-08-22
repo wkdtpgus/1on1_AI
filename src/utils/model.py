@@ -27,7 +27,7 @@ from src.config.config import (
     ASSEMBLYAI_SPEAKERS_EXPECTED
 )
 
-logger = logging.getLogger("model")
+logger = logging.getLogger("llm_models")
 
 # Gemini LLM 인스턴스 (템플릿 생성용)
 llm = ChatVertexAI(
