@@ -95,9 +95,9 @@ LANGSMITH_PROJECT=oblit-1on1_ai_ui
 
 통합 서버(`src.web.main:app`)는 다음 엔드포인트를 제공합니다:
 
-### 템플릿 생성 API (`/generate`)
+### 템플릿 생성 API (`/api/template`)
 
-- 요청: POST `/generate?generation_type=template|guide|email`
+- 요청: POST `/api/template?generation_type=template|guide|email`
 - 본문(JSON): `src.utils.template_schemas`에 정의된 입력 스키마 참고
 - 스트리밍 지원: 가이드 생성 시 실시간 스트리밍 응답
 
@@ -124,7 +124,7 @@ poetry run uvicorn src.web.main:app --reload --host 127.0.0.1 --port 8000
 
 ### 테스트 실행:
 ```bash
-# 템플릿 생성 흐름 테스트 (통합 서버의 /generate 엔드포인트 테스트)
+# 템플릿 생성 흐름 테스트 (통합 서버의 /api/template 엔드포인트 테스트)
 poetry run pytest tests/test_client_flow.py -v -s
 
 # STT 및 미팅 분석 테스트 (통합 서버의 /api/analyze 엔드포인트 테스트)
