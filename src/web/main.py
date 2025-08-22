@@ -108,14 +108,7 @@ async def analyze_meeting_with_storage(
 @app.post(
     "/api/template",
     response_model=Union[TemplateGeneratorOutput, EmailGeneratorOutput],
-    summary="1on1 미팅 템플릿, 이메일, 가이드 생성",
-    description="""
-    1on1 미팅을 위한 다양한 콘텐츠를 생성합니다:
-    - template: 1on1 미팅 질문 템플릿 생성
-    - email: 1on1 미팅 초대 이메일 생성
-    - guide: 1on1 미팅 진행 가이드 생성
-    """
-)
+    summary="1on1 미팅 템플릿, 이메일, 가이드 생성하는 엔드포인트")
 async def generate_endpoint(
     input_data: TemplateGeneratorInput,
     generation_type: Literal["template", "email", "guide"] = Query(
