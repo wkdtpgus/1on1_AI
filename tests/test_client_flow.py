@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from langsmith import traceable
 
 from src.utils.mock_db import MOCK_USER_DATA
-from src.utils.utils import save_questions_to_json, save_guide_to_json, save_email_to_json
+from src.utils.utils import save_to_json
 
 # .env 파일 로드
 load_dotenv()
@@ -69,10 +69,10 @@ async def test_client_generation_flow():
             client_state["generated_questions"] = response_data.get("generated_questions")
             assert client_state["generated_questions"], "생성된 질문이 없습니다."
             
-            # 파일 저장 로직 추가
+            # 📁 파일 저장: 통합된 save_to_json 함수 사용
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = f"data/generated_templates/questions_{timestamp}.json"
-            save_questions_to_json(client_state["generated_questions"], output_path)
+            save_to_json(client_state["generated_questions"], output_path)
             print(f"✅ 템플릿 생성 성공, 결과를 {output_path}에 저장 완료")
 
         except Exception as e:
@@ -118,10 +118,10 @@ async def test_client_generation_flow():
             usage_guide = guide_data.get("usage_guide")
             assert usage_guide, "응답에 'usage_guide'가 없습니다."
 
-            # 파일 저장 로직 추가
+            # 📁 파일 저장: 통합된 save_to_json 함수 사용
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = f"data/generated_templates/guide_{timestamp}.json"
-            save_guide_to_json(guide_data, output_path)
+            save_to_json(guide_data, output_path)
             print(f"\\n✅ 활용 가이드 생성 성공, 결과를 {output_path}에 저장 완료")
 
         except Exception as e:
@@ -139,10 +139,10 @@ async def test_client_generation_flow():
             generated_email = response_data.get("generated_email")
             assert generated_email, "생성된 이메일이 없습니다."
 
-            # 파일 저장 로직 추가
+            # 📁 파일 저장: 통합된 save_to_json 함수 사용
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = f"data/generated_templates/email_{timestamp}.json"
-            save_email_to_json(response_data, output_path)
+            save_to_json(response_data, output_path)
             print(f"✅ 이메일 생성 성공, 결과를 {output_path}에 저장 완료")
             
         except Exception as e:
