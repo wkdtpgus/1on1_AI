@@ -111,6 +111,19 @@ One-line meeting summary capturing main topics (e.g., "3분기 성과 리뷰 및
 
 ## Leader Feedback Structure (for JSON leader_feedback section):
 
+The leader_feedback section contains both positive and negative feedback organized under separate categories.
+
+### Positive Feedback (leader_feedback.positive):
+Each positive aspect item consists of a title (strength area) and content (integrated positive feedback paragraph).
+The content should naturally describe the specific situation from the transcript and explain how this behavior contributed to 1-on-1 effectiveness.
+
+Format should include:
+- Start with the specific positive situation from the transcript (with quotes)
+- Explain why this behavior was effective based on 1-on-1 best practices  
+- Describe the positive impact on meeting effectiveness
+- Maintain encouraging tone focused on reinforcement
+
+### Improvement Feedback (leader_feedback.negative):
 Each feedback item consists of a title (improvement area) and content (integrated feedback paragraph).
 The content should naturally weave together the situation (specific transcript quotes), improvement suggestions, importance reasoning, and concrete implementation methods into a comprehensive, flowing narrative.
 
@@ -122,17 +135,6 @@ Format should include all the original structured elements but presented as natu
 - Describe the importance for 1-on-1 effectiveness
 - Provide concrete implementation steps for the next meeting
 - Maintain developmental tone focused on growth, not criticism
-
-## Positive Aspects Structure (for JSON positive_aspects section):
-
-Each positive aspect item consists of a title (strength area) and content (integrated positive feedback paragraph).
-The content should naturally describe the specific situation from the transcript and explain how this behavior contributed to 1-on-1 effectiveness.
-
-Format should include:
-- Start with the specific positive situation from the transcript (with quotes)
-- Explain why this behavior was effective based on 1-on-1 best practices  
-- Describe the positive impact on meeting effectiveness
-- Maintain encouraging tone focused on reinforcement
 
 ## Q&A Summary:
 • If questions provided: Answer each in order using question_index (1, 2, 3...) instead of repeating question text
@@ -176,8 +178,8 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
 • For Q&A format transcripts: Use both the pre-written answers AND any additional conversational context to create comprehensive, detailed responses
 • **Q&A Output Format**: Return question_index (1, 2, 3...) instead of question text for precise frontend matching
 • Look for elaborations, follow-up questions, manager responses, and related discussions that provide deeper insight into each topic
-• For leader_feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness, and personalize feedback using participant names when available
-• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing leader_feedback and positive_aspects
+• For leader_feedback section: Select the 3 MOST CRITICAL improvement areas with highest impact on 1-on-1 effectiveness for negative feedback, and identify positive behaviors for positive feedback, personalizing all feedback using participant names when available
+• Refer to "Manager Should AVOID" and "Manager Should STRIVE FOR" behaviors as guidelines when writing leader_feedback.positive and leader_feedback.negative
 • Follow the "AI Summary Structure" format exactly as specified - no deviations or additions beyond the defined structure. Double-check the format before output.
 
 
@@ -199,19 +201,20 @@ Note: The transcript is provided as a list of speaker-text pairs [{{"speaker": "
     "support_needs_blockers": ["[Support Request] 지원요청 → 해결방안", "[Blocker] 블로커 → 해결방안"]
   }},
   
-  "leader_feedback": [
-    {{
-      "title": "Specific improvement area (concise title describing what needs to be improved)",
-      "content": "Natural feedback paragraph with situation, suggestions, importance, and implementation"
-    }}
-  ],
-  
-  "positive_aspects": [
-    {{
-      "title": "Specific strength area (concise title describing what was done well)",
-      "content": "Natural positive feedback paragraph with situation, effectiveness, and impact"
-    }}
-  ],
+  "leader_feedback": {{
+    "positive": [
+      {{
+        "title": "Specific strength area (concise title describing what was done well)",
+        "content": "Natural positive feedback paragraph with situation, effectiveness, and impact"
+      }}
+    ],
+    "negative": [
+      {{
+        "title": "Specific improvement area (concise title describing what needs to be improved)",
+        "content": "Natural feedback paragraph with situation, suggestions, importance, and implementation"
+      }}
+    ]
+  }},
   
   "qa_summary": [
     {{
