@@ -119,7 +119,7 @@ async def generate_endpoint(
                 detailed_context=input_data.detailed_context,
                 use_previous_data=input_data.use_previous_data,
                 previous_summary=input_data.previous_summary,
-                language=input_data.language
+                language=input_data.language or "Korean"  # 사용자 선택 우선, 없으면 기본값
             )
             result = await generate_email(email_input)
         elif generation_type == 'guide':
@@ -132,7 +132,7 @@ async def generate_endpoint(
                 purpose=input_data.purpose,
                 detailed_context=input_data.detailed_context,
                 generated_questions=input_data.generated_questions,
-                language=input_data.language
+                language=input_data.language or "Korean"  # 사용자 선택 우선, 없으면 기본값
             )
             return StreamingResponse(generate_usage_guide(guide_input), media_type="text/event-stream")
         return result

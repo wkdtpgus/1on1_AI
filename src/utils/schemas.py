@@ -121,7 +121,7 @@ class EmailGeneratorInput(BaseModel):
     detailed_context: str
     use_previous_data: bool
     previous_summary: Optional[str] = None
-    language: str = "Korean"
+    language: Optional[str] = None  # 사용자가 선택한 언어 (미선택시 기본값 사용)
 
 class EmailGeneratorOutput(BaseModel):
     """
@@ -142,4 +142,4 @@ class UsageGuideInput(BaseModel):
     generated_questions: Dict[str, str] = Field(..., description="생성된 질문들 (key: 질문 번호, value: 질문 내용)")
     
     # 추가 메타데이터
-    language: str = Field(default="Korean", description="출력 언어")
+    language: Optional[str] = Field(default=None, description="사용자가 선택한 출력 언어 (미선택시 기본값 사용)")
