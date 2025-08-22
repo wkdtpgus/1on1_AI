@@ -19,7 +19,7 @@ class TemplateGeneratorInput(BaseModel):
         default="Experience/Story-based",
         description="질문 유형 조합 (쉼표로 구분된 값들). 예시: 'Experience/Story-based, Growth/Goal-oriented'"
     )
-    tone_and_manner: str = Field(..., description="원하는 어조와 말투 (e.g., '전문적이고 차분하게', '친근하고 부드럽게')")
+    tone_and_manner: str = Field(..., description="원하는 어조와 말투 (e.g., 'Formal', 'Casual')")
     language: str = Field(default="Korean", description="출력 언어")
     include_guide: bool = Field(default=False, description="생성된 질문에 대한 활용 가이드 생성 여부")
     
