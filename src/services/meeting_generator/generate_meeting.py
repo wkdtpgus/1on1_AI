@@ -6,7 +6,7 @@ from src.utils.model import SpeechTranscriber, title_llm, meeting_llm
 from src.utils.schemas import MeetingPipelineState, MeetingAnalysis
 from src.prompts.stt_generation.meeting_analysis_prompts import SYSTEM_PROMPT, USER_PROMPT
 from src.prompts.stt_generation.title_generation_prompts import TITLE_ONLY_SYSTEM_PROMPT, TITLE_ONLY_USER_PROMPT
-from src.utils.performance_logging import time_node_execution, SimpleTokenCallback
+from src.utils.performance_logging import time_node_execution
 from src.config.config import STT_MAX_WAIT_TIME, STT_CHECK_INTERVAL
 from src.utils.utils import calculate_speaker_percentages, map_speaker_data
 from langchain.prompts import PromptTemplate
@@ -179,9 +179,7 @@ def analyze_with_llm(state: MeetingPipelineState) -> MeetingPipelineState:
         
         chain = prompt | meeting_llm.with_structured_output(MeetingAnalysis)
         
-        token_callback = SimpleTokenCallback(state)
-        
-        result = chain.invoke(input_data, config={"callbacks": [token_callback]})
+        result = chain.invoke(input_data)
         
         if result is None:
             logger.error("회의 분석 실패")
@@ -240,9 +238,7 @@ def generate_title_only(state: MeetingPipelineState) -> MeetingPipelineState:
         
         title_chain = title_prompt | title_llm
         
-        token_callback = SimpleTokenCallback(state)
-        
-        title_result = title_chain.invoke(title_input_data, config={"callbacks": [token_callback]})
+        title_result = title_chain.invoke(title_input_data)
         
         if title_result is None:
             logger.error("제목 생성 실패")

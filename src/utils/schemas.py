@@ -57,8 +57,6 @@ class MeetingPipelineState(TypedDict):
     
     # 성능 측정 필드
     performance_metrics: Optional[Dict]
-    token_usage: Optional[Dict]
-    costs: Optional[Dict]
     performance_report: Optional[Dict]
     
     errors: List[str]

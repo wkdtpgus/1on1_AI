@@ -58,8 +58,6 @@ class MeetingPipeline:
             
             # 성능 측정 필드 
             "performance_metrics": None,
-            "token_usage": None,
-            "costs": None,
             "performance_report": None
         }
         

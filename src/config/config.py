@@ -67,5 +67,3 @@ SUPABASE_BUCKET_NAME = os.getenv("SUPABASE_BUCKET_NAME", "audio-recordings")
 # Supabase 파일 경로 템플릿
 RECORDING_PATH_TEMPLATE = "recordings/{user_id}/{file_id}"
 
-# 비용 계산 설정
-USD_TO_KRW = 1380  # USD -> KRW 환율 (주기적 업데이트 필요)
