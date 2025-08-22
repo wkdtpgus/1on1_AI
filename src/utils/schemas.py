@@ -5,14 +5,14 @@ from pydantic import BaseModel, Field
 # ==================== STT & Meeting Analysis Schemas ====================
 
 class FeedbackItem(BaseModel):
-    """매니저 개선 피드백 항목"""
-    title: str = Field(description="개선이 필요한 주제")
-    content: str = Field(description="상황, 개선 제안, 중요성, 구체적 실행 방법을 하나의 자연스러운 단락으로 통합한 피드백 내용")
+    """피드백 항목 (긍정적/개선 피드백 공통 사용)"""
+    title: str = Field(description="피드백 주제")
+    content: str = Field(description="피드백 내용을 자연스러운 단락으로 작성")
 
-class PositiveAspectItem(BaseModel):
-    """매니저가 잘한 점 항목"""
-    title: str = Field(description="매니저가 잘 수행한 영역")
-    content: str = Field(description="구체적 상황과 그것이 1on1 효과성에 미친 긍정적 영향을 자연스러운 단락으로 작성")
+class LeaderFeedback(BaseModel):
+    """매니저 피드백 (긍정적 피드백과 개선 피드백으로 구분)"""
+    positive: List[FeedbackItem] = Field(description="매니저가 잘 수행한 측면들 (기존 positive_aspects)")
+    negative: List[FeedbackItem] = Field(description="매니저 개선 피드백 리스트 (기존 leader_feedback)")
 
 class QAItem(BaseModel):
     """Q&A 항목"""
@@ -34,8 +34,7 @@ class MeetingAnalysis(BaseModel):
     member_action_items: List[str] = Field(description="멤버(팀원)가 수행할 액션 아이템 리스트")
     ai_summary: str = Field(description="계층적 구조를 따르는 상세한 회의 내용 (마크다운 형식)")
     ai_core_summary: AiCoreSummary = Field(description="핵심 요약 정보")
-    leader_feedback: List[FeedbackItem] = Field(description="매니저 개선 피드백 리스트")
-    positive_aspects: List[PositiveAspectItem] = Field(description="매니저가 잘 수행한 측면들")
+    leader_feedback: LeaderFeedback = Field(description="매니저 피드백 (긍정적/개선 피드백)")
     qa_summary: List[QAItem] = Field(description="질문별 답변 리스트 - 모든 질문에 대해 완전한 답변 필수")
 
 # 랭그래프 스키마 
