@@ -96,13 +96,11 @@ LANGSMITH_PROJECT=oblit-1on1_ai_ui
 통합 서버(`src.web.main:app`)는 다음 엔드포인트를 제공합니다:
 
 ### 템플릿 생성 API (`/api/template`)
-
 - 요청: POST `/api/template?generation_type=template|guide|email`
 - 본문(JSON): `src.utils.template_schemas`에 정의된 입력 스키마 참고
 - 스트리밍 지원: 가이드 생성 시 실시간 스트리밍 응답
 
 ### 미팅 분석 API (`/api/analyze`)
-
 - 요청: POST `multipart/form-data`
 - 필드(form):
   - `file_id`(optional, string): Supabase Storage 파일 ID (`only_title=true`이면 생략 가능)
@@ -152,5 +150,3 @@ poetry run pytest tests/test_meeting_api.py
 
 ### AssemblyAI
 1. 계정 생성 및 API Key 발급 → `ASSEMBLYAI_API_KEY`
-
-
