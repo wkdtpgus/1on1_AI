@@ -67,7 +67,7 @@ export default function Home() {
 
     try {
       // 1. 템플릿(질문) 생성 API 호출
-      const templateResponse = await fetch('http://127.0.0.1:8000/api/template?generation_type=template', {
+      const templateResponse = await fetch('/api/template?generation_type=template', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(apiRequestData),
@@ -130,7 +130,7 @@ export default function Home() {
     };
     
     try {
-        const guideResponse = await fetch('http://127.0.0.1:8000/api/template?generation_type=guide', {
+        const guideResponse = await fetch('/api/template?generation_type=guide', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(guideRequestData),

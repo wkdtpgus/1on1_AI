@@ -69,7 +69,7 @@ const TemplateForm: React.FC<TemplateFormProps> = ({ onGenerate, isLoading }) =>
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/users');
+        const response = await fetch('/api/users');
         const data: User[] = await response.json();
         setUsers(data);
         if (data.length > 0) {
