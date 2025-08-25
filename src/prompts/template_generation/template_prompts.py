@@ -68,7 +68,7 @@ HUMAN_PROMPT = """
     5. Growth/Goal-oriented: Role and position based goal setting and development. 
       (e.g., "What do you want to become like in a year?")
       (e.g., "What new skill are you hoping to develop this quarter?")
-    6. Multiple choice: **At least 3 structured questions** with predefined options.
+    6. Multiple choice: **If this option is selected in {question_composition}, generate at least 3 structured questions** with predefined options.
       (e.g., "On a scale of 1 to 5, how satisfied are you with your current workload?") 
       (e.g., "Which of the following areas do you want to focus on next quarter? (a) New feature development, (b) Code refactoring, (c) Learning new technology")
       IMPORTANT: The options for the multiple-choice questions should be derived from `target_info`, `detailed_context`, `previous_summary_section`.

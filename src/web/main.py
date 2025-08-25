@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from supabase import create_client, Client
-
+import traceback
 
 from src.services.meeting_generator.workflow import MeetingPipeline
 
@@ -29,6 +29,7 @@ from src.config.config import (
     SUPABASE_KEY,
     SUPABASE_BUCKET_NAME
 )
+from src.web.test_endpoints import router as test_router # 테스트용 라우터 import
 
 meeting_pipeline = None
 supabase: Client = None
@@ -60,6 +61,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+app.include_router(test_router, tags=["Test"]) # 테스트용 라우터 추가
 
 # CORS 설정
 app.add_middleware(
