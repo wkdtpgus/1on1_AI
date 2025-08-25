@@ -41,7 +41,18 @@ async def lifespan(app: FastAPI):
     
     # Google Cloud 인증 설정
     if GOOGLE_APPLICATION_CREDENTIALS:
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
+        if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
+        else:
+            # Railway 등 배포 환경에서는 환경변수에 JSON 내용이 직접 저장될 수 있음
+            google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+            if google_credentials_json:
+                import tempfile
+                import json
+                # 임시 파일로 생성
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                    json.dump(json.loads(google_credentials_json), f)
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
     
     # Supabase 클라이언트 초기화
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -155,4 +166,7 @@ async def generate_endpoint(
             return StreamingResponse(generate_usage_guide(guide_input), media_type="text/event-stream")
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_details = f"Error: {str(e)}\nTraceback: {traceback.format_exc()}"
+        print(error_details)  # Railway 로그에 출력
+        raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
