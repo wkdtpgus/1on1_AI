@@ -49,10 +49,19 @@ async def lifespan(app: FastAPI):
             if google_credentials_json:
                 import tempfile
                 import json
-                # 임시 파일로 생성
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                    json.dump(json.loads(google_credentials_json), f)
-                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
+                try:
+                    # 임시 파일로 생성
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        # JSON 문자열을 직접 파일에 쓰기 (파싱하지 않음)
+                        f.write(google_credentials_json)
+                        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
+                except Exception as e:
+                    print(f"Google Cloud 인증 설정 실패: {e}")
+    else:
+        # 환경변수가 없으면 기본 파일 경로 시도
+        default_path = "thetimecollabo-38646deba34a.json"
+        if os.path.exists(default_path):
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = default_path
     
     # Supabase 클라이언트 초기화
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
