@@ -46,15 +46,43 @@ async def lifespan(app: FastAPI):
         else:
             # Railway 등 배포 환경에서는 환경변수에 JSON 내용이 직접 저장될 수 있음
             google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-            if google_credentials_json:
+            google_credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_BASE64")
+            
+            if google_credentials_base64:
+                # Base64로 인코딩된 인증 정보 처리
+                import tempfile
+                import base64
+                try:
+                    # Base64 디코딩
+                    decoded_json = base64.b64decode(google_credentials_base64).decode('utf-8')
+                    
+                    # 임시 파일로 생성
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
+                        f.write(decoded_json)
+                        f.flush()
+                        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
+                        print(f"Google Cloud 인증 파일 생성 완료 (Base64): {f.name}")
+                except Exception as e:
+                    print(f"Base64 디코딩 실패: {e}")
+            
+            elif google_credentials_json:
                 import tempfile
                 import json
                 try:
+                    # JSON 문자열 정리 (불필요한 공백 및 개행문자 제거)
+                    cleaned_json = google_credentials_json.strip()
+                    # 유효한 JSON인지 먼저 확인
+                    json.loads(cleaned_json)
+                    
                     # 임시 파일로 생성
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                        # JSON 문자열을 직접 파일에 쓰기 (파싱하지 않음)
-                        f.write(google_credentials_json)
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
+                        f.write(cleaned_json)
+                        f.flush()
                         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
+                        print(f"Google Cloud 인증 파일 생성 완료: {f.name}")
+                except json.JSONDecodeError as e:
+                    print(f"JSON 파싱 오류: {e}")
+                    print(f"JSON 내용 확인: {google_credentials_json[:200]}...")
                 except Exception as e:
                     print(f"Google Cloud 인증 설정 실패: {e}")
     else:
