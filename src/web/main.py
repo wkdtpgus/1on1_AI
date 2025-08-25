@@ -73,6 +73,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/", summary="API 서버 헬스 체크 엔드포인트")
+async def read_root():
+    """API 서버가 정상적으로 실행 중인지 확인합니다."""
+    return JSONResponse(content={"message": "Welcome to 1on1 AI Assistant API"})
+
 # ==================== STT & Analysis Endpoints ====================
 
 @app.get("/api/config")
