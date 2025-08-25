@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import TemplateForm from '@/components/TemplateForm';
+import TemplateForm, { FormData } from '@/components/TemplateForm';
 import ResultDisplay from '@/components/ResultDisplay';
 
 export interface GeneratedData {
@@ -15,9 +15,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGuideLoading, setIsGuideLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentFormData, setCurrentFormData] = useState<any>(null);
+  const [currentFormData, setCurrentFormData] = useState<FormData | null>(null);
 
-  const handleGenerate = async (formData: any) => {
+  const handleGenerate = async (formData: FormData) => {
     setIsLoading(true);
     setResult(null);
     setError(null);
@@ -154,7 +154,7 @@ export default function Home() {
                         // "..." 형식의 JSON 문자열일 경우 파싱
                         const parsedContent = JSON.parse(content);
                         setResult(prev => prev ? { ...prev, guide: (prev.guide || "") + parsedContent } : null);
-                    } catch (e) {
+                    } catch { // 'e' is not used, so remove it
                         // 일반 문자열일 경우
                         setResult(prev => prev ? { ...prev, guide: (prev.guide || "") + content } : null);
                     }

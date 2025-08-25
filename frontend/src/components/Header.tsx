@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 const Header = () => {
   return (
@@ -6,15 +7,15 @@ const Header = () => {
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-xl font-semibold text-gray-700">
-            <a href="/">1on1 AI Assistant</a>
+            <Link href="/">1on1 AI Assistant</Link>
           </div>
           <div>
-            <a href="#" className="text-gray-600 hover:text-blue-500 mx-3">
+            <Link href="#" className="text-gray-600 hover:text-blue-500 mx-3">
               History
-            </a>
-            <a href="#" className="text-gray-600 hover:text-blue-500 mx-3">
+            </Link>
+            <Link href="#" className="text-gray-600 hover:text-blue-500 mx-3">
               Login
-            </a>
+            </Link>
           </div>
         </div>
       </nav>

@@ -6,8 +6,26 @@ import Input from './Input';
 import RadioGroup from './RadioGroup';
 import Checkbox from './Checkbox';
 
+export interface FormData {
+  userId: string;
+  recipient: string;
+  topic: string;
+  context: string;
+  questionCount: string;
+  toneAndManner: string;
+  language: string;
+  questionTypes: {
+    experience: boolean;
+    reflection: boolean;
+    action: boolean;
+    relationship: boolean;
+    growth: boolean;
+    multiple_choice: boolean;
+  };
+}
+
 interface TemplateFormProps {
-  onGenerate: (formData: any) => void;
+  onGenerate: (formData: FormData) => void;
   isLoading: boolean;
 }
 
@@ -18,7 +36,7 @@ interface User {
 
 const TemplateForm: React.FC<TemplateFormProps> = ({ onGenerate, isLoading }) => {
   const [users, setUsers] = useState<User[]>([]);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     userId: '',
     recipient: '',
     topic: 'Work', // 기본값 설정
