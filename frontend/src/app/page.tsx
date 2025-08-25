@@ -43,11 +43,17 @@ export default function Home() {
     };
     // --- 변환 로직 끝 ---
 
+    // 선택된 주제들을 쉼표로 구분된 문자열로 변환
+    const selectedTopics = Object.entries(formData.topic)
+      .filter(([, checked]) => checked)
+      .map(([topic]) => topic)
+      .join(', ');
+
     // 프론트엔드 폼 데이터를 백엔드 스키마에 맞게 변환
     const apiRequestData = {
       user_id: formData.userId, // 'test-user-id' 대신 선택된 값 사용
       target_info: formData.recipient,
-      purpose: formData.topic,
+      purpose: selectedTopics || 'Work', // 하나도 선택 안됐을 경우 기본값
       detailed_context: formData.context,
       num_questions: questionCountMap[formData.questionCount],
       question_composition: Object.entries(formData.questionTypes)
@@ -74,7 +80,7 @@ export default function Home() {
       const templateData = await templateResponse.json();
       
       setResult({
-        title: formData.topic,
+        title: selectedTopics || 'Work',
         guide: null, // 가이드는 아직 생성되지 않음
         questions: templateData.generated_questions,
       });
@@ -104,10 +110,16 @@ export default function Home() {
         multiple_choice: 'Multiple choice',
     };
 
+    // 선택된 주제들을 쉼표로 구분된 문자열로 변환
+    const selectedTopics = Object.entries(currentFormData.topic)
+      .filter(([, checked]) => checked)
+      .map(([topic]) => topic)
+      .join(', ');
+
     const guideRequestData = {
       user_id: currentFormData.userId,
       target_info: currentFormData.recipient,
-      purpose: currentFormData.topic,
+      purpose: selectedTopics || 'Work', // 하나도 선택 안됐을 경우 기본값
       detailed_context: currentFormData.context,
       num_questions: questionCountMap[currentFormData.questionCount],
       question_composition: Object.entries(currentFormData.questionTypes).filter(([, checked]) => checked).map(([type]) => questionTypeMap[type as keyof typeof questionTypeMap]).join(', ') || "Experience/Story-based",

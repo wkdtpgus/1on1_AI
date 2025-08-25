@@ -9,7 +9,13 @@ import Checkbox from './Checkbox';
 export interface FormData {
   userId: string;
   recipient: string;
-  topic: string;
+  topic: {
+    Work: boolean;
+    Growth: boolean;
+    Satisfaction: boolean;
+    Relationships: boolean;
+    'Junior Development': boolean;
+  };
   context: string;
   questionCount: string;
   toneAndManner: string;
@@ -39,7 +45,13 @@ const TemplateForm: React.FC<TemplateFormProps> = ({ onGenerate, isLoading }) =>
   const [formData, setFormData] = useState<FormData>({
     userId: '',
     recipient: '',
-    topic: 'Work', // 기본값 설정
+    topic: {
+      Work: true,
+      Growth: false,
+      Satisfaction: false,
+      Relationships: false,
+      'Junior Development': false,
+    },
     context: '',
     questionCount: 'standard',
     toneAndManner: 'polite',
@@ -75,13 +87,24 @@ const TemplateForm: React.FC<TemplateFormProps> = ({ onGenerate, isLoading }) =>
     
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
-      setFormData(prev => ({
-        ...prev,
-        questionTypes: {
-          ...prev.questionTypes,
-          [name]: checked,
-        }
-      }));
+      
+      if (name in formData.questionTypes) {
+        setFormData(prev => ({
+          ...prev,
+          questionTypes: {
+            ...prev.questionTypes,
+            [name]: checked,
+          }
+        }));
+      } else if (name in formData.topic) {
+        setFormData(prev => ({
+          ...prev,
+          topic: {
+            ...prev.topic,
+            [name]: checked,
+          }
+        }));
+      }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -131,22 +154,16 @@ const TemplateForm: React.FC<TemplateFormProps> = ({ onGenerate, isLoading }) =>
         />
 
         <div>
-          <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">
-            대화 나누고 싶은 주제를 선택해주세요.
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            대화 나누고 싶은 주제를 선택해주세요. (중복 가능)
           </label>
-          <select
-            id="topic"
-            name="topic"
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            value={formData.topic}
-            onChange={handleChange}
-          >
-            <option value="Work">업무 (Work)</option>
-            <option value="Growth">성장 (Growth)</option>
-            <option value="Satisfaction">만족도 (Satisfaction)</option>
-            <option value="Relationships">관계 (Relationships)</option>
-            <option value="Junior Development">주니어 육성 (Junior Development)</option>
-          </select>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Checkbox id="Work" name="Work" label="업무 (Work)" checked={formData.topic.Work} onChange={handleChange} />
+            <Checkbox id="Growth" name="Growth" label="성장 (Growth)" checked={formData.topic.Growth} onChange={handleChange} />
+            <Checkbox id="Satisfaction" name="Satisfaction" label="만족도 (Satisfaction)" checked={formData.topic.Satisfaction} onChange={handleChange} />
+            <Checkbox id="Relationships" name="Relationships" label="관계 (Relationships)" checked={formData.topic.Relationships} onChange={handleChange} />
+            <Checkbox id="Junior Development" name="Junior Development" label="주니어 육성 (Junior Development)" checked={formData.topic['Junior Development']} onChange={handleChange} />
+          </div>
         </div>
         
         <div>
