@@ -40,56 +40,26 @@ async def lifespan(app: FastAPI):
     global meeting_pipeline, supabase
     
     # Google Cloud 인증 설정
-    if GOOGLE_APPLICATION_CREDENTIALS:
-        if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
-        else:
-            # Railway 등 배포 환경에서는 환경변수에 JSON 내용이 직접 저장될 수 있음
-            google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-            google_credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_BASE64")
+    google_credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    if google_credentials_json:
+        import json
+        from google.oauth2 import service_account
+        try:
+            # JSON 문자열을 파싱해서 인증 정보 생성
+            credentials_info = json.loads(google_credentials_json)
+            credentials = service_account.Credentials.from_service_account_info(credentials_info)
             
-            if google_credentials_base64:
-                # Base64로 인코딩된 인증 정보 처리
-                import tempfile
-                import base64
-                try:
-                    # Base64 디코딩
-                    decoded_json = base64.b64decode(google_credentials_base64).decode('utf-8')
-                    
-                    # 임시 파일로 생성
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
-                        f.write(decoded_json)
-                        f.flush()
-                        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
-                        print(f"Google Cloud 인증 파일 생성 완료 (Base64): {f.name}")
-                except Exception as e:
-                    print(f"Base64 디코딩 실패: {e}")
+            # 전역적으로 사용할 수 있도록 환경변수 설정
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                json.dump(credentials_info, f)
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
             
-            elif google_credentials_json:
-                import tempfile
-                import json
-                try:
-                    # JSON 문자열 정리 (불필요한 공백 및 개행문자 제거)
-                    cleaned_json = google_credentials_json.strip()
-                    # 유효한 JSON인지 먼저 확인
-                    json.loads(cleaned_json)
-                    
-                    # 임시 파일로 생성
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
-                        f.write(cleaned_json)
-                        f.flush()
-                        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
-                        print(f"Google Cloud 인증 파일 생성 완료: {f.name}")
-                except json.JSONDecodeError as e:
-                    print(f"JSON 파싱 오류: {e}")
-                    print(f"JSON 내용 확인: {google_credentials_json[:200]}...")
-                except Exception as e:
-                    print(f"Google Cloud 인증 설정 실패: {e}")
-    else:
-        # 환경변수가 없으면 기본 파일 경로 시도
-        default_path = "thetimecollabo-38646deba34a.json"
-        if os.path.exists(default_path):
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = default_path
+            print("Google Cloud 인증 설정 완료")
+        except Exception as e:
+            print(f"Google Cloud 인증 설정 실패: {e}")
+    elif GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
     
     # Supabase 클라이언트 초기화
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
