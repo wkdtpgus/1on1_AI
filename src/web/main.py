@@ -65,9 +65,15 @@ app = FastAPI(
 app.include_router(test_router, tags=["Test"]) # 테스트용 라우터 추가
 
 # CORS 설정
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "https://1on1-ai.vercel.app",  # Vercel Frontend URL
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
