@@ -13,6 +13,7 @@ from src.services.meeting_generator.workflow import MeetingPipeline
 from src.services.template_generator.generate_email import generate_email
 from src.services.template_generator.generate_template import generate_template
 from src.services.template_generator.generate_usage_guide import generate_usage_guide
+from src.utils.mock_db import MOCK_USER_DATA
 from src.utils.schemas import (
     AnalyzeMeetingInput,
     EmailGeneratorInput,
@@ -29,7 +30,6 @@ from src.config.config import (
     SUPABASE_KEY,
     SUPABASE_BUCKET_NAME
 )
-from src.web.test_endpoints import router as test_router # 테스트용 라우터 import
 
 meeting_pipeline = None
 supabase: Client = None
@@ -62,8 +62,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.include_router(test_router, tags=["Test"]) # 테스트용 라우터 추가
-
 # CORS 설정
 origins = [
     "http://localhost",
@@ -83,6 +81,12 @@ app.add_middleware(
 async def read_root():
     """API 서버가 정상적으로 실행 중인지 확인합니다."""
     return JSONResponse(content={"message": "Welcome to 1on1 AI Assistant API"})
+
+@app.get("/api/users", summary="목업 DB의 모든 사용자 목록 반환")
+async def get_users():
+    """사용자 목록 반환 API (user_id와 name)"""
+    users = [{"user_id": user["user_id"], "name": user["name"]} for user in MOCK_USER_DATA]
+    return JSONResponse(content=users)
 
 # ==================== STT & Analysis Endpoints ====================
 
